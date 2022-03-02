@@ -42,6 +42,7 @@ namespace Temporal.WorkflowClient
     public class TemporalServiceNamespaceClient
     {
         public string Namespace { get; }
+        // Other namespace properties go here.
 
         // -- Misc general APIs: --
 
@@ -54,6 +55,8 @@ namespace Temporal.WorkflowClient
         public Task<NeedsDesign> DeprecateNamespaceAsync(NeedsDesign oneOrMoreArgs) { return null; } // Depricated in proto. Need it?
 
         // -- Workflow exploration APIs (based on GRPC capabilities. Needs review): --
+
+        public Task<NeedsDesign> GetWorkflowsAsync(NeedsDesign oneOrMoreArgs) { return null; }
 
         // Should the APIs right below use 'WorkflowRuns' rather than 'WorkflowExecutions' for consistency with the terminology used here?
         public Task<NeedsDesign> ListOpenWorkflowExecutionsAsync(NeedsDesign oneOrMoreArgs) { return null; }

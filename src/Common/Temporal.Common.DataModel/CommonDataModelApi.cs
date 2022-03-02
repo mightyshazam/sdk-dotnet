@@ -49,4 +49,8 @@ namespace Temporal.Common.DataModel
     {
 
     }
+
+    public enum TimeoutType
+    {
+    }
 }
