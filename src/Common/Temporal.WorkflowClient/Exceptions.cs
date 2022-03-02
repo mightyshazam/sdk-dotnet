@@ -10,7 +10,7 @@ namespace Temporal.WorkflowClient
     /// Exceptions that originate in the workflow client, but are NOT caused by a worker-side issue are NOT wrapped into instances
     /// of this class (e.g. connection issues, local cancellations, etc.)
     /// </summary>
-    public class WorkflowWorkerException : Exception
+    public sealed class WorkflowWorkerException : Exception
     {
         internal WorkflowWorkerException(string message, Exception innerException) : base(message, innerException) { }
     }
