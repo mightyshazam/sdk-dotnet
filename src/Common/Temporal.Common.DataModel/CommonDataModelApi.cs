@@ -40,9 +40,22 @@ namespace Temporal.Common.DataModel
     }
 
     public class Payload
-    {
+    {        
         public IReadOnlyDictionary<string, Stream> Metadata { get; }
         public Stream Data { get; }
+    }
+
+    public class MutablePayload : Payload
+    {
+        public IDictionary<string, Stream> MutableMetadata { get; }
+        public Stream MutableData { get; }
+
+        public void CopyMetadataFrom(Payload payload) { }
+        public Stream RemoveMetadataEntry(string key) { return null; }
+        public void SetMetadataEntry(string key, string data) { }        
+        public void SetMetadataEntry(string key, byte[] data) { }
+        public void SetMetadataEntry(string key, int data) { }
+        public void SetMetadataEntry(string key) { }
     }
 
     public enum WorkflowExecutionStatus

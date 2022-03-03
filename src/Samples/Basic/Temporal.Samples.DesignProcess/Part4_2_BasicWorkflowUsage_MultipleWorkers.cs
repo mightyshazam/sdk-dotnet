@@ -22,7 +22,7 @@ namespace Temporal.Sdk.BasicSamples
             public override async Task<PayloadsCollection> RunAsync(IWorkflowContext workflowCtx)
             {
                 PayloadsCollection input = workflowCtx.CurrentRun.Input;
-                string addresseeName = workflowCtx.GetSerializer(input).Deserialize<string>(input);
+                string addresseeName = workflowCtx.GetDataConverter().Deserialize<string>(input);
 
                 string greeting = $"Hello, {addresseeName ?? "<null>"}.";
                 await SpeakGreetingAsync(greeting, workflowCtx);
@@ -32,7 +32,7 @@ namespace Temporal.Sdk.BasicSamples
 
             private async Task SpeakGreetingAsync(string text, IWorkflowContext workflowCtx)
             {
-                PayloadsCollection greetingPayload = workflowCtx.WorkflowImplementationConfig.DefaultPayloadSerializer.Serialize(text);
+                PayloadsCollection greetingPayload = workflowCtx.WorkflowImplementationConfig.DefaultDataConverter.Serialize(text);
                 await workflowCtx.Activities.ExecuteAsync("SpeakAGreeting1", greetingPayload);
             }
         }
@@ -55,7 +55,7 @@ namespace Temporal.Sdk.BasicSamples
             public override async Task<PayloadsCollection> RunAsync(IWorkflowContext workflowCtx)
             {
                 PayloadsCollection input = workflowCtx.CurrentRun.Input;
-                string addresseeName = workflowCtx.GetSerializer(input).Deserialize<string>(input);
+                string addresseeName = workflowCtx.GetDataConverter().Deserialize<string>(input);
 
                 string greeting = $"Good bye, {addresseeName ?? "<null>"}.";
                 await SpeakGreetingAsync(greeting, workflowCtx);
@@ -74,7 +74,7 @@ namespace Temporal.Sdk.BasicSamples
             public override async Task<PayloadsCollection> RunAsync(IWorkflowContext workflowCtx)
             {
                 PayloadsCollection input = workflowCtx.CurrentRun.Input;
-                string greeting = workflowCtx.GetSerializer(input).Deserialize<string>(input);
+                string greeting = workflowCtx.GetDataConverter().Deserialize<string>(input);
                 greeting ??= "<null>";
 
                 await workflowCtx.Activities.ExecuteAsync("SpeakAGreeting2", new SpeechRequest(greeting));
@@ -90,7 +90,7 @@ namespace Temporal.Sdk.BasicSamples
             
             public Task<PayloadsCollection> RunAsync(PayloadsCollection input, WorkflowActivityContext activityCtx)
             {
-                string greetingText = activityCtx.GetSerializer(input).Deserialize<string>(input) ?? "<null>";
+                string greetingText = activityCtx.GetDataConverter().Deserialize<string>(input) ?? "<null>";
                 Console.WriteLine($"[{ActivityTypeName}] {greetingText}");
                 return Task.FromResult<PayloadsCollection>(null);
             }

@@ -30,9 +30,8 @@ namespace Temporal.Worker.Workflows
         Task<bool> SleepAsync(TimeSpan timeSpan, CancellationToken cancelToken);
         Task SleepUntilAsync(DateTime sleepEndUtc);
         Task<bool> SleepUntilAsync(DateTime sleepEndUtc, CancellationToken cancelToken);
-
-        IPayloadSerializer GetSerializer(PayloadsCollection payloads);
-        IPayloadSerializer GetSerializer();
+        
+        IDataConverter GetDataConverter();
     }
 
     internal class WorkflowContext : IWorkflowContext, IDynamicWorkflowContext
@@ -53,13 +52,14 @@ namespace Temporal.Worker.Workflows
         public Task SleepUntilAsync(DateTime sleepEndUtc) { return null; }
         public Task<bool> SleepUntilAsync(DateTime sleepEndUtc, CancellationToken cancelToken) { return null; }
 
-        /// <summary>Get the serializer for the specified payload.
+        /// <summary>Before the default DataConverter we had:
+        /// Get the serializer for the specified payload.
         /// If metadata specifies an available serializer - get that one;
         /// If metadata specifies an unavailable serializer - throw;
         /// If metadata specifies nothing - get the default form the config.
-        /// If nothing configured - get JSON.</summary>        
-        public IPayloadSerializer GetSerializer(PayloadsCollection payloads) { return null; }
-        public IPayloadSerializer GetSerializer() { return null; }
+        /// If nothing configured - get JSON.
+        /// Now we need to teach the default data converter to be able to load payloadconverters from the DI.</summary>        
+        public IDataConverter GetDataConverter() { return null; }
     }
 
     // ----------- -----------
@@ -147,13 +147,13 @@ namespace Temporal.Worker.Workflows
     /// </summary>
     public interface IWorkflowImplementationConfiguration
     {
-        IPayloadSerializer DefaultPayloadSerializer { get; }
+        IDataConverter DefaultDataConverter { get; }
         IActivityInvocationConfiguration DefaultActivityInvocationConfig { get; }
     }
 
     public class WorkflowImplementationConfiguration : IWorkflowImplementationConfiguration
     {
-        public IPayloadSerializer DefaultPayloadSerializer { get; set; }
+        public IDataConverter DefaultDataConverter { get; set; }
         public ActivityInvocationConfiguration DefaultActivityInvocationConfig { get; set; }
         IActivityInvocationConfiguration IWorkflowImplementationConfiguration.DefaultActivityInvocationConfig { get { return this.DefaultActivityInvocationConfig; } }
     }

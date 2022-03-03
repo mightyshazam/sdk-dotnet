@@ -20,9 +20,11 @@ namespace Temporal.Worker.Workflows.Dynamic
     {
         public sealed override async Task<PayloadsCollection> RunAsync(IWorkflowContext workflowCtx)
         {
+            // Check the data converter logic here....
+
             TInput input = (typeof(TInput) == typeof(IDataValue.Void))
                     ? (TInput) (IDataValue) IDataValue.Void.Instance
-                    : workflowCtx.GetSerializer(workflowCtx.CurrentRun.Input).Deserialize<TInput>(workflowCtx.CurrentRun.Input);
+                    : workflowCtx.GetDataConverter().Deserialize<TInput>(workflowCtx.CurrentRun.Input);
 
             IDynamicWorkflowContext dynamicCtx = null;  // some wrapper of workflowCtx;
 
@@ -30,7 +32,7 @@ namespace Temporal.Worker.Workflows.Dynamic
 
             PayloadsCollection serializedResult = (result == null || result.GetType() == typeof(IDataValue.Void))
                     ? PayloadsCollection.Empty
-                    : workflowCtx.WorkflowImplementationConfig.DefaultPayloadSerializer.Serialize<TResult>(result);
+                    : workflowCtx.WorkflowImplementationConfig.DefaultDataConverter.Serialize<TResult>(result);
 
             return serializedResult;
         }

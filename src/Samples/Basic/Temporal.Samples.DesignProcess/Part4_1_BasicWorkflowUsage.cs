@@ -34,7 +34,7 @@ namespace Temporal.Sdk.BasicSamples
             {
                 string greeting = $"Hello, {_addresseeName ?? AddresseeNameDefault}.";
 
-                PayloadsCollection greetingPayload = workflowCtx.WorkflowImplementationConfig.DefaultPayloadSerializer.Serialize(greeting);
+                PayloadsCollection greetingPayload = workflowCtx.WorkflowImplementationConfig.DefaultDataConverter.Serialize(greeting);
                 await workflowCtx.Activities.ExecuteAsync("SpeakAGreeting", greetingPayload);
 
                 return PayloadsCollection.Empty;
@@ -44,7 +44,7 @@ namespace Temporal.Sdk.BasicSamples
             {
                 if (signalName.Equals("SetAddressee", StringComparison.OrdinalIgnoreCase))
                 {                    
-                    string addresseeName = workflowCtx.GetSerializer(input).Deserialize<string>(input);
+                    string addresseeName = workflowCtx.GetDataConverter().Deserialize<string>(input);
                     
                     _addresseeName = addresseeName;
                     return Task.CompletedTask;
@@ -58,7 +58,7 @@ namespace Temporal.Sdk.BasicSamples
         {
             public override Task<PayloadsCollection> RunAsync(PayloadsCollection input, WorkflowActivityContext activityCtx)
             {
-                string greetingText = activityCtx.GetSerializer(input).Deserialize<string>(input) ?? "<null>";
+                string greetingText = activityCtx.GetDataConverter().Deserialize<string>(input) ?? "<null>";
                 Console.WriteLine($"[{ActivityTypeName}] {greetingText}");
                 return Task.FromResult<PayloadsCollection>(null);
             }
@@ -126,7 +126,7 @@ namespace Temporal.Sdk.BasicSamples
                                 })
                                 .ConfigureImplementation((serviceProvider, workflowImplementationConfig) =>
                                 {
-                                    workflowImplementationConfig.DefaultPayloadSerializer = serviceProvider.GetService<JsonPayloadSerializer>();
+                                    //workflowImplementationConfig.DefaultDataConverter = serviceProvider.GetService<JsonPayloadSerializer>();
 
                                     workflowImplementationConfig.DefaultActivityInvocationConfig.TaskQueue = "My Queue";
                                     workflowImplementationConfig.DefaultActivityInvocationConfig.StartToCloseTimeoutMillisecs = 5_000;

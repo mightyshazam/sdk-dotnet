@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using Temporal.Common.DataModel;
+using Temporal.Serialization;
 using Temporal.WorkflowClient;
 
 using static Temporal.Sdk.BasicSamples.Part1_4_TimersAndComposition2;
@@ -18,6 +20,8 @@ namespace Temporal.Sdk.BasicSamples
             AccessResultOfEntireWorkflow(args).GetAwaiter().GetResult();
             UseSignalsAndQueries(args).GetAwaiter().GetResult();
             CancelCurrentWorkflowRunIfActive(args).GetAwaiter().GetResult();
+            UsePayloadCodecToCompressPayloadsForAllWorkflows(args).GetAwaiter().GetResult();
+            UsePayloadCodecToCompressPayloadsForSpecificWorkflow(args).GetAwaiter().GetResult();
         }
 
         public static async Task Minimal(string[] _)
@@ -151,6 +155,95 @@ namespace Temporal.Sdk.BasicSamples
             }
 
             Console.WriteLine("Workflow not found or no run was active.");
+        }
+
+        public static async Task UsePayloadCodecToCompressPayloadsForAllWorkflows(string[] _)
+        {
+            TemporalServiceClientConfiguration serviceConfig = new();
+            serviceConfig.DataConverterFactory = (_, _, _) => new DefaultDataConverter(new[] { new GZipPayloadCodec() });
+
+            TemporalServiceClient serviceClient = new(serviceConfig);
+            TemporalServiceNamespaceClient serviceNamespaceClient = await serviceClient.GetNamespaceClientAsync("namespace");
+
+            WorkflowRun workflowRun = await serviceNamespaceClient.GetNewWorkflow("workflowTypeName").StartNewRunAsync("taskQueue");
+
+            WorkflowRunResult result = await workflowRun.GetResultAsync();
+            result.GetValue();
+        }
+
+        public static async Task UsePayloadCodecToCompressPayloadsForSpecificWorkflow(string[] _)
+        {
+            TemporalServiceClientConfiguration serviceConfig = new();
+
+            TemporalServiceClient serviceClient = new(serviceConfig);
+            TemporalServiceNamespaceClient serviceNamespaceClient = await serviceClient.GetNamespaceClientAsync("namespace");
+
+            WorkflowClientConfiguration wfConfig = new() { DataConverterFactory = new DefaultDataConverter(new[] { new GZipPayloadCodec() }) };
+            WorkflowRun workflowRun = await serviceNamespaceClient.GetNewWorkflow("workflowTypeName", wfConfig).StartNewRunAsync("taskQueue");
+
+            WorkflowRunResult result = await workflowRun.GetResultAsync();
+            result.GetValue();
+        }
+
+        class GZipPayloadCodec : IPayloadCodec
+        {
+            private const string MetadataKey = nameof(GZipPayloadCodec);
+
+            public PayloadsCollection Decode(PayloadsCollection data)
+            {
+                MutablePayloadsCollection decompressedData = new();
+                foreach (Payload p in data)
+                {
+                    decompressedData.Add(Decode(p));
+                }
+
+                return decompressedData;
+            }
+
+            public PayloadsCollection Encode(PayloadsCollection data)
+            {
+                MutablePayloadsCollection compressedData = new();
+                foreach (Payload p in data)
+                {
+                    compressedData.Add(Encode(p));
+                }
+
+                return compressedData;
+            }
+
+            private Payload Decode(Payload data)
+            {
+                if (!data.Metadata.ContainsKey(MetadataKey))
+                {
+                    return data;
+                }
+
+                MutablePayload decoded = new();
+                decoded.CopyMetadataFrom(data);
+                decoded.RemoveMetadataEntry(MetadataKey);
+
+                using GZipStream decodedStr = new(decoded.MutableData, CompressionMode.Decompress, leaveOpen: true);
+                data.Data.CopyTo(decodedStr);
+
+                return decoded;
+            }
+
+            private Payload Encode(Payload data)
+            {
+                if (data.Metadata.ContainsKey(MetadataKey))
+                {
+                    return data;
+                }
+
+                MutablePayload encoded = new();
+                encoded.CopyMetadataFrom(data);
+                encoded.SetMetadataEntry(MetadataKey);
+                
+                using GZipStream encodedStr = new(encoded.MutableData, CompressionLevel.Optimal, leaveOpen: true);
+                data.Data.CopyTo(encodedStr);
+
+                return encoded;
+            }
         }
     }
 }

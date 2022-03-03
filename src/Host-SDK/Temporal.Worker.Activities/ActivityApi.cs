@@ -46,10 +46,11 @@ namespace Temporal.Worker.Activities
     {
         public string ActivityTypeName { get; }
 
-        /// <summary>Get the serializer for the specified payload.
+        /// <summary>PREVIOUS: Get the serializer for the specified payload.
         /// If metadata specifies an available serializer - get that one;
         /// If metadata specifies an unavailable serializer - throw;
-        /// If metadata specified nothing - get the default form the config.</summary>        
-        public IPayloadSerializer GetSerializer(PayloadsCollection payloads) { return null; }
+        /// If metadata specified nothing - get the default form the config.
+        /// NOW: Redesign DI for this.</summary>        
+        public IDataConverter GetDataConverter() { return null; }
     }
 }

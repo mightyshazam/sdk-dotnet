@@ -8,6 +8,7 @@ using Temporal.Common.WorkflowConfiguration;
 
 using Temporal.Async;
 using Temporal.Collections;
+using Temporal.Serialization;
 
 namespace Temporal.WorkflowClient
 {
@@ -72,7 +73,8 @@ namespace Temporal.WorkflowClient
         public Task<IPaginatedReadOnlyCollectionPage<Workflow>> ListWorkflowsAsync(NeedsDesign oneOrMoreArgs) { return null; }
 
         // Get a client for the specified 'workflowTypeName' while generating a random GUID-based 'workflowId':
-        public Workflow GetNewWorkflow(string workflowTypeName) { return null; }        
+        public Workflow GetNewWorkflow(string workflowTypeName) { return null; }
+        public Workflow GetNewWorkflow(string workflowTypeName, WorkflowClientConfiguration clientConfig) { return null; }        
 
         // Get a client for the specified 'workflowId' while fetching 'workflowTypeName' from the server:
         public Task<Workflow> GetExistingWorkflowAsync(string workflowId) { return null; }
@@ -420,6 +422,14 @@ namespace Temporal.WorkflowClient
     {
         public String ServiceUrl { get; set; }
         public bool IsHttpsEnabled { get; set; }
+        public Func<string, string, string, IDataConverter> DataConverterFactory { get; set; }
+        // . . .
+    }
+
+    // If we rename `Workflow` type, rename this accordingly.
+    public class WorkflowClientConfiguration
+    {   
+        public IDataConverter DataConverterFactory { get; set; }
         // . . .
     }
 
@@ -435,25 +445,37 @@ namespace Temporal.WorkflowClient
 
     // ----------- -----------
     
-public sealed class WorkflowRunStubConfiguration
-{
-    public bool CanBindToNewRun { get; init; }
-    public bool CanBindToExistingActiveRun { get; init; }
-    public bool CanBindToExistingFinishedRun { get; init; }        
-    public bool MustBindToNewIfContinued { get; init; }
-    public WorkflowRunStubConfiguration()
-        : this(canBindToNewRun: true, canBindToExistingActiveRun: true, canBindToExistingFinishedRun: true, mustBindToNewIfContinued: false) { }
-    public WorkflowRunStubConfiguration(bool canBindToNewRun, bool canBindToActiveRun)
-        : this(canBindToNewRun, canBindToExistingActiveRun: canBindToActiveRun, canBindToExistingFinishedRun: true, mustBindToNewIfContinued: false) { }
-
-    public WorkflowRunStubConfiguration(bool canBindToNewRun, bool canBindToExistingActiveRun, bool canBindToExistingFinishedRun, bool mustBindToNewIfContinued)
+    public sealed class WorkflowRunStubConfiguration
     {
-        CanBindToNewRun = canBindToNewRun;
-        CanBindToExistingActiveRun = canBindToExistingActiveRun;
-        CanBindToExistingFinishedRun = canBindToExistingFinishedRun;
-        MustBindToNewIfContinued = mustBindToNewIfContinued;
+        public bool CanBindToNewRun { get; init; }
+        public bool CanBindToExistingActiveRun { get; init; }
+        public bool CanBindToExistingFinishedRun { get; init; }        
+        public bool MustBindToNewIfContinued { get; init; }
+        public WorkflowRunStubConfiguration()
+            : this(canBindToNewRun: true, canBindToExistingActiveRun: true, canBindToExistingFinishedRun: true, mustBindToNewIfContinued: false) { }
+        public WorkflowRunStubConfiguration(bool canBindToNewRun, bool canBindToActiveRun)
+            : this(canBindToNewRun, canBindToExistingActiveRun: canBindToActiveRun, canBindToExistingFinishedRun: true, mustBindToNewIfContinued: false) { }
+
+        public WorkflowRunStubConfiguration(bool canBindToNewRun, bool canBindToExistingActiveRun, bool canBindToExistingFinishedRun, bool mustBindToNewIfContinued)
+        {
+            CanBindToNewRun = canBindToNewRun;
+            CanBindToExistingActiveRun = canBindToExistingActiveRun;
+            CanBindToExistingFinishedRun = canBindToExistingFinishedRun;
+            MustBindToNewIfContinued = mustBindToNewIfContinued;
+        }
     }
-}
+
+    // ----------- -----------
+
+    // If we rename `Workflow` type, rename this accordingly.
+    //public interface IWorkflowClientInterceptor
+    //{
+
+    //    public Task<WorkflowRun> StartNewRunAsync(IWorkflowExecutionConfiguration workflowRunConfig, PayloadsCollection args, CancellationToken cancelToken) { return null; }
+    //    public Task<WorkflowRun> StartNewRunWithSignalAsync(IWorkflowExecutionConfiguration workflowRunConfig, PayloadsCollection workflowArgs, string signalName, PayloadsCollection signalArgs, CancellationToken cancelToken) { return null; }
+    //    public Task<WorkflowRun> GetRunAsync(string workflowRunId, CancellationToken cancelToken) { return null; }
+    //    public Task<WorkflowRun> GetFinalRunIfAvailableAsync(CancellationToken cancelToken) { return null; }
+    //}
 
     // ----------- -----------
 
