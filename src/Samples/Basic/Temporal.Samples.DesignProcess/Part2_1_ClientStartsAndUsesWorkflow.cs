@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.IO.Compression;
+using System.Threading;
 using System.Threading.Tasks;
 using Temporal.Common.DataModel;
 using Temporal.Serialization;
@@ -178,13 +180,14 @@ namespace Temporal.Sdk.BasicSamples
             TemporalServiceClient serviceClient = new(serviceConfig);
             TemporalServiceNamespaceClient serviceNamespaceClient = await serviceClient.GetNamespaceClientAsync("namespace");
 
-            WorkflowClientConfiguration wfConfig = new() { DataConverterFactory = new DefaultDataConverter(new[] { new GZipPayloadCodec() }) };
+            WorkflowClientConfiguration wfConfig = new() { DataConverter = new DefaultDataConverter(new[] { new GZipPayloadCodec() }) };
             WorkflowRun workflowRun = await serviceNamespaceClient.GetNewWorkflow("workflowTypeName", wfConfig).StartNewRunAsync("taskQueue");
 
             WorkflowRunResult result = await workflowRun.GetResultAsync();
             result.GetValue();
         }
 
+        #region class GZipPayloadCodec
         class GZipPayloadCodec : IPayloadCodec
         {
             private const string MetadataKey = nameof(GZipPayloadCodec);
@@ -245,5 +248,81 @@ namespace Temporal.Sdk.BasicSamples
                 return encoded;
             }
         }
+        #endregion class GZipPayloadCodec
+
+        public static async Task UseInterceptorToLogClientCallsForAllWorkflows(string[] _)
+        {
+            TemporalServiceClientConfiguration serviceConfig = new();
+            serviceConfig.WorkflowClientInterceptorFactory = (_, _, _, interceptors) =>
+            {
+                interceptors.Insert(0, new FileLoggerWorkflowClientInterceptor("SampleLog.txt"));
+            };
+
+            TemporalServiceClient serviceClient = new(serviceConfig);
+            TemporalServiceNamespaceClient serviceNamespaceClient = await serviceClient.GetNamespaceClientAsync("namespace");
+
+            WorkflowRun workflowRun = await serviceNamespaceClient.GetNewWorkflow("workflowTypeName").StartNewRunAsync("taskQueue");
+
+            WorkflowRunResult result = await workflowRun.GetResultAsync();
+            result.GetValue();
+        }
+
+        public static async Task UseInterceptorToLogClientCallsForSpecificWorkflow(string[] _)
+        {
+            TemporalServiceClientConfiguration serviceConfig = new();
+
+            TemporalServiceClient serviceClient = new(serviceConfig);
+            TemporalServiceNamespaceClient serviceNamespaceClient = await serviceClient.GetNamespaceClientAsync("namespace");
+
+            WorkflowClientConfiguration wfConfig = new()
+            {
+                WorkflowClientInterceptorFactory = (interceptors) =>
+                {
+                    interceptors.Insert(0, new FileLoggerWorkflowClientInterceptor("SampleLog.txt"));
+                }
+            };
+            WorkflowRun workflowRun = await serviceNamespaceClient.GetNewWorkflow("workflowTypeName", wfConfig).StartNewRunAsync("taskQueue");
+
+            WorkflowRunResult result = await workflowRun.GetResultAsync();
+            result.GetValue();
+        }
+
+        #region class FileLoggerWorkflowClientInterceptor
+        class FileLoggerWorkflowClientInterceptor : WorkflowClientInterceptorBase
+        {
+            private readonly string _fileName;
+
+            public FileLoggerWorkflowClientInterceptor(string fileName)
+            {
+                _fileName = fileName;
+            }
+
+            public override Workflow OnGetNewWorkflow(string workflowTypeName, WorkflowClientConfiguration clientConfig)
+            {
+                File.AppendAllText(_fileName, $"{nameof(OnGetNewWorkflow)}({nameof(workflowTypeName)}:\"({workflowTypeName})\", ...)\n");
+                return base.OnGetNewWorkflow(workflowTypeName, clientConfig);                
+            }
+
+            public override Task<Workflow> OnGetExistingWorkflowAsync(string workflowId, CancellationToken cancelToken)
+            {
+                File.AppendAllText(_fileName, $"{nameof(OnGetExistingWorkflowAsync)}({nameof(workflowId)}:\"({workflowId})\", ...)\n");
+                return base.OnGetExistingWorkflowAsync(workflowId, cancelToken);                
+            }
+
+            public override Task<WorkflowRun> OnGetRunAsync(string workflowRunId, CancellationToken cancelToken)
+            {
+                File.AppendAllText(_fileName, $"{nameof(OnGetRunAsync)}({nameof(workflowRunId)}:\"({workflowRunId})\", ...)\n");
+                return base.OnGetRunAsync(workflowRunId, cancelToken);
+            }
+
+            public override Task<WorkflowRunInfo> OnGetRunInfoAsync()
+            {
+                File.AppendAllText(_fileName, $"{nameof(OnGetRunInfoAsync)}()\n");
+                return base.OnGetRunInfoAsync();
+            }
+
+            // Other OnXxx event handlers not implemented for brievity.
+        }
+        #endregion class FileLoggerWorkflowClientInterceptor
     }
 }
