@@ -12,7 +12,7 @@ namespace Temporal.Sdk.BasicSamples
 {
     public class Part1_1_TypicalWorkflow
     {
-        [Workflow(runMethod: nameof(SayHelloAsync))]
+        [Workflow(mainMethod: nameof(SayHelloAsync))]
         public class SayHelloWorkflow
         {
             private const string AddresseeNameDefault = "Boss";

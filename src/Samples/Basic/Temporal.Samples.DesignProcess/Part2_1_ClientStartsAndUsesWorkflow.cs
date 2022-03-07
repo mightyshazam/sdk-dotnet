@@ -17,6 +17,8 @@ namespace Temporal.Sdk.BasicSamples
         public static void Main(string[] args)
         {
             Minimal(args).GetAwaiter().GetResult();
+            SpecifyNamespace(args).GetAwaiter().GetResult();
+            SpecifyNamespaceAndValidate(args).GetAwaiter().GetResult();
             WorkflowMayAlreadyBeRunning(args).GetAwaiter().GetResult();
             AvoidLongPolls(args).GetAwaiter().GetResult();
             AccessResultOfWorkflow(args).GetAwaiter().GetResult();
@@ -37,12 +39,41 @@ namespace Temporal.Sdk.BasicSamples
             Console.WriteLine($"Final state: {result.Status}.");
         }
 
+        public static async Task SpecifyNamespace(string[] _)
+        {
+            TemporalServiceClientConfiguration serviceConfig = new()
+            {
+                Namespace = "namespace"
+            };
+
+            TemporalServiceClient serviceClient = new(serviceConfig);
+
+            WorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+
+            IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
+            Console.WriteLine($"Final state: {result.Status}.");
+        }
+
+        public static async Task SpecifyNamespaceAndValidate(string[] _)
+        {
+            const string RequiredNamespace = "user-namespace";
+
+            TemporalServiceClient serviceClient = new();
+            if (! await serviceClient.TrySetNamespaceAsync(RequiredNamespace))
+            {
+                Console.WriteLine($"The namespace \"{RequiredNamespace}\" does not exist or is not accessible.");
+            }
+
+            WorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+
+            IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
+            Console.WriteLine($"Final state: {result.Status}.");
+        }
+
         public static async Task WorkflowMayAlreadyBeRunning(string[] _)
         {
-            TemporalServiceClientConfiguration serviceConfig = new();
-            TemporalServiceClient serviceClient = new(serviceConfig);
-            await serviceClient.TrySetNamespaceAsync("namespace");
-            
+            TemporalServiceClient serviceClient = new(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
+
             WorkflowConsecution workflowConsecution = await serviceClient.GetOrStartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
             await workflowConsecution.GetResultAsync();
@@ -51,12 +82,7 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task AvoidLongPolls(string[] _)
         {
-            TemporalServiceClientConfiguration serviceConfig = new()
-            {
-                Namespace = "namespace"
-            };
-
-            TemporalServiceClient serviceClient = new(serviceConfig);
+            TemporalServiceClient serviceClient = new(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
 
             WorkflowConsecution workflowConsecution = await serviceClient.GetWorkflowAsync("workflowId");
 
@@ -178,7 +204,7 @@ namespace Temporal.Sdk.BasicSamples
         {
             TemporalServiceClient serviceClient = new(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
 
-            WorkflowClientConfiguration wfConfig = new() { DataConverter = new DefaultDataConverter(new[] { new GZipPayloadCodec() }) };
+            WorkflowConsecutionClientConfiguration wfConfig = new() { DataConverter = new DefaultDataConverter(new[] { new GZipPayloadCodec() }) };
             WorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync(
                                                                             "workflowTypeName",
                                                                             "workflowId",
@@ -274,7 +300,7 @@ namespace Temporal.Sdk.BasicSamples
 
             TemporalServiceClient serviceClient = new(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
 
-            WorkflowClientConfiguration clientConfig = new()
+            WorkflowConsecutionClientConfiguration clientConfig = new()
             {
                 TemporalServiceClientInterceptorFactory = (interceptors) =>
                 {
@@ -313,7 +339,7 @@ namespace Temporal.Sdk.BasicSamples
             public override Task<WorkflowConsecution> OnGetWorkflowAsync(string workflowTypeName,
                                                                          string workflowId,
                                                                          string workflowConsecutionId,
-                                                                         WorkflowClientConfiguration clientConfig,
+                                                                         WorkflowConsecutionClientConfiguration clientConfig,
                                                                          CancellationToken cancelToken)
             {
                 File.AppendAllText(_fileName,

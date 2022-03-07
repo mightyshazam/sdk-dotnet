@@ -15,7 +15,7 @@ namespace Temporal.Sdk.BasicSamples
         // This sample is equivalent to:
         // https://github.com/temporalio/samples-java/blob/main/src/main/java/io/temporal/samples/hello/HelloPeriodic.java
 
-        [Workflow(runMethod: nameof(GreetRegularlyAsync), WorkflowTypeName = RemoteApiNames.GreetingWorkflow.TypeName)]
+        [Workflow(mainMethod: nameof(GreetRegularlyAsync), WorkflowTypeName = RemoteApiNames.GreetingWorkflow.TypeName)]
         public class HelloPeriodicWorkflow
         {
             private const int SchedulePeriodTargetSecs = 5;

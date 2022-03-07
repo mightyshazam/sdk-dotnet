@@ -14,7 +14,7 @@
 //    {
 
 
-//        // [Workflow(runMethod: nameof(RunAsync))]
+//        // [Workflow(mainMethod: nameof(RunAsync))]
 //        // public class ProcessCustomer
 //        // {
 //        //     public async Task RunAsync(Customer customerInfo, IWorkflowContext workflowCtx)
@@ -46,7 +46,7 @@
 //        // public record CustomerRating(int Value) : IDataValue;
 
 
-//        [Workflow(runMethod: nameof(MainAsync))]
+//        [Workflow(mainMethod: nameof(MainAsync))]
 //        public class SomeWorkflow
 //        {
 //            private bool _isConditionMet = false;
@@ -76,7 +76,7 @@
 
 //        //public record SomeActivityStats(int CountCompletions) : IDataValue;
 
-//[Workflow(runMethod: nameof(MainBaseAsync), WorkflowTypeName = "SomeBaseWorkflow")]
+//[Workflow(mainMethod: nameof(MainBaseAsync), WorkflowTypeName = "SomeBaseWorkflow")]
 //public class SomeWorkflowB
 //{          
 //    public virtual async Task MainBaseAsync()
@@ -85,7 +85,7 @@
 //    }                
 //}
 
-//[Workflow(runMethod: nameof(SomeWorkflowB.MainBaseAsync))]
+//[Workflow(mainMethod: nameof(SomeWorkflowB.MainBaseAsync))]
 //public class SomeWorkflowD : SomeWorkflowB
 //{          
 //    public virtual async Task MainDerivedAsync()
@@ -94,8 +94,8 @@
 //    }                
 //}
 
-////[Workflow(runMethod: "Task MainAsync(Parameters, IWorkflowContext)")]
-//[Workflow(runMethod: "System.Threading.Tasks.Task MainAsync(Temporal.Sdk.BasicSamples.Parameters, Temporal.Worker.Workflows.IWorkflowContext)")]
+////[Workflow(mainMethod: "Task MainAsync(Parameters, IWorkflowContext)")]
+//[Workflow(mainMethod: "System.Threading.Tasks.Task MainAsync(Temporal.Sdk.BasicSamples.Parameters, Temporal.Worker.Workflows.IWorkflowContext)")]
 //public class SomeOtherWorkflow
 //{    
 //    public Task<TResult> MainAsync(IWorkflowContext workflowCtx)

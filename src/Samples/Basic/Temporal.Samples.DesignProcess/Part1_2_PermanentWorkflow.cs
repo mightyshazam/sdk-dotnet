@@ -13,7 +13,7 @@ namespace Temporal.Sdk.BasicSamples
 {
     public class Part1_2_PermanentWorkflow
     {
-        [Workflow(runMethod: nameof(SpeakUntilCancelledAsync))]
+        [Workflow(mainMethod: nameof(SpeakUntilCancelledAsync))]
         public class SayGreetingWorkflow
         {            
             private const int SingleWorkflowRunIterations = 10000;

@@ -88,11 +88,8 @@ namespace Temporal.Sdk.BasicSamples
             [WorkflowSignalStub(SignalTypeName = RemoteApiNames.ShoppingCartWorkflow.Signals.Pay)]
             Task ApplyPaymentAsync(MoneyAmount amount);
 
-            [WorkflowRunMethodStub]
+            [WorkflowMainMethodStub]
             Task<OrderConfirmation> ShopAsync(User shopper);
-
-            [WorkflowRunMethodStub(CanBindToNewRun = false, CanBindToExistingRun = true)]
-            Task<OrderConfirmation> ContinueShoppingAsync();
         }
 
         public static class RemoteApiNames
@@ -128,7 +125,7 @@ namespace Temporal.Sdk.BasicSamples
         /// uses <see cref="WorkflowAttribute" />, <see cref="WorkflowSignalHandlerAttribute" /> and <see cref="WorkflowQueryHandlerAttribute" />
         /// instead.
         /// </summary>
-        [Workflow(runMethod: "Task<Part1_5_AttributesAndInterfaces.OrderConfirmation> ShopAsync(Part1_5_AttributesAndInterfaces.User)")]
+        [Workflow(mainMethod: "Task<Part1_5_AttributesAndInterfaces.OrderConfirmation> ShopAsync(Part1_5_AttributesAndInterfaces.User)")]
         public class ShoppingCart : IShoppingCart
         {
             private User _owner = null;
@@ -248,12 +245,6 @@ namespace Temporal.Sdk.BasicSamples
                         : new MoneyAmount(0, 50);
 
                 return new TryGetResult<MoneyAmount>(preTax + tax);
-            }
-
-            Task<OrderConfirmation> IShoppingCart.ContinueShoppingAsync()
-            {
-                throw new NotSupportedException($"This {nameof(IShoppingCart)} implementation does not support this RunMethod-Stub."
-                                              + $" The workflow run method is {nameof(ShopAsync)}({nameof(User)}, {nameof(IWorkflowContext)}).");
             }
 
             public async Task<OrderConfirmation> ShopAsync(User shopper)

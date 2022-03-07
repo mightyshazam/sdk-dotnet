@@ -198,7 +198,7 @@ namespace Temporal.Worker.Workflows
     /// If 'WorkflowTypeName' is not specified OR null OR Empty OR WhiteSpaceOnly, then the workflow type name is auto-populated
     /// by taking the class type name.
     /// 
-    /// 'RunMethod' must be the name of the method that implements them main workflow Run method.
+    /// 'MainMethod' must be the name of the method that implements them main workflow Run method.
     /// Such method must have one of the following signatures ("RunAsync" is a placeholder for any method name):
     ///     public Task RunAsync();
     ///     public Task RunAsync(IWorkflowContext workflowCtx);
@@ -211,41 +211,41 @@ namespace Temporal.Worker.Workflows
     ///     public Task{PayloadsCollection> RunAsync(PayloadsCollection input, IWorkflowContext workflowCtx);
     /// otherwise an error during worker initialization is generated.
     /// 
-    /// If the method named by 'RunMethod' property is overloaded, the property must unambiguously specify a particular overload
+    /// If the method named by 'MainMethod' property is overloaded, the property must unambiguously specify a particular overload
     /// by specifying the full signature. In such a case, either ALL or NONE of the types must use the fully qualified type names.
     /// E.g., see <c>Part1_5_AttributesAndInterfaces</c>. There it would be sufficient to specify
     /// 
     /// <code>
-    ///     [Workflow(runMethod: "ShopAsync")]
+    ///     [Workflow(mainMethod: "ShopAsync")]
     /// </code>
     /// 
     /// since it is not ambiguous. Other valid options are:
     /// 
     /// <code>
-    ///     [Workflow(runMethod: "Task<Part1_5_AttributesAndInterfaces.OrderConfirmation> ShopAsync(Part1_5_AttributesAndInterfaces.User)")]
-    ///     [Workflow(runMethod: "System.Threading.Tasks.Task<Temporal.Sdk.BasicSamples.Part1_5_AttributesAndInterfaces.OrderConfirmation> ShopAsync(Temporal.Sdk.BasicSamples.Part1_5_AttributesAndInterfaces.User)")]
+    ///     [Workflow(mainMethod: "Task<Part1_5_AttributesAndInterfaces.OrderConfirmation> ShopAsync(Part1_5_AttributesAndInterfaces.User)")]
+    ///     [Workflow(mainMethod: "System.Threading.Tasks.Task<Temporal.Sdk.BasicSamples.Part1_5_AttributesAndInterfaces.OrderConfirmation> ShopAsync(Temporal.Sdk.BasicSamples.Part1_5_AttributesAndInterfaces.User)")]
     /// </code>
     /// 
     /// The following is will never be matched because it specifies a namespace for Task, but not for the other types:
     /// (note that 'Part1_5_AttributesAndInterfaces' is the outer type, not the namespace, so it must always be present)
     /// 
     /// <code>
-    ///     [Workflow(runMethod: "System.Threading.Tasks.Task<Part1_5_AttributesAndInterfaces.OrderConfirmation> ShopAsync(Part1_5_AttributesAndInterfaces.User)")]
+    ///     [Workflow(mainMethod: "System.Threading.Tasks.Task<Part1_5_AttributesAndInterfaces.OrderConfirmation> ShopAsync(Part1_5_AttributesAndInterfaces.User)")]
     /// </code>
     /// 
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
     public sealed class WorkflowAttribute : Attribute
     {
-        public string RunMethod { get; }
+        public string MainMethod { get; }
 
         public string WorkflowTypeName { get; set; }
 
         public bool IsWorkflowTypeNameSetExplicitly { get; }
 
-        public WorkflowAttribute(string runMethod)
+        public WorkflowAttribute(string mainMethod)
         {
-            RunMethod = runMethod;
+            MainMethod = mainMethod;
         }
 
         public override bool IsDefaultAttribute()

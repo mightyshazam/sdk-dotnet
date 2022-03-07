@@ -9,13 +9,13 @@ namespace ReflectionAnalysisPoC
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = true, AllowMultiple = true)]
     public class WorkflowAttribute : Attribute
     {
-        public string RunMethod { get; }
+        public string MainMethod { get; }
 
         public string WorkflowTypeName { get; set; }
 
-        public WorkflowAttribute(string runMethod)
+        public WorkflowAttribute(string mainMethod)
         {
-            RunMethod = runMethod;
+            MainMethod = mainMethod;
         }
 
         public override bool IsDefaultAttribute()

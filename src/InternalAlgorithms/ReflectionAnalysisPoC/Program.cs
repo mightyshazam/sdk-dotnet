@@ -367,7 +367,7 @@ namespace ReflectionAnalysisPoC
 
                 if (attr is WorkflowAttribute wfAttr)
                 {
-                    Console.Write($" RunMethod=\"{wfAttr.RunMethod}\"");
+                    Console.Write($" MainMethod=\"{wfAttr.MainMethod}\"");
                 }
 
                 if (attr is WorkflowQueryAttribute wfQuAttr)
@@ -478,7 +478,7 @@ namespace ReflectionAnalysisPoC
                 WorkflowAttribute fwAttr = attr as WorkflowAttribute;
                 if (fwAttr != null)
                 {
-                    Console.WriteLine($"        {fwAttr.GetType().Name} (default={fwAttr.IsDefaultAttribute()}), RunMethod=\"{fwAttr.RunMethod}\"");
+                    Console.WriteLine($"        {fwAttr.GetType().Name} (default={fwAttr.IsDefaultAttribute()}), MainMethod=\"{fwAttr.MainMethod}\"");
                 }
                 else
                 {

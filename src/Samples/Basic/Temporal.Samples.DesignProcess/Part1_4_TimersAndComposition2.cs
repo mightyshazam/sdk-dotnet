@@ -13,7 +13,7 @@ namespace Temporal.Sdk.BasicSamples
 {
     public class Part1_4_TimersAndComposition2
     {        
-        [Workflow(runMethod: nameof(CountdownAsync))]
+        [Workflow(mainMethod: nameof(CountdownAsync))]
         public class CountdownTimer
         {
             private static readonly TimeSpan CountdownStep = TimeSpan.FromSeconds(10);
