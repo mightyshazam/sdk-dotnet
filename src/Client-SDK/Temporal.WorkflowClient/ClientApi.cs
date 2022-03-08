@@ -16,14 +16,14 @@ namespace Temporal.WorkflowClient
     {
     }
 
+    // *** !Re CancellationTokens: In the actual implementation, most APIs that take a CancellationToken will also have
+    // *** some overload(s) that do not and use CancellationToken.None instead.
+    // *** For now, we omit most of such overloads for brevity and include only the ones needed for samples.
+
     #region TemporalServiceClient
 
     public interface ITemporalServiceClient
     {
-        // !Re CancellationTokens: In the actual implementation, most APIs that take a CancellationToken will also have
-        // some overload(s) that do not and use CancellationToken.None instead.
-        // For now, we omit most of such overloads for brevity and include only the ones needed for samples.
-
         #region -- Namespace settings for the client --
         // A TemporalServiceClient is OPTIONALLY "bound" to a namespace.
         // If the client is NOT bound to a namespace, then only APIs that do not require a namespace can be invoked.
