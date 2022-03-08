@@ -20,6 +20,7 @@ namespace Temporal.Sdk.BasicSamples
             SpecifyNamespace(args).GetAwaiter().GetResult();
             SpecifyNamespaceAndValidate(args).GetAwaiter().GetResult();
             ValidateConnectionEagerly(args).GetAwaiter().GetResult();
+            ValidateConnectionEagerly2(args).GetAwaiter().GetResult();
             WorkflowMayAlreadyBeRunning(args).GetAwaiter().GetResult();
             AvoidLongPolls(args).GetAwaiter().GetResult();
             AccessResultOfWorkflow(args).GetAwaiter().GetResult();
@@ -80,6 +81,22 @@ namespace Temporal.Sdk.BasicSamples
 
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateNewAndInitializeConnectionAsync(serviceConfig);
             
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+
+            IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
+            Console.WriteLine($"Final state: {result.Status}.");
+        }
+
+        public static async Task ValidateConnectionEagerly2(string[] _)
+        {
+            TemporalServiceClientConfiguration serviceConfig = new()
+            {
+                Namespace = "namespace"
+            };
+
+            ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
+            await serviceClient.InitializeConnectionAsync();
+
             IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
             IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
