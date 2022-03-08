@@ -50,6 +50,19 @@ namespace Temporal.WorkflowClient
         #endregion -- Namespace settings for the client --
 
 
+        #region -- Connection management --
+        bool IsConectionInitialized { get; }
+
+        /// <summary>
+        /// Before the client can talk to the Temporal server, it must execute GetSystemInfo(..) to check server health
+        /// and get server capabilities. This API will explicitly perform that. If this is not done explicitly, it will happen
+        /// automatically before placing any other calls. <br />
+        /// This will also validate connection to the namespace if it was set in the ctor.
+        /// </summary>
+        Task InitializeConnectionAsync();
+        #endregion -- Connection management --
+
+
         #region -- Workflow access and control APIs --
 
         #region StartNewWorkflowAsync(..)
@@ -402,20 +415,16 @@ namespace Temporal.WorkflowClient
 
         public TemporalServiceClient(TemporalServiceClientConfiguration config) { }
 
-        public bool IsConectionInitialized { get; }
-
-        /// <summary>
-        /// Before the client can talk to the Temporal server, it must execute GetSystemInfo(..) to check server health
-        /// and get server capabilities. This API will explicitly perform that. If this is not done explicitly, it will happen
-        /// automatically before placing any other calls. <br />
-        /// This will also validate connection to the namespace if it was set in the ctor.
-        /// </summary>
-        public Task InitializeConnectionAsync() { return null; }
 
         #region --- --- Interface implementation --- ---
 
         // ** All clarifications and comments are in the interface definition.
         // ** This section is just to make things compile for now.
+
+        #region -- Connection management --
+        public bool IsConectionInitialized { get; }
+        public Task InitializeConnectionAsync() { return null; }
+        #endregion -- Connection management --
 
         #region -- Namespace settings for the client --
         public string Namespace { get; }
@@ -683,9 +692,9 @@ namespace Temporal.WorkflowClient
         Task SignalAsync(string signalName, IDataValue arg);
         Task SignalAsync(string signalName, IDataValue arg, CancellationToken cancelToken);
 
-        Task<TResult> QueryAsync<TResult>(string queryName) where TResult : IDataValue;
-        Task<TResult> QueryAsync<TResult>(string queryName, CancellationToken cancelToken) where TResult : IDataValue;
-        Task<TResult> QueryAsync<TResult>(string queryName, IDataValue arg, CancellationToken cancelToken) where TResult : IDataValue;
+        Task<IWorkflowQueryResult<TResult>> QueryAsync<TResult>(string queryName) where TResult : IDataValue;
+        Task<IWorkflowQueryResult<TResult>> QueryAsync<TResult>(string queryName, CancellationToken cancelToken) where TResult : IDataValue;
+        Task<IWorkflowQueryResult<TResult>> QueryAsync<TResult>(string queryName, IDataValue arg, CancellationToken cancelToken) where TResult : IDataValue;
 
         Task RequestCancellationAsync();
         Task RequestCancellationAsync(CancellationToken cancelToken);
@@ -748,38 +757,51 @@ namespace Temporal.WorkflowClient
         // @ToDo. Roughly corresponds to DescribeWorkflowExecutionResponse.
     }
 
-    public interface IWorkflowRunResultBase
+    #region Workflow Routine Results
+
+    public interface IWorkflowRoutineResult
     {
         PayloadsCollection ResultPayload { get; }
-        bool IsCompletedNormally { get; }
         WorkflowExecutionStatus Status { get; }
         Exception Failure { get; }
         IDataValue GetValue(); // Wraps if result was not IDataValue. Returns IDataValue.Void.Instance if there is no result value.
     }
 
-    public interface IWorkflowRunResultBase<out TResult> where TResult : IDataValue
+    public interface IWorkflowRoutineResult<out TResult> : IWorkflowRoutineResult
+                                                                    where TResult : IDataValue
     {
         TResult Value { get; }
     }
 
-    public interface IWorkflowConsecutionResult : IWorkflowRunResultBase
-    {        
-    }
-
-    public interface IWorkflowConsecutionResult<out TResult> : IWorkflowRunResultBase<TResult> where TResult : IDataValue
+    public interface IWorkflowQueryResult<out TResult> : IWorkflowRoutineResult<TResult>
+                                                                    where TResult : IDataValue
     {
     }
 
-    public interface IWorkflowRunResult : IWorkflowRunResultBase
+    public interface IWorkflowConsecutionResult : IWorkflowRoutineResult
     {
+        bool IsCompletedNormally { get; }
+    }
+
+    public interface IWorkflowConsecutionResult<out TResult> : IWorkflowConsecutionResult, IWorkflowRoutineResult<TResult>
+                                                                    where TResult : IDataValue
+    {
+    }
+
+    public interface IWorkflowRunResult : IWorkflowRoutineResult
+    {
+        bool IsCompletedNormally { get; }
         RetryState RetryState { get; }
         bool IsContinuedAsNew { get; }
-    }
-
-    public interface IWorkflowRunResult<out TResult> : IWorkflowRunResultBase<TResult>, IWorkflowRunResult where TResult : IDataValue
-    {
         Task<TryGetResult<IWorkflowRun>> TryGetContinuationRunAsync();
     }
+
+    public interface IWorkflowRunResult<out TResult> : IWorkflowRunResult, IWorkflowRoutineResult<TResult>
+                                                                    where TResult : IDataValue
+    {
+    }
+
+    #endregion Workflow Routine Results
 
     public class TemporalServiceClientConfiguration
     {

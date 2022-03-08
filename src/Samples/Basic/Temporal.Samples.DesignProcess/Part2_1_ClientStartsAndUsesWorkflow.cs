@@ -164,7 +164,7 @@ namespace Temporal.Sdk.BasicSamples
 
             // Push out target time by 30 secs:
             // Query the workflow, add a minute, signal workflow.
-            TargetTimePayload prevTargetTime = await workflowConsecution.QueryAsync<TargetTimePayload>("GetCurrentTargetTimeUtc");
+            TargetTimePayload prevTargetTime = (await workflowConsecution.QueryAsync<TargetTimePayload>("GetCurrentTargetTimeUtc")).Value;
             TargetTimePayload newTargetTime = new(prevTargetTime.UtcDateTime.AddSeconds(30));
             await workflowConsecution.SignalAsync(RemoteApiNames.CountdownTimerWorkflow.Signals.UpdateTargetTime, newTargetTime);
 
