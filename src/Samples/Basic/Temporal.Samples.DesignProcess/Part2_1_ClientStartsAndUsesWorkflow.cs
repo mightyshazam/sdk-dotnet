@@ -143,10 +143,9 @@ namespace Temporal.Sdk.BasicSamples
             }
             else
             {
-                Console.WriteLine($"Could not obrain the result value becasue the workflow returned"
+                Console.WriteLine($"Could not obtain the result value because the workflow returned"
                                 + $" a value of type {result.GetValue().GetType().Name} where {nameof(Int32)} was expected.");
             }
-            
         }
 
         public static async Task UseSignalsAndQueries(string[] _)
@@ -154,10 +153,11 @@ namespace Temporal.Sdk.BasicSamples
             ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
 
             // Start countdown timer to finish in 1 min:   
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("CountdownTimer",
-                                                                                                "TestTimerXyz",
-                                                                                                "taskQueue",
-                                                                                                new TargetTimePayload(DateTime.UtcNow.AddMinutes(1)));
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync(
+                                                                                    "CountdownTimer",
+                                                                                    "TestTimerXyz",
+                                                                                    "taskQueue",
+                                                                                    new TargetTimePayload(DateTime.UtcNow.AddMinutes(1)));
 
             // Do something else...
             await Task.Delay(TimeSpan.FromSeconds(30));
@@ -312,8 +312,6 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task UseInterceptorToLogClientCallsForSpecificWorkflow(string[] _)
         {
-            TemporalServiceClientConfiguration serviceConfig = new();
-
             ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
 
             WorkflowConsecutionClientConfiguration clientConfig = new()
@@ -324,10 +322,10 @@ namespace Temporal.Sdk.BasicSamples
                 }
             };
             IWorkflowConsecution workflowConsecution = await serviceClient.GetWorkflowAsync(workflowTypeName: null,
-                                                                                           workflowId: "xyz",
-                                                                                           workflowConsecutionId: null,
-                                                                                           clientConfig,
-                                                                                           CancellationToken.None);
+                                                                                            workflowId: "xyz",
+                                                                                            workflowConsecutionId: null,
+                                                                                            clientConfig,
+                                                                                            CancellationToken.None);
 
             await workflowConsecution.GetResultAsync();
         }
@@ -367,7 +365,7 @@ namespace Temporal.Sdk.BasicSamples
                 return base.OnGetWorkflowAsync(workflowTypeName, workflowId, workflowConsecutionId, clientConfig, cancelToken);                
             }
 
-            // Other OnXxx event handlers not implemented for brievity.
+            // Other OnXxx event handlers not implemented for brevity.
 
             class ConsecutionInterceptor : TemporalServiceClientInterceptorBase.WorkflowConsecutionInterceptorBase
             {
@@ -379,7 +377,7 @@ namespace Temporal.Sdk.BasicSamples
                     return base.OnGetResultAsync<TResult>(cancelToken);
                 }
 
-                // Other OnXxx event handlers not implemented for brievity.
+                // Other OnXxx event handlers not implemented for brevity.
             }
 
             class RunInterceptor : TemporalServiceClientInterceptorBase.WorkflowRunInterceptorBase
@@ -392,7 +390,7 @@ namespace Temporal.Sdk.BasicSamples
                     return base.OnGetInfoAsync();
                 }
 
-                // Other OnXxx event handlers not implemented for brievity.
+                // Other OnXxx event handlers not implemented for brevity.
             }
         }
         #endregion class FileLoggerWorkflowClientInterceptor

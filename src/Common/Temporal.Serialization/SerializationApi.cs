@@ -29,12 +29,12 @@ namespace Temporal.Serialization
 
     public sealed class DefaultDataConverter : IDataConverter
     {
-        private static IList<IPayloadConverter> CreateDefaultConverters()
+        public static IList<IPayloadConverter> CreateDefaultConverters()
         {
             return null;
         }
 
-        private static IList<IPayloadCodec> CreateDefaultCodecs()
+        public static IList<IPayloadCodec> CreateDefaultCodecs()
         {
             return null;
         }

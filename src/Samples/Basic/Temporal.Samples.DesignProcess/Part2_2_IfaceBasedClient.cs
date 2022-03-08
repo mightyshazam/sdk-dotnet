@@ -43,7 +43,7 @@ namespace Temporal.Sdk.BasicSamples
             if ((await serviceClient.TryGetWorkflowAsync(shopper.UserKey)).IsSuccess(out IWorkflowConsecution wfConsecution)
                     && await wfConsecution.IsRunningAsync())
             {
-                // Get a stuf that is bound to the specified consecution:
+                // Get a stub that is bound to the specified consecution:
                 // (Note that both 'IProductList' and 'IShoppingCart' are valid here.)
                 IProductList cart = wfConsecution.GetStub<IProductList>();  
 
@@ -127,8 +127,8 @@ namespace Temporal.Sdk.BasicSamples
             try
             {
                 // This will cause the stub to be bound to a consecution according to the config specified in `CreateUnboundWorkflowStub(..)`,
-                // i.e to en EXISTING and RUNNING consecution. If no such consecution is found, this will throw.
-                // Because we only bind to a redily running consecution, the input parameters will be ignored, so ew can just specify null.
+                // i.e to an EXISTING and RUNNING consecution. If no such consecution is found, this will throw.
+                // Because we only bind to a readily running consecution, the input parameters will be ignored, so we can just specify null.
                 order = cart.ShopAsync(null);                
             }
             catch (NeedsDesignException)
@@ -210,7 +210,7 @@ namespace Temporal.Sdk.BasicSamples
         private static async Task AddProductToNewOrExistingCart_Logic(User shopper, Product product, IShoppingCart cart)
         {
             // Based on the config passed to `CreateUnboundWorkflowStub(..)`, this will bind to a new or an existing consecution.
-            // We must pass valid input parameter in case a new consecution is started.
+            // We must pass a valid input parameter in case a new consecution is started.
             await cart.ShopAsync(shopper);  
 
             Console.WriteLine("Current items:");

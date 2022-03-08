@@ -38,7 +38,7 @@ namespace Temporal.WorkflowClient
         // 2) Call TrySetNamespaceAsync(..).
         //    In that case the API will validate that the namespace exists and can be accessed. If yes, the client will be bound to 
         //    that namespace and the API will return True. Otherwise the previously bound namespace will remain, and the API will
-        //    return False. Note that in this scenario, subsequent invocations on APIs that require a namespace may still throw just
+        //    return False. Note that in this scenario, subsequent invocations of APIs that require a namespace may still throw just
         //    like in the 1st case, because the namespace may be altered concurrently on the server by a different client.
         string Namespace { get; }
 
@@ -862,8 +862,8 @@ namespace Temporal.WorkflowClient
         Task<IWorkflowConsecution> EnsureIsBoundAsync();
         Task<IWorkflowConsecution> EnsureIsBoundAsync(WorkflowConsecutionStubConfiguration stubConfig);
         Task<IWorkflowConsecution> EnsureIsBoundAsync(IDataValue inputArgs,
-                                                     WorkflowConsecutionStubConfiguration stubConfig,
-                                                     CancellationToken cancelToken);
+                                                      WorkflowConsecutionStubConfiguration stubConfig,
+                                                      CancellationToken cancelToken);
     }
 
     // ----------- -----------
@@ -928,10 +928,10 @@ namespace Temporal.WorkflowClient
                                                              CancellationToken cancelToken);
 
         Task<IWorkflowConsecution> OnGetWorkflowAsync(string workflowTypeName,
-                                                     string workflowId,
-                                                     string workflowConsecutionId,
-                                                     WorkflowConsecutionClientConfiguration clientConfig,
-                                                     CancellationToken cancelToken);
+                                                      string workflowId,
+                                                      string workflowConsecutionId,
+                                                      WorkflowConsecutionClientConfiguration clientConfig,
+                                                      CancellationToken cancelToken);
         Task<IWorkflowRun> OnGetWorkflowRunAsync(string workflowId,
                                                  string workflowRunId,
                                                  WorkflowConsecutionClientConfiguration clientConfig,
