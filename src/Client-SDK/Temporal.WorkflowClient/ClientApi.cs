@@ -384,14 +384,14 @@ namespace Temporal.WorkflowClient
     {
         private static TemporalServiceClientConfiguration CreateDefaultConfiguration() { return new TemporalServiceClientConfiguration(); }
 
-        public async Task<TemporalServiceClient> CreateNewAndInitializeConnectionAsync()
+        public static async Task<TemporalServiceClient> CreateNewAndInitializeConnectionAsync()
         {
             TemporalServiceClient client = new();
             await client.InitializeConnectionAsync();
             return client;
         }
 
-        public async Task<TemporalServiceClient> CreateNewAndInitializeConnectionAsync(TemporalServiceClientConfiguration config)
+        public static async Task<TemporalServiceClient> CreateNewAndInitializeConnectionAsync(TemporalServiceClientConfiguration config)
         {
             TemporalServiceClient client = new(config);
             await client.InitializeConnectionAsync();
@@ -407,7 +407,8 @@ namespace Temporal.WorkflowClient
         /// <summary>
         /// Before the client can talk to the Temporal server, it must execute GetSystemInfo(..) to check server health
         /// and get server capabilities. This API will explicitly perform that. If this is not done explicitly, it will happen
-        /// automatically before placing any other calls. 
+        /// automatically before placing any other calls. <br />
+        /// This will also validate connection to the namespace if it was set in the ctor.
         /// </summary>
         public Task InitializeConnectionAsync() { return null; }
 
