@@ -40,7 +40,7 @@ namespace Temporal.Sdk.BasicSamples
             ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "Shopping" });
 
             // Get a handle to a EXISTING consecution with the workflowId `shopper.UserKey` AND make sure it is running:
-            if ((await serviceClient.TryGetWorkflowAsync(shopper.UserKey)).IsSuccess(out WorkflowConsecution wfConsecution)
+            if ((await serviceClient.TryGetWorkflowAsync(shopper.UserKey)).IsSuccess(out IWorkflowConsecution wfConsecution)
                     && await wfConsecution.IsRunningAsync())
             {
                 // Get a stuf that is bound to the specified consecution:
