@@ -298,8 +298,8 @@ namespace Temporal.WorkflowClient
         TStub CreateUnboundWorkflowStub<TStub>(string workflowTypeName,
                                                string workflowId,
                                                string taskQueue,
-                                               StartWorkflowChainConfiguration workflowConfig,
-                                               WorkflowChainStubConfiguration stubConfig);
+                                               WorkflowChainStubConfiguration stubConfig,
+                                               StartWorkflowChainConfiguration workflowConfig);
         #endregion GetWorkflowStub<TStub>(..)
 
 
@@ -520,8 +520,8 @@ namespace Temporal.WorkflowClient
         public TStub CreateUnboundWorkflowStub<TStub>(string workflowTypeName,
                                                       string workflowId,
                                                       string taskQueue,
-                                                      StartWorkflowChainConfiguration workflowConfig,
-                                                      WorkflowChainStubConfiguration stubConfig) { return default(TStub); }
+                                                      WorkflowChainStubConfiguration stubConfig,
+                                                      StartWorkflowChainConfiguration workflowConfig) { return default(TStub); }
         #endregion GetWorkflowStub<TStub>(..)
 
 

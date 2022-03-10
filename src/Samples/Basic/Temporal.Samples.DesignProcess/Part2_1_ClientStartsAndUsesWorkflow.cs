@@ -103,7 +103,7 @@ namespace Temporal.Sdk.BasicSamples
             // Start countdown timer to finish in 1 min:   
             IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("CountdownTimer",
                                                                                   "TestTimerXyz",
-                                                                                  "taskQueue",
+                                                                                  "TaskQueue",
                                                                                   new TargetTimePayload(DateTime.UtcNow.AddMinutes(1)));
 
             // Do something else...
@@ -127,7 +127,7 @@ namespace Temporal.Sdk.BasicSamples
 
             // Get latest workflow with the specified Id or throw if no workflows with the specified Id can be found:
             IWorkflowChain latestChain = await serviceClient.GetWorkflowAsync("workflowId");
-            
+
             // The Task returned by this API is completed when the cancellation request call is completed,
             // i.e. the server persisted the request to cancel into the workflow history.
             // At that time the workflow implementation may not have yet processed the cancellation request.
@@ -143,6 +143,127 @@ namespace Temporal.Sdk.BasicSamples
                             + (result.Status == WorkflowExecutionStatus.Canceled ? "was respected" : "was not respected")
                             + " by the workflow.");
         }
+
+        public static async Task CancelWorkflow2(string[] _)
+        {
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
+
+            // Get latest workflow with the specified Id or throw if no workflows with the specified Id can be found:
+            IWorkflowChain latestChain = await serviceClient.GetWorkflowAsync("workflowId");
+            
+            // The Task returned by this API is completed when the cancellation request call is completed,
+            // i.e. the server persisted the request to cancel into the workflow history.
+            // At that time the workflow implementation may not have yet processed the cancellation request.
+            // This API will throw if latestChain is no longer running which may happen concurrently
+            // after the above check.
+            await latestChain.RequestCancellationAsync();
+
+            // If we want to know that the workflow reacted to the cancellation we must await its conclusion.            
+            // (note that if the workflow does not respect the cancellation, this may await indefinitely)
+            await latestChain.GetResultAsync();            
+        }
+
+        public static async Task CancelWorkflowAndWaitWithProgress()
+        {
+            TimeSpan progressUpdatePeriod = TimeSpan.FromSeconds(10);
+
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
+           
+            IWorkflowChain workflow = await serviceClient.GetWorkflowAsync("workflowId");
+
+            // Request cancellation:
+            await workflow.RequestCancellationAsync();
+            DateTime cancellationTime = DateTime.Now;
+
+            // This task represents the conclusion of the workflow with any status:
+            Task<IWorkflowChainResult> workflowConclusion = workflow.GetResultAsync();
+
+            // This task represents the conclusion of the display update period:
+            Task displayDelayConclusion = Task.Delay(progressUpdatePeriod);
+
+            // Await until either the workflow or the waiting period finishes:
+            await Task.WhenAny(workflowConclusion, displayDelayConclusion);
+
+            // If workflow is still running, display progress and keep waiting:
+            while(! workflowConclusion.IsCompleted)
+            {
+                Console.WriteLine($"Still waiting for the workflow to react to the cancellation request."
+                                + $" Time elapsed: {DateTime.Now - cancellationTime}.");
+
+                displayDelayConclusion = Task.Delay(progressUpdatePeriod);
+                await Task.WhenAny(workflowConclusion, displayDelayConclusion);
+            }
+
+            // Get the result handle and display the final status:
+            IWorkflowChainResult workflowResult = workflowConclusion.Result;
+            Console.WriteLine($"Workflow finished. Terminal status: {workflowResult.Status}.");
+        }
+
+        public static async Task AccessWorkflowResultValue()
+        {
+            // Get the workflow:
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
+            IWorkflowChain workflow = await serviceClient.GetWorkflowAsync("workflowId");
+            
+            // Get the workflow result:
+            ComputationResult resultValue = (await workflow.GetResultAsync<ComputationResult>()).Value;
+
+            // Print result:
+            Console.WriteLine($"Workflow completed. Result value: \"{resultValue}\".");
+        }
+
+        public static async Task AccessWorkflowResultValue2()
+        {
+            // Get the workflow:
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);           
+            IWorkflowChain workflow = await serviceClient.GetWorkflowAsync("workflowId");
+
+            // Declare variables used below:
+            Task<IWorkflowChainResult<ComputationResult>> workflowConclusion;
+            IWorkflowChainResult<ComputationResult> workflowResult;
+            ComputationResult resultValue;
+
+            // Expand the ONE LINE in the previous sample into small steps and add try-catch clauses that clarify
+            // what exceptions may or may not occur at each step:
+            
+            try
+            {
+                workflowConclusion = workflow.GetResultAsync<ComputationResult>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error while initiating the long poll to wait for the conclusion of the workflow: {ex}");
+                return;
+            }
+
+            try
+            {
+                workflowResult = await workflowConclusion;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Network or Temporal server error while waiting for the workflow to run to conclusion: {ex}");
+                return;
+            }
+
+            try
+            {
+                resultValue = workflowResult.Value;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting workflow result value"
+                                + $" (workflow run to conclusion, but it did not complete successfully): {ex}");
+                return;
+            }
+           
+            Console.WriteLine($"Workflow completed. Result value: \"{resultValue}\".");
+        }
+
 
         public static async Task UsePayloadCodecToCompressPayloadsForAllWorkflows(string[] _)
         {
@@ -258,7 +379,7 @@ namespace Temporal.Sdk.BasicSamples
                 return base.OnServiceClient_GetWorkflowAsync(workflowId, workflowChainId, cancelToken);                
             }
 
-            // Other OnXxx event handlers not implemented for brevity.
+            // Other OnServiceClient_Xxx event handlers not implemented for brevity.
 
             
             public override Task<IWorkflowChainResult<TResult>> OnChain_GetResultAsync<TResult>(CancellationToken cancelToken)
@@ -269,7 +390,7 @@ namespace Temporal.Sdk.BasicSamples
                 return base.OnChain_GetResultAsync<TResult>(cancelToken);
             }
 
-            // Other OnXxx event handlers not implemented for brevity.
+            // Other OnChain_Xxx event handlers not implemented for brevity.
 
             public override Task<WorkflowRunInfo> OnRun_GetInfoAsync()
             {
@@ -279,7 +400,7 @@ namespace Temporal.Sdk.BasicSamples
                 return base.OnRun_GetInfoAsync();
             }
 
-            // Other OnXxx event handlers not implemented for brevity.
+            // Other OnRun_Xxx event handlers not implemented for brevity.
         }
         #endregion class FileLoggerWorkflowClientInterceptor
     }

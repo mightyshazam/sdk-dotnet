@@ -160,7 +160,6 @@ namespace Temporal.Sdk.BasicSamples
                                                     "ShoppingCart",
                                                     shopper.UserKey,
                                                     "taskQueue",
-                                                    StartWorkflowChainConfiguration.Default,
                                                     new WorkflowChainStubConfiguration(canBindToNewChain: false,
                                                                                        canBindToExistingRunningChain: true,
                                                                                        canBindToExistingFinishedChain: false));
