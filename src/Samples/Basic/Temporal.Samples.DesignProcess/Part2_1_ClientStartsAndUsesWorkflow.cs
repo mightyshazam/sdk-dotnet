@@ -101,11 +101,10 @@ namespace Temporal.Sdk.BasicSamples
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Start countdown timer to finish in 1 min:   
-            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync(
-                                                                                    "CountdownTimer",
-                                                                                    "TestTimerXyz",
-                                                                                    "taskQueue",
-                                                                                    new TargetTimePayload(DateTime.UtcNow.AddMinutes(1)));
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("CountdownTimer",
+                                                                                  "TestTimerXyz",
+                                                                                  "taskQueue",
+                                                                                  new TargetTimePayload(DateTime.UtcNow.AddMinutes(1)));
 
             // Do something else...
             await Task.Delay(TimeSpan.FromSeconds(30));
@@ -248,8 +247,8 @@ namespace Temporal.Sdk.BasicSamples
             }
 
             public override Task<IWorkflowChain> OnServiceClient_GetWorkflowAsync(string workflowId,
-                                                                                        string workflowChainId,
-                                                                                        CancellationToken cancelToken)
+                                                                                  string workflowChainId,
+                                                                                  CancellationToken cancelToken)
             {
                 File.AppendAllText(_fileName,
                                    $"{nameof(OnServiceClient_GetWorkflowAsync)}({nameof(workflowId)}:\"({workflowId})\","

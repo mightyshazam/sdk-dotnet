@@ -93,8 +93,8 @@ namespace Temporal.Sdk.BasicSamples
                 // (any stub can be cast to 'IWorkflowRunStub')
 
                 WorkflowChainStubConfiguration bindConfig = new (canBindToNewChain: false,
-                                                                       canBindToExistingRunningChain: true,
-                                                                       canBindToExistingFinishedChain: false);
+                                                                 canBindToExistingRunningChain: true,
+                                                                 canBindToExistingFinishedChain: false);
 
                 await ((IWorkflowChainStub) cart).EnsureIsBoundAsync(bindConfig);  
 
@@ -118,8 +118,8 @@ namespace Temporal.Sdk.BasicSamples
                                                     shopper.UserKey,
                                                     "taskQueue",
                                                     new WorkflowChainStubConfiguration(canBindToNewChain: false,
-                                                                                             canBindToExistingRunningChain: true,
-                                                                                             canBindToExistingFinishedChain: false));
+                                                                                       canBindToExistingRunningChain: true,
+                                                                                       canBindToExistingFinishedChain: false));
             
             return await PayAndWaitForOrderCompletionIfUserIsShopping_Logic(paymentAmount, cart);
         }
@@ -162,8 +162,8 @@ namespace Temporal.Sdk.BasicSamples
                                                     "taskQueue",
                                                     StartWorkflowChainConfiguration.Default,
                                                     new WorkflowChainStubConfiguration(canBindToNewChain: false,
-                                                                                             canBindToExistingRunningChain: true,
-                                                                                             canBindToExistingFinishedChain: false));
+                                                                                       canBindToExistingRunningChain: true,
+                                                                                       canBindToExistingFinishedChain: false));
 
             return await AddProductToExistingCart2_Logic(product, cart);
         }
@@ -206,8 +206,8 @@ namespace Temporal.Sdk.BasicSamples
                                                     shopper.UserKey,
                                                     "taskQueue",
                                                     new WorkflowChainStubConfiguration(canBindToNewChain: true,
-                                                                                             canBindToExistingRunningChain: true,
-                                                                                             canBindToExistingFinishedChain: false));
+                                                                                       canBindToExistingRunningChain: true,
+                                                                                       canBindToExistingFinishedChain: false));
 
 
             await AddProductToNewOrExistingCart_Logic(shopper, product, cart);
