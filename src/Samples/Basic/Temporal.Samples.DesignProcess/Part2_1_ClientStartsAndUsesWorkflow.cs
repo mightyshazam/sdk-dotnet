@@ -33,69 +33,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task Minimal(string[] _)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient();
-            
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
-
-            IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
-            Console.WriteLine($"Final state: {result.Status}.");
-        }
-
-        public static async Task SpecifyNamespace(string[] _)
-        {
-            TemporalServiceClientConfiguration serviceConfig = new()
-            {
-                Namespace = "namespace"
-            };
-
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
-
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
-
-            IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
-            Console.WriteLine($"Final state: {result.Status}.");
-        }
-
-        public static async Task SpecifyNamespaceAndValidate(string[] _)
-        {
-            const string RequiredNamespace = "user-namespace";
-
-            ITemporalServiceClient serviceClient = new TemporalServiceClient();
-            if (! await serviceClient.TrySetNamespaceAsync(RequiredNamespace))
-            {
-                Console.WriteLine($"The namespace \"{RequiredNamespace}\" does not exist or is not accessible.");
-            }
-
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
-
-            IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
-            Console.WriteLine($"Final state: {result.Status}.");
-        }
-
-        public static async Task ValidateConnectionEagerly(string[] _)
-        {
-            TemporalServiceClientConfiguration serviceConfig = new()
-            {
-                Namespace = "namespace"
-            };
-
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateNewAndInitializeConnectionAsync(serviceConfig);
-            
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
-
-            IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
-            Console.WriteLine($"Final state: {result.Status}.");
-        }
-
-        public static async Task ValidateConnectionEagerly2(string[] _)
-        {
-            TemporalServiceClientConfiguration serviceConfig = new()
-            {
-                Namespace = "namespace"
-            };
-
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
-            await serviceClient.InitializeConnectionAsync();
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
@@ -105,7 +44,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task WorkflowIsAlreadyRunning(string[] _)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             IWorkflowConsecution workflowConsecution = await serviceClient.GetWorkflowAsync("workflowId");
 
@@ -115,7 +55,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task WorkflowMayAlreadyBeRunning(string[] _)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             IWorkflowConsecution workflowConsecution = await serviceClient.GetOrStartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue", CancellationToken.None);
 
@@ -125,7 +66,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task AvoidLongPolls(string[] _)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             IWorkflowConsecution workflowConsecution = await serviceClient.GetWorkflowAsync("workflowId");
 
@@ -149,7 +91,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task AccessResultOfWorkflow(string[] _)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("NumbersComputer", "ComputeSomeNumber", "TaskQueue");
 
@@ -157,27 +100,10 @@ namespace Temporal.Sdk.BasicSamples
             Console.WriteLine($"The result of the workflow is {result.Value.Number}.");
         }
 
-        public static async Task AccessResultOfWorkflowWithNonDataValueResult(string[] _)
-        {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
-
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("NumbersComputer", "ComputeSomeNumber", "TaskQueue");
-
-            IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
-            if (DataValue.TryUnpack(result.GetValue(), out int resultVal))
-            {
-                Console.WriteLine($"The result of the workflow is {resultVal}.");
-            }
-            else
-            {
-                Console.WriteLine($"Could not obtain the result value because the workflow returned"
-                                + $" a value of type {result.GetValue().GetType().Name} where {nameof(Int32)} was expected.");
-            }
-        }
-
         public static async Task UseSignalsAndQueries(string[] _)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Start countdown timer to finish in 1 min:   
             IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync(
@@ -202,17 +128,12 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task CancelWorkflow(string[] _)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Get latest workflow with the specified Id or throw if no workflows with the specified Id can be found:
             IWorkflowConsecution latestConsecution = await serviceClient.GetWorkflowAsync("workflowId");
             
-            // Only try to cancel if the fetched workflow is still running:
-            if (!await latestConsecution.IsRunningAsync())
-            {
-                Console.WriteLine("Workflow no longer running");
-            }
-
             // The Task returned by this API is completed when the cancellation request call is completed,
             // i.e. the server persisted the request to cancel into the workflow history.
             // At that time the workflow implementation may not have yet processed the cancellation request.

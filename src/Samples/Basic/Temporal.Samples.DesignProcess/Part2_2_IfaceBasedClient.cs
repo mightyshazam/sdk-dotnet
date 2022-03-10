@@ -11,7 +11,8 @@ namespace Temporal.Sdk.BasicSamples
     {        
         public static async Task Minimal(string[] _)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient();
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Create a workflow stub that implements the `IShoppingCart` iface:
             // (The stub will start a new workflow consecution and bind to it later, when its main routine is invoked later.)
@@ -37,7 +38,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task<bool> AddProductToExistingCart_Main(User shopper, Product product)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "Shopping" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Get a handle to a EXISTING consecution with the workflowId `shopper.UserKey` AND make sure it is running:
             if ((await serviceClient.TryGetWorkflowAsync(shopper.UserKey)).IsSuccess(out IWorkflowConsecution wfConsecution)
@@ -73,7 +75,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task<bool> TryAddShippingInfoIfUserIsShopping_Main(User shopper, DeliveryInfo shippingInfo)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "Shopping" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Create a new stub for a workflow with workflowTypeName "ShoppingCart", workflowId `shopper.UserKey`etc.:
             // (The stub is NOT bound to any particular consecution, until we invoke a main routine.)
@@ -106,7 +109,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task<bool> PayAndWaitForOrderCompletionIfUserIsShopping_Main(User shopper, MoneyAmount paymentAmount)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "Shopping" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Create an unbound stub and specify to what it can be bound later, when the main routine is invoked:
             IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>(
@@ -147,7 +151,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task<bool> AddProductToExistingCart2_Main(User shopper, Product product)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "Shopping" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Create an unbound stub, specify to what it can be bound later when the main routine is invoked,
             // and specify options for the underlying client:
@@ -193,7 +198,8 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task AddProductToNewOrExistingCart_Main(User shopper, Product product)
         {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "Shopping" });
+            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>(
                                                     "ShoppingCart",

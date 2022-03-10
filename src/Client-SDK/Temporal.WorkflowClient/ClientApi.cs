@@ -31,22 +31,10 @@ namespace Temporal.WorkflowClient
         // Q: Shall we always bound by default to some namespace with a default name? What would that be?
         // If the client IS bound to a namespace, but that namespace does not exist on the server or the user
         // has no appropriate permissions, then a `NeedsDesignException` will be thrown from the APIs that require the namespace.
-        // There are two ways how a client may be bound to a namespace:
-        // 1) (Optionally) specify the namespace in the TemporalServiceClientConfiguration passed to the ctor.
-        //    In that case the namespace cannot be validated immediately. The client will be bound to the namespace, and invoking
-        //    APIs that require the namespace will throw as described above if there is something wrong with the namespace.
-        // 2) Call TrySetNamespaceAsync(..).
-        //    In that case the API will validate that the namespace exists and can be accessed. If yes, the client will be bound to 
-        //    that namespace and the API will return True. Otherwise the previously bound namespace will remain, and the API will
-        //    return False. Note that in this scenario, subsequent invocations of APIs that require a namespace may still throw just
-        //    like in the 1st case, because the namespace may be altered concurrently on the server by a different client.
+        //
+        // To bind a TemporalServiceClient to a namespace, specify the namespace in the TemporalServiceClientConfiguration passed
+        // to the ctor.
         string Namespace { get; }
-
-        Task<bool> TrySetNamespaceAsync(string @namespace);
-        Task<bool> TrySetNamespaceAsync(string @namespace, CancellationToken cancelToken);
-
-        // `IsNamespaceAccessibleAsync(..)` returns whether `TrySetNamespaceAsync(..)` would succeed without actually setting the NS.
-        Task<bool> IsNamespaceAccessibleAsync(string @namespace, CancellationToken cancelToken);
         #endregion -- Namespace settings for the client --
 
 
@@ -357,14 +345,14 @@ namespace Temporal.WorkflowClient
     {
         private static TemporalServiceClientConfiguration CreateDefaultConfiguration() { return new TemporalServiceClientConfiguration(); }
 
-        public static async Task<TemporalServiceClient> CreateNewAndInitializeConnectionAsync()
+        public static async Task<TemporalServiceClient> CreateAndInitializeAsync()
         {
             TemporalServiceClient client = new();
             await client.InitializeConnectionAsync();
             return client;
         }
 
-        public static async Task<TemporalServiceClient> CreateNewAndInitializeConnectionAsync(TemporalServiceClientConfiguration config)
+        public static async Task<TemporalServiceClient> CreateAndInitializeAsync(TemporalServiceClientConfiguration config)
         {
             TemporalServiceClient client = new(config);
             await client.InitializeConnectionAsync();
