@@ -15,10 +15,10 @@ namespace Temporal.Sdk.BasicSamples
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Create a workflow stub that implements the `IShoppingCart` iface:
-            // (The stub will start a new workflow consecution and bind to it later, when its main routine is invoked later.)
+            // (The stub will start a new workflow chain and bind to it later, when its main routine is invoked later.)
             IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>("ShoppingCart", "SomeUserCard-ID", "taskQueue");
 
-            // Start the workflow consecution by invoking the stub's main routine:
+            // Start the workflow chain by invoking the stub's main routine:
             Task<OrderConfirmation> order = cart.ShopAsync(new User("Jean-Luc", "Picard", Guid.NewGuid()));
             
             // Interact with the workflow by sending signals:
@@ -41,13 +41,13 @@ namespace Temporal.Sdk.BasicSamples
             TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
-            // Get a handle to a EXISTING consecution with the workflowId `shopper.UserKey` AND make sure it is running:
-            if ((await serviceClient.TryGetWorkflowAsync(shopper.UserKey)).IsSuccess(out IWorkflowConsecution wfConsecution)
-                    && await wfConsecution.IsRunningAsync())
+            // Get a handle to a EXISTING chain with the workflowId `shopper.UserKey` AND make sure it is running:
+            if ((await serviceClient.TryGetWorkflowAsync(shopper.UserKey)).IsSuccess(out IWorkflowChain wfChain)
+                    && await wfChain.IsRunningAsync())
             {
-                // Get a stub that is bound to the specified consecution:
+                // Get a stub that is bound to the specified chain:
                 // (Note that both 'IProductList' and 'IShoppingCart' are valid here.)
-                IProductList cart = wfConsecution.GetStub<IProductList>();  
+                IProductList cart = wfChain.GetStub<IProductList>();  
 
                 return await AddProductToExistingCart_Logic(product, cart);
             }
@@ -61,7 +61,7 @@ namespace Temporal.Sdk.BasicSamples
         {
             try
             {
-                await cart.AddProductAsync(product);  // This would throw if `cart` was not bound to a workflow consecution.
+                await cart.AddProductAsync(product);  // This would throw if `cart` was not bound to a workflow chain.
                 MoneyAmount total = await cart.GetTotalAsync();
 
                 Console.WriteLine($"Item \"{product.Name}\" added to cart. New total is: ${total.Dollars}.{total.Cents}.");
@@ -79,7 +79,7 @@ namespace Temporal.Sdk.BasicSamples
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Create a new stub for a workflow with workflowTypeName "ShoppingCart", workflowId `shopper.UserKey`etc.:
-            // (The stub is NOT bound to any particular consecution, until we invoke a main routine.)
+            // (The stub is NOT bound to any particular chain, until we invoke a main routine.)
             IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>("ShoppingCart", shopper.UserKey, "taskQueue");
              
             return await TryAddShippingInfoIfUserIsShopping_Logic(shippingInfo, cart);
@@ -89,14 +89,14 @@ namespace Temporal.Sdk.BasicSamples
         {
             try
             {
-                // Bind the stub to an actual consecution (throws if no appropriate consecution exists):
+                // Bind the stub to an actual chain (throws if no appropriate chain exists):
                 // (any stub can be cast to 'IWorkflowRunStub')
 
-                WorkflowConsecutionStubConfiguration bindConfig = new (canBindToNewConsecution: false,
-                                                                       canBindToExistingRunningConsecution: true,
-                                                                       canBindToExistingFinishedConsecution: false);
+                WorkflowChainStubConfiguration bindConfig = new (canBindToNewChain: false,
+                                                                       canBindToExistingRunningChain: true,
+                                                                       canBindToExistingFinishedChain: false);
 
-                await ((IWorkflowConsecutionStub) cart).EnsureIsBoundAsync(bindConfig);  
+                await ((IWorkflowChainStub) cart).EnsureIsBoundAsync(bindConfig);  
 
                 await cart.SetDeliveryInfoAsync(shippingInfo); 
                 return true;  // Shipping info applied.
@@ -117,9 +117,9 @@ namespace Temporal.Sdk.BasicSamples
                                                     "ShoppingCart",
                                                     shopper.UserKey,
                                                     "taskQueue",
-                                                    new WorkflowConsecutionStubConfiguration(canBindToNewConsecution: false,
-                                                                                             canBindToExistingRunningConsecution: true,
-                                                                                             canBindToExistingFinishedConsecution: false));
+                                                    new WorkflowChainStubConfiguration(canBindToNewChain: false,
+                                                                                             canBindToExistingRunningChain: true,
+                                                                                             canBindToExistingFinishedChain: false));
             
             return await PayAndWaitForOrderCompletionIfUserIsShopping_Logic(paymentAmount, cart);
         }
@@ -130,9 +130,9 @@ namespace Temporal.Sdk.BasicSamples
 
             try
             {
-                // This will cause the stub to be bound to a consecution according to the config specified in `CreateUnboundWorkflowStub(..)`,
-                // i.e to an EXISTING and RUNNING consecution. If no such consecution is found, this will throw.
-                // Because we only bind to a readily running consecution, the input parameters will be ignored, so we can just specify null.
+                // This will cause the stub to be bound to a chain according to the config specified in `CreateUnboundWorkflowStub(..)`,
+                // i.e to an EXISTING and RUNNING chain. If no such chain is found, this will throw.
+                // Because we only bind to a readily running chain, the input parameters will be ignored, so we can just specify null.
                 order = cart.ShopAsync(null);                
             }
             catch (NeedsDesignException)
@@ -140,7 +140,7 @@ namespace Temporal.Sdk.BasicSamples
                 return false;  // "Could not apply shipping info. Does user have an active shopping cart?
             }
 
-            // Wait for the main routine (i.e. the entire workflow consecution) to complete:
+            // Wait for the main routine (i.e. the entire workflow chain) to complete:
             await cart.ApplyPaymentAsync(paymentAmount);
             
             OrderConfirmation confirmation = await order;
@@ -161,9 +161,9 @@ namespace Temporal.Sdk.BasicSamples
                                                     shopper.UserKey,
                                                     "taskQueue",
                                                     StartWorkflowChainConfiguration.Default,
-                                                    new WorkflowConsecutionStubConfiguration(canBindToNewConsecution: false,
-                                                                                             canBindToExistingRunningConsecution: true,
-                                                                                             canBindToExistingFinishedConsecution: false));
+                                                    new WorkflowChainStubConfiguration(canBindToNewChain: false,
+                                                                                             canBindToExistingRunningChain: true,
+                                                                                             canBindToExistingFinishedChain: false));
 
             return await AddProductToExistingCart2_Logic(product, cart);
         }
@@ -174,7 +174,7 @@ namespace Temporal.Sdk.BasicSamples
             try
             {
                 // Binding will only succeed for an EXISTING and RUNNING cart, based on the settings specified when stub was created.
-                await ((IWorkflowConsecutionStub) cart).EnsureIsBoundAsync();
+                await ((IWorkflowChainStub) cart).EnsureIsBoundAsync();
             }
             catch (NeedsDesignException)
             {
@@ -205,9 +205,9 @@ namespace Temporal.Sdk.BasicSamples
                                                     "ShoppingCart",
                                                     shopper.UserKey,
                                                     "taskQueue",
-                                                    new WorkflowConsecutionStubConfiguration(canBindToNewConsecution: true,
-                                                                                             canBindToExistingRunningConsecution: true,
-                                                                                             canBindToExistingFinishedConsecution: false));
+                                                    new WorkflowChainStubConfiguration(canBindToNewChain: true,
+                                                                                             canBindToExistingRunningChain: true,
+                                                                                             canBindToExistingFinishedChain: false));
 
 
             await AddProductToNewOrExistingCart_Logic(shopper, product, cart);
@@ -215,8 +215,8 @@ namespace Temporal.Sdk.BasicSamples
 
         private static async Task AddProductToNewOrExistingCart_Logic(User shopper, Product product, IShoppingCart cart)
         {
-            // Based on the config passed to `CreateUnboundWorkflowStub(..)`, this will bind to a new or an existing consecution.
-            // We must pass a valid input parameter in case a new consecution is started.
+            // Based on the config passed to `CreateUnboundWorkflowStub(..)`, this will bind to a new or an existing chain.
+            // We must pass a valid input parameter in case a new chain is started.
             await cart.ShopAsync(shopper);  
 
             Console.WriteLine("Current items:");

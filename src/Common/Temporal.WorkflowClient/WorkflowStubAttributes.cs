@@ -8,7 +8,7 @@ namespace Temporal.WorkflowClient
 
     /// <summary>
     /// Specifies that invocations of the marked method are forwarded to the main routine of the remote workflow
-    /// consecution bound to the stub.
+    /// chain bound to the stub.
     /// This attribute can be applied to methods with these signatures:
     ///     Task SomeMethod()
     ///     Task{TResult} SomeMethod() where TResult : IDataValue
@@ -23,23 +23,23 @@ namespace Temporal.WorkflowClient
     /// Parameters are not validated by the client and are sent to the workflow as provided.
     /// If no parameters are provided, an empty payload is sent.
     /// 
-    /// If a MainMethodStub is invoked on a stub instance that is NOT yet bound to a workflow consecution,
-    /// it will attempt to bind the stub instance to the first option permitted by `WorkflowConsecutionStubConfiguration`
+    /// If a MainMethodStub is invoked on a stub instance that is NOT yet bound to a workflow chain,
+    /// it will attempt to bind the stub instance to the first option permitted by `WorkflowChainStubConfiguration`
     /// specified to the stub creation method in the following order:
-    ///   1) Bind to an existing Active consecution ("active" as in Status=Running)
-    ///   2) Start a New consecution and bind to it
-    ///   3) Bind to an existing Finished consecution
+    ///   1) Bind to an existing Active chain ("active" as in Status=Running)
+    ///   2) Start a New chain and bind to it
+    ///   3) Bind to an existing Finished chain
     /// If it cannot find anything to bind to based on above-mentioned permissions, an error is thrown.
     /// If permissions specify a binding strategy, but the execution fails, the respective error is thrown
     /// and no other binding is attempted.For example, assume that all CanBindToXxx settings are True, and
-    /// there are existing consecutions, yet all of them are finished.In that case, based on the above order,
-    /// it will try to start a New consecution and bind to it.
-    /// If, however, starting a new consecution fails based on the 'WorkflowIdReusePolicy', the failure will be
+    /// there are existing chains, yet all of them are finished.In that case, based on the above order,
+    /// it will try to start a New chain and bind to it.
+    /// If, however, starting a new chain fails based on the 'WorkflowIdReusePolicy', the failure will be
     /// propagated and binding to an existing Finished run will not be attempted.
     /// 
-    /// If `CanBindToExistingRunningConsecution` (or `CanBindToExistingFinishedConsecution`) is true, then the
-    /// MainMethodStub can be called for a given workflow consecution multiple times.In that case the returned
-    /// Task represents the completion of the respective consecution; the consecution is NOT started again.
+    /// If `CanBindToExistingRunningChain` (or `CanBindToExistingFinishedChain`) is true, then the
+    /// MainMethodStub can be called for a given workflow chain multiple times.In that case the returned
+    /// Task represents the completion of the respective chain; the chain is NOT started again.
     /// Potential arguments are ignored in such cases.
     /// 
     /// This and other 'WorkflowXxxStub' attributes can only be applied to method definitions in interfaces.

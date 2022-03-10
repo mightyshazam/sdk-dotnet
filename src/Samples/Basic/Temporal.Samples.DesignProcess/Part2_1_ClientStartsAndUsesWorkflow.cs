@@ -31,9 +31,9 @@ namespace Temporal.Sdk.BasicSamples
             TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
-            IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
+            IWorkflowChainResult result = await workflowChain.GetResultAsync();
             Console.WriteLine($"Final state: {result.Status}.");
         }
 
@@ -42,9 +42,9 @@ namespace Temporal.Sdk.BasicSamples
             TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.GetWorkflowAsync("workflowId");
+            IWorkflowChain workflowChain = await serviceClient.GetWorkflowAsync("workflowId");
 
-            await workflowConsecution.GetResultAsync();
+            await workflowChain.GetResultAsync();
             Console.WriteLine("Workflow completed.");
         }
 
@@ -53,9 +53,9 @@ namespace Temporal.Sdk.BasicSamples
             TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.GetOrStartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue", CancellationToken.None);
+            IWorkflowChain workflowChain = await serviceClient.GetOrStartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue", CancellationToken.None);
 
-            await workflowConsecution.GetResultAsync();
+            await workflowChain.GetResultAsync();
             Console.WriteLine("Workflow completed.");
         }
 
@@ -64,19 +64,19 @@ namespace Temporal.Sdk.BasicSamples
             TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.GetWorkflowAsync("workflowId");
+            IWorkflowChain workflowChain = await serviceClient.GetWorkflowAsync("workflowId");
 
-            if ((await workflowConsecution.TryGetResultIfAvailableAync()).IsSuccess(out IWorkflowConsecutionResult result))
+            if ((await workflowChain.TryGetResultIfAvailableAync()).IsSuccess(out IWorkflowChainResult result))
             {                                
-                Console.WriteLine($"Workflow consecution completed with status: {result.Status}.");
+                Console.WriteLine($"Workflow chain completed with status: {result.Status}.");
             }
             
             Console.WriteLine($"Workflow did not yet complete. Doing some other work...");
             await Task.Delay(TimeSpan.FromSeconds(60));
 
-            if ((await workflowConsecution.TryGetResultIfAvailableAync()).IsSuccess(out result))
+            if ((await workflowChain.TryGetResultIfAvailableAync()).IsSuccess(out result))
             {
-                Console.WriteLine($"Workflow consecution completed with status: {result.Status}.");
+                Console.WriteLine($"Workflow chain completed with status: {result.Status}.");
             }
 
             Console.WriteLine($"Workflow still did not complete. Good bye.");
@@ -89,9 +89,9 @@ namespace Temporal.Sdk.BasicSamples
             TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("NumbersComputer", "ComputeSomeNumber", "TaskQueue");
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("NumbersComputer", "ComputeSomeNumber", "TaskQueue");
 
-            IWorkflowConsecutionResult<ComputationResult> result = await workflowConsecution.GetResultAsync<ComputationResult>();
+            IWorkflowChainResult<ComputationResult> result = await workflowChain.GetResultAsync<ComputationResult>();
             Console.WriteLine($"The result of the workflow is {result.Value.Number}.");
         }
 
@@ -101,7 +101,7 @@ namespace Temporal.Sdk.BasicSamples
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Start countdown timer to finish in 1 min:   
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync(
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync(
                                                                                     "CountdownTimer",
                                                                                     "TestTimerXyz",
                                                                                     "taskQueue",
@@ -112,12 +112,12 @@ namespace Temporal.Sdk.BasicSamples
 
             // Push out target time by 30 secs:
             // Query the workflow, add a minute, signal workflow.
-            TargetTimePayload prevTargetTime = (await workflowConsecution.QueryAsync<TargetTimePayload>("GetCurrentTargetTimeUtc")).Value;
+            TargetTimePayload prevTargetTime = (await workflowChain.QueryAsync<TargetTimePayload>("GetCurrentTargetTimeUtc")).Value;
             TargetTimePayload newTargetTime = new(prevTargetTime.UtcDateTime.AddSeconds(30));
-            await workflowConsecution.SignalAsync(RemoteApiNames.CountdownTimerWorkflow.Signals.UpdateTargetTime, newTargetTime);
+            await workflowChain.SignalAsync(RemoteApiNames.CountdownTimerWorkflow.Signals.UpdateTargetTime, newTargetTime);
 
             // Wait for the workflow to finish:
-            CountdownResult result = (await workflowConsecution.GetResultAsync<CountdownResult>()).Value;
+            CountdownResult result = (await workflowChain.GetResultAsync<CountdownResult>()).Value;
             Console.WriteLine($"The workflow {(result.IsTargetTimeReached ? "did" : "did not")} reach the target time.");
         }
 
@@ -127,19 +127,19 @@ namespace Temporal.Sdk.BasicSamples
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
 
             // Get latest workflow with the specified Id or throw if no workflows with the specified Id can be found:
-            IWorkflowConsecution latestConsecution = await serviceClient.GetWorkflowAsync("workflowId");
+            IWorkflowChain latestChain = await serviceClient.GetWorkflowAsync("workflowId");
             
             // The Task returned by this API is completed when the cancellation request call is completed,
             // i.e. the server persisted the request to cancel into the workflow history.
             // At that time the workflow implementation may not have yet processed the cancellation request.
-            // This API will throw if latestConsecution is no longer running which may happen concurrently
+            // This API will throw if latestChain is no longer running which may happen concurrently
             // after the above check.
-            await latestConsecution.RequestCancellationAsync();
+            await latestChain.RequestCancellationAsync();
 
             // We must await the completion of the workflow to learn whether the remote workflow actually
             // honored the cancellation request.
             // (note that if the workflow does not respect the cancellation, this may await indefinitely)
-            IWorkflowConsecutionResult result = await latestConsecution.GetResultAsync();
+            IWorkflowChainResult result = await latestChain.GetResultAsync();
             Console.WriteLine("Workflow cancellation "
                             + (result.Status == WorkflowExecutionStatus.Canceled ? "was respected" : "was not respected")
                             + " by the workflow.");
@@ -154,9 +154,9 @@ namespace Temporal.Sdk.BasicSamples
             };
 
             ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
-            await workflowConsecution.GetResultAsync();
+            await workflowChain.GetResultAsync();
         }
 
         #region class GZipPayloadCodec
@@ -232,9 +232,9 @@ namespace Temporal.Sdk.BasicSamples
             };
 
             ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
-            IWorkflowConsecution workflowConsecution = await serviceClient.GetWorkflowAsync("workflowId");
+            IWorkflowChain workflowChain = await serviceClient.GetWorkflowAsync("workflowId");
 
-            await workflowConsecution.GetResultAsync();
+            await workflowChain.GetResultAsync();
         }
 
         #region class FileLoggerWorkflowClientInterceptor
@@ -247,27 +247,27 @@ namespace Temporal.Sdk.BasicSamples
                 _fileName = fileName;
             }
 
-            public override Task<IWorkflowConsecution> OnServiceClient_GetWorkflowAsync(string workflowId,
-                                                                                        string workflowConsecutionId,
+            public override Task<IWorkflowChain> OnServiceClient_GetWorkflowAsync(string workflowId,
+                                                                                        string workflowChainId,
                                                                                         CancellationToken cancelToken)
             {
                 File.AppendAllText(_fileName,
                                    $"{nameof(OnServiceClient_GetWorkflowAsync)}({nameof(workflowId)}:\"({workflowId})\","
-                                 + $" {nameof(workflowConsecutionId)}:\"({workflowConsecutionId})\","
+                                 + $" {nameof(workflowChainId)}:\"({workflowChainId})\","
                                  + $"...)\n");
 
-                return base.OnServiceClient_GetWorkflowAsync(workflowId, workflowConsecutionId, cancelToken);                
+                return base.OnServiceClient_GetWorkflowAsync(workflowId, workflowChainId, cancelToken);                
             }
 
             // Other OnXxx event handlers not implemented for brevity.
 
             
-            public override Task<IWorkflowConsecutionResult<TResult>> OnConsecution_GetResultAsync<TResult>(CancellationToken cancelToken)
+            public override Task<IWorkflowChainResult<TResult>> OnChain_GetResultAsync<TResult>(CancellationToken cancelToken)
             {
                 File.AppendAllText(_fileName,
-                                   $"{nameof(OnConsecution_GetResultAsync)}(..)\n");
+                                   $"{nameof(OnChain_GetResultAsync)}(..)\n");
 
-                return base.OnConsecution_GetResultAsync<TResult>(cancelToken);
+                return base.OnChain_GetResultAsync<TResult>(cancelToken);
             }
 
             // Other OnXxx event handlers not implemented for brevity.
