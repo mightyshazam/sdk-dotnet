@@ -154,11 +154,11 @@ namespace Temporal.Sdk.BasicSamples
             IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>(
                                                     "ShoppingCart",
                                                     shopper.UserKey,
-                                                    new WorkflowExecutionConfiguration() { TaskQueue = "taskQueue" },
+                                                    "taskQueue",
+                                                    StartWorkflowChainConfiguration.Default,
                                                     new WorkflowConsecutionStubConfiguration(canBindToNewConsecution: false,
                                                                                              canBindToExistingRunningConsecution: true,
-                                                                                             canBindToExistingFinishedConsecution: false),
-                                                    new WorkflowConsecutionClientConfiguration());
+                                                                                             canBindToExistingFinishedConsecution: false));
 
             return await AddProductToExistingCart2_Logic(product, cart);
         }

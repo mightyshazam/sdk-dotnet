@@ -21,6 +21,7 @@ namespace Temporal.Sdk.BasicSamples
             SpecifyNamespaceAndValidate(args).GetAwaiter().GetResult();
             ValidateConnectionEagerly(args).GetAwaiter().GetResult();
             ValidateConnectionEagerly2(args).GetAwaiter().GetResult();
+            WorkflowIsAlreadyRunning(args).GetAwaiter().GetResult();
             WorkflowMayAlreadyBeRunning(args).GetAwaiter().GetResult();
             AvoidLongPolls(args).GetAwaiter().GetResult();
             AccessResultOfWorkflow(args).GetAwaiter().GetResult();
@@ -28,14 +29,13 @@ namespace Temporal.Sdk.BasicSamples
             UseSignalsAndQueries(args).GetAwaiter().GetResult();
             CancelWorkflow(args).GetAwaiter().GetResult();
             UsePayloadCodecToCompressPayloadsForAllWorkflows(args).GetAwaiter().GetResult();
-            UsePayloadCodecToCompressPayloadsForSpecificWorkflow(args).GetAwaiter().GetResult();
         }
 
         public static async Task Minimal(string[] _)
         {
             ITemporalServiceClient serviceClient = new TemporalServiceClient();
             
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
             IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
             Console.WriteLine($"Final state: {result.Status}.");
@@ -50,7 +50,7 @@ namespace Temporal.Sdk.BasicSamples
 
             ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
             IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
             Console.WriteLine($"Final state: {result.Status}.");
@@ -66,7 +66,7 @@ namespace Temporal.Sdk.BasicSamples
                 Console.WriteLine($"The namespace \"{RequiredNamespace}\" does not exist or is not accessible.");
             }
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
             IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
             Console.WriteLine($"Final state: {result.Status}.");
@@ -81,7 +81,7 @@ namespace Temporal.Sdk.BasicSamples
 
             ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateNewAndInitializeConnectionAsync(serviceConfig);
             
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
             IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
             Console.WriteLine($"Final state: {result.Status}.");
@@ -97,17 +97,27 @@ namespace Temporal.Sdk.BasicSamples
             ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
             await serviceClient.InitializeConnectionAsync();
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
             IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
             Console.WriteLine($"Final state: {result.Status}.");
+        }
+
+        public static async Task WorkflowIsAlreadyRunning(string[] _)
+        {
+            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
+
+            IWorkflowConsecution workflowConsecution = await serviceClient.GetWorkflowAsync("workflowId");
+
+            await workflowConsecution.GetResultAsync();
+            Console.WriteLine("Workflow completed.");
         }
 
         public static async Task WorkflowMayAlreadyBeRunning(string[] _)
         {
             ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.GetOrStartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            IWorkflowConsecution workflowConsecution = await serviceClient.GetOrStartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue", CancellationToken.None);
 
             await workflowConsecution.GetResultAsync();
             Console.WriteLine("Workflow completed.");
@@ -141,7 +151,7 @@ namespace Temporal.Sdk.BasicSamples
         {
             ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("NumbersComputer", "ComputeSomeNumber", "TaskQueue");
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("NumbersComputer", "ComputeSomeNumber", "TaskQueue");
 
             IWorkflowConsecutionResult<ComputationResult> result = await workflowConsecution.GetResultAsync<ComputationResult>();
             Console.WriteLine($"The result of the workflow is {result.Value.Number}.");
@@ -151,7 +161,7 @@ namespace Temporal.Sdk.BasicSamples
         {
             ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
 
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("NumbersComputer", "ComputeSomeNumber", "TaskQueue");
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("NumbersComputer", "ComputeSomeNumber", "TaskQueue");
 
             IWorkflowConsecutionResult result = await workflowConsecution.GetResultAsync();
             if (DataValue.TryUnpack(result.GetValue(), out int resultVal))
@@ -170,7 +180,7 @@ namespace Temporal.Sdk.BasicSamples
             ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
 
             // Start countdown timer to finish in 1 min:   
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync(
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync(
                                                                                     "CountdownTimer",
                                                                                     "TestTimerXyz",
                                                                                     "taskQueue",
@@ -228,23 +238,7 @@ namespace Temporal.Sdk.BasicSamples
             };
 
             ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
-
-            await workflowConsecution.GetResultAsync();
-        }
-
-        public static async Task UsePayloadCodecToCompressPayloadsForSpecificWorkflow(string[] _)
-        {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
-
-            WorkflowConsecutionClientConfiguration wfConfig = new() { DataConverter = new DefaultDataConverter(new[] { new GZipPayloadCodec() }) };
-            IWorkflowConsecution workflowConsecution = await serviceClient.StartNewWorkflowAsync(
-                                                                            "workflowTypeName",
-                                                                            "workflowId",
-                                                                            new WorkflowExecutionConfiguration() { TaskQueue = "taskQueue"},
-                                                                            DataValue.Void,
-                                                                            wfConfig,
-                                                                            CancellationToken.None);
+            IWorkflowConsecution workflowConsecution = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
 
             await workflowConsecution.GetResultAsync();
         }
@@ -327,26 +321,6 @@ namespace Temporal.Sdk.BasicSamples
             await workflowConsecution.GetResultAsync();
         }
 
-        public static async Task UseInterceptorToLogClientCallsForSpecificWorkflow(string[] _)
-        {
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(new TemporalServiceClientConfiguration() { Namespace = "namespace" });
-
-            WorkflowConsecutionClientConfiguration clientConfig = new()
-            {
-                TemporalServiceClientInterceptorFactory = (interceptors) =>
-                {
-                    interceptors.Insert(0, new FileLoggerWorkflowClientInterceptor("SampleLog.txt"));
-                }
-            };
-            IWorkflowConsecution workflowConsecution = await serviceClient.GetWorkflowAsync(workflowTypeName: null,
-                                                                                            workflowId: "xyz",
-                                                                                            workflowConsecutionId: null,
-                                                                                            clientConfig,
-                                                                                            CancellationToken.None);
-
-            await workflowConsecution.GetResultAsync();
-        }
-
         #region class FileLoggerWorkflowClientInterceptor
         class FileLoggerWorkflowClientInterceptor : TemporalServiceClientInterceptorBase
         {
@@ -357,58 +331,40 @@ namespace Temporal.Sdk.BasicSamples
                 _fileName = fileName;
             }
 
-            protected override ITemporalServiceClientInterceptor.IWorkflowConsecutionInterceptor CreateConsecutionCallsInterceptor()
-            {
-                return new ConsecutionInterceptor();
-            }
-
-            protected override ITemporalServiceClientInterceptor.IWorkflowRunInterceptor CreatRunCallsInterceptor()
-            {
-                return new RunInterceptor();
-            }
-
-            public override Task<IWorkflowConsecution> OnGetWorkflowAsync(string workflowTypeName,
-                                                                         string workflowId,
-                                                                         string workflowConsecutionId,
-                                                                         WorkflowConsecutionClientConfiguration clientConfig,
-                                                                         CancellationToken cancelToken)
+            public override Task<IWorkflowConsecution> OnServiceClient_GetWorkflowAsync(string workflowId,
+                                                                                        string workflowConsecutionId,
+                                                                                        CancellationToken cancelToken)
             {
                 File.AppendAllText(_fileName,
-                                   $"{nameof(OnGetWorkflowAsync)}({nameof(workflowTypeName)}:\"({workflowTypeName})\","
-                                 + $" {nameof(workflowId)}:\"({workflowId})\","
+                                   $"{nameof(OnServiceClient_GetWorkflowAsync)}({nameof(workflowId)}:\"({workflowId})\","
                                  + $" {nameof(workflowConsecutionId)}:\"({workflowConsecutionId})\","
                                  + $"...)\n");
 
-                return base.OnGetWorkflowAsync(workflowTypeName, workflowId, workflowConsecutionId, clientConfig, cancelToken);                
+                return base.OnServiceClient_GetWorkflowAsync(workflowId, workflowConsecutionId, cancelToken);                
             }
 
             // Other OnXxx event handlers not implemented for brevity.
 
-            class ConsecutionInterceptor : TemporalServiceClientInterceptorBase.WorkflowConsecutionInterceptorBase
+            
+            public override Task<IWorkflowConsecutionResult<TResult>> OnConsecution_GetResultAsync<TResult>(CancellationToken cancelToken)
             {
-                public override Task<IWorkflowConsecutionResult<TResult>> OnGetResultAsync<TResult>(CancellationToken cancelToken)
-                {
-                    File.AppendAllText(((FileLoggerWorkflowClientInterceptor) Owner)._fileName,
-                                       $"Consecution: {nameof(OnGetResultAsync)}()\n");
+                File.AppendAllText(_fileName,
+                                   $"{nameof(OnConsecution_GetResultAsync)}(..)\n");
 
-                    return base.OnGetResultAsync<TResult>(cancelToken);
-                }
-
-                // Other OnXxx event handlers not implemented for brevity.
+                return base.OnConsecution_GetResultAsync<TResult>(cancelToken);
             }
 
-            class RunInterceptor : TemporalServiceClientInterceptorBase.WorkflowRunInterceptorBase
+            // Other OnXxx event handlers not implemented for brevity.
+
+            public override Task<WorkflowRunInfo> OnRun_GetInfoAsync()
             {
-                public override Task<WorkflowRunInfo> OnGetInfoAsync()
-                {
-                    File.AppendAllText(((FileLoggerWorkflowClientInterceptor)Owner)._fileName,
-                                       $"Run: {nameof(OnGetInfoAsync)}()\n");
+                File.AppendAllText(_fileName,
+                                   $"{nameof(OnRun_GetInfoAsync)}()\n");
 
-                    return base.OnGetInfoAsync();
-                }
-
-                // Other OnXxx event handlers not implemented for brevity.
+                return base.OnRun_GetInfoAsync();
             }
+
+            // Other OnXxx event handlers not implemented for brevity.
         }
         #endregion class FileLoggerWorkflowClientInterceptor
     }

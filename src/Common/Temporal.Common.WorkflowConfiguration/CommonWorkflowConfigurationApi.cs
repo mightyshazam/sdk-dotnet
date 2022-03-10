@@ -31,6 +31,32 @@ namespace Temporal.Common.WorkflowConfiguration
         // workflow / run id, namespace, workflow type
     }
 
+    public enum WorkflowIdReusePolicy
+    {
+
+    }
+
+    public class RetryPolicy
+    {
+
+    }
+
+    public class Memo
+    {
+
+    }
+
+    public class SearchAttributes
+    {
+
+    }
+
+    public class Header
+    {
+
+    }
+
+
     /// <summary>
     /// Per-workflow settings related to the execution container of a workflow.
     /// Must not affect the business logic.
