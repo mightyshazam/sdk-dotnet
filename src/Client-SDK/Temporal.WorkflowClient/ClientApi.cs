@@ -57,71 +57,71 @@ namespace Temporal.WorkflowClient
         // Future: Consider overloads auto-generate a random GUID-based `workflowId`.
 
         Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                         string workflowId,
-                                                         string taskQueue);
+                                                      string workflowId,
+                                                      string taskQueue);
 
         Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                         string workflowId,
-                                                         string taskQueue,
-                                                         CancellationToken cancelToken);
+                                                      string workflowId,
+                                                      string taskQueue,
+                                                      CancellationToken cancelToken);
 
         Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                         string workflowId,
-                                                         string taskQueue,
-                                                         IDataValue inputArgs);
+                                                      string workflowId,
+                                                      string taskQueue,
+                                                      IDataValue inputArgs);
 
         Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                         string workflowId,
-                                                         string taskQueue,
-                                                         IDataValue inputArgs,
-                                                         CancellationToken cancelToken);
+                                                      string workflowId,
+                                                      string taskQueue,
+                                                      IDataValue inputArgs,
+                                                      CancellationToken cancelToken);
 
         Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                         string workflowId,
-                                                         string taskQueue,
-                                                         IDataValue inputArgs,
-                                                         StartWorkflowChainConfiguration workflowConfig,
-                                                         CancellationToken cancelToken);
+                                                      string workflowId,
+                                                      string taskQueue,
+                                                      IDataValue inputArgs,
+                                                      StartWorkflowChainConfiguration workflowConfig,
+                                                      CancellationToken cancelToken);
         #endregion StartWorkflowAsync(..)
 
         #region StartWorkflowWithSignalAsync(..)
         // Future: Consider overloads auto-generate a random GUID-based `workflowId`.
         Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                   string workflowId,
-                                                                   string taskQueue,
-                                                                   string signalName,
-                                                                   CancellationToken cancelToken);
+                                                                string workflowId,
+                                                                string taskQueue,
+                                                                string signalName,
+                                                                CancellationToken cancelToken);
 
         Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                   string workflowId,
-                                                                   string taskQueue,
-                                                                   string signalName,
-                                                                   IDataValue signalArgs,
-                                                                   CancellationToken cancelToken);
+                                                                string workflowId,
+                                                                string taskQueue,
+                                                                string signalName,
+                                                                IDataValue signalArgs,
+                                                                CancellationToken cancelToken);
 
         Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                   string workflowId,
-                                                                   string taskQueue,
-                                                                   IDataValue wokflowArgs,
-                                                                   string signalName,
-                                                                   CancellationToken cancelToken);
+                                                                string workflowId,
+                                                                string taskQueue,
+                                                                IDataValue wokflowArgs,
+                                                                string signalName,
+                                                                CancellationToken cancelToken);
 
         Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                   string workflowId,
-                                                                   string taskQueue,
-                                                                   IDataValue wokflowArgs,
-                                                                   string signalName,
-                                                                   IDataValue signalArgs,
-                                                                   CancellationToken cancelToken);
+                                                                string workflowId,
+                                                                string taskQueue,
+                                                                IDataValue wokflowArgs,
+                                                                string signalName,
+                                                                IDataValue signalArgs,
+                                                                CancellationToken cancelToken);
 
         Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                   string workflowId,
-                                                                   string taskQueue, 
-                                                                   IDataValue wokflowArgs,
-                                                                   string signalName,
-                                                                   IDataValue signalArgs,
-                                                                   StartWorkflowChainConfiguration workflowConfig,                                                                   
-                                                                   CancellationToken cancelToken);
+                                                                string workflowId,
+                                                                string taskQueue, 
+                                                                IDataValue wokflowArgs,
+                                                                string signalName,
+                                                                IDataValue signalArgs,
+                                                                StartWorkflowChainConfiguration workflowConfig,                                                                   
+                                                                CancellationToken cancelToken);
         #endregion StartWorkflowWithSignalAsync(..)
 
         #region GetOrStartWorkflowAsync(..)
@@ -385,67 +385,67 @@ namespace Temporal.WorkflowClient
 
         #region StartWorkflowAsync(..)
         public Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                                string workflowId,
-                                                                string taskQueue) { return null; }
+                                                             string workflowId,
+                                                             string taskQueue) { return null; }
         public Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                                string workflowId,
-                                                                string taskQueue,
-                                                                CancellationToken cancelToken) { return null; }
+                                                             string workflowId,
+                                                             string taskQueue,
+                                                             CancellationToken cancelToken) { return null; }
         public Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                                string workflowId,
-                                                                string taskQueue,
-                                                                IDataValue inputArgs) { return null; }
+                                                             string workflowId,
+                                                             string taskQueue,
+                                                             IDataValue inputArgs) { return null; }
         public Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                                string workflowId,
-                                                                string taskQueue,
-                                                                IDataValue inputArgs,
-                                                                CancellationToken cancelToken) { return null; }
+                                                             string workflowId,
+                                                             string taskQueue,
+                                                             IDataValue inputArgs,
+                                                             CancellationToken cancelToken) { return null; }
 
         public Task<IWorkflowConsecution> StartWorkflowAsync(string workflowTypeName,
-                                                                string workflowId,
-                                                                string taskQueue,
-                                                                IDataValue inputArgs,
-                                                                StartWorkflowChainConfiguration workflowConfig,
-                                                                CancellationToken cancelToken) { return null; }
+                                                             string workflowId,
+                                                             string taskQueue,
+                                                             IDataValue inputArgs,
+                                                             StartWorkflowChainConfiguration workflowConfig,
+                                                             CancellationToken cancelToken) { return null; }
         #endregion StartWorkflowAsync(..)
 
         #region StartWorkflowWithSignalAsync(..)
         public Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                          string workflowId,
-                                                                          string taskQueue,
-                                                                          string signalName,
-                                                                          CancellationToken cancelToken) { return null; }
+                                                                       string workflowId,
+                                                                       string taskQueue,
+                                                                       string signalName,
+                                                                       CancellationToken cancelToken) { return null; }
 
         public Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                          string workflowId,
-                                                                          string taskQueue,
-                                                                          string signalName,
-                                                                          IDataValue signalArgs,
-                                                                          CancellationToken cancelToken) { return null; }
+                                                                       string workflowId,
+                                                                       string taskQueue,
+                                                                       string signalName,
+                                                                       IDataValue signalArgs,
+                                                                       CancellationToken cancelToken) { return null; }
 
         public Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                          string workflowId,
-                                                                          string taskQueue,
-                                                                          IDataValue wokflowArgs,
-                                                                          string signalName,
-                                                                          CancellationToken cancelToken) { return null; }
+                                                                       string workflowId,
+                                                                       string taskQueue,
+                                                                       IDataValue wokflowArgs,
+                                                                       string signalName,
+                                                                       CancellationToken cancelToken) { return null; }
 
         public Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                          string workflowId,
-                                                                          string taskQueue,
-                                                                          IDataValue wokflowArgs,
-                                                                          string signalName,
-                                                                          IDataValue signalArgs,
-                                                                          CancellationToken cancelToken) { return null; }
+                                                                       string workflowId,
+                                                                       string taskQueue,
+                                                                       IDataValue wokflowArgs,
+                                                                       string signalName,
+                                                                       IDataValue signalArgs,
+                                                                       CancellationToken cancelToken) { return null; }
 
         public Task<IWorkflowConsecution> StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                          string workflowId,
-                                                                          string taskQueue,
-                                                                          IDataValue wokflowArgs,
-                                                                          string signalName,
-                                                                          IDataValue signalArgs,
-                                                                          StartWorkflowChainConfiguration workflowConfig,
-                                                                          CancellationToken cancelToken) { return null; }
+                                                                       string workflowId,
+                                                                       string taskQueue,
+                                                                       IDataValue wokflowArgs,
+                                                                       string signalName,
+                                                                       IDataValue signalArgs,
+                                                                       StartWorkflowChainConfiguration workflowConfig,
+                                                                       CancellationToken cancelToken) { return null; }
         #endregion StartWorkflowWithSignalAsync(..)
 
         #region GetOrStartWorkflowAsync(..)
@@ -843,13 +843,13 @@ namespace Temporal.WorkflowClient
 
         #region ---  TemporalServiceClient API interceptors ---
         Task<IWorkflowConsecution> OnServiceClient_StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                                   string workflowId,
-                                                                                   string taskQueue,
-                                                                                   IDataValue wokflowArgs,
-                                                                                   string signalName,
-                                                                                   IDataValue signalArgs,
-                                                                                   StartWorkflowChainConfiguration workflowConfig,
-                                                                                   CancellationToken cancelToken);
+                                                                                string workflowId,
+                                                                                string taskQueue,
+                                                                                IDataValue wokflowArgs,
+                                                                                string signalName,
+                                                                                IDataValue signalArgs,
+                                                                                StartWorkflowChainConfiguration workflowConfig,
+                                                                                CancellationToken cancelToken);
         Task<IWorkflowConsecution> OnServiceClient_GetOrStartWorkflowAsync(string workflowTypeName,
                                                                            string workflowId,
                                                                            string taskQueue,
@@ -919,23 +919,23 @@ namespace Temporal.WorkflowClient
         // The TemporalServiceClient APIs interceptors that result in creating a new `IWorkflowConsecution` instance must
         // initialize the `Workflow` field of this instance.
         public virtual async Task<IWorkflowConsecution> OnServiceClient_StartWorkflowWithSignalAsync(string workflowTypeName,
-                                                                                                        string workflowId,
-                                                                                                        string taskQueue,
-                                                                                                        IDataValue wokflowArgs,
-                                                                                                        string signalName,
-                                                                                                        IDataValue signalArgs,
-                                                                                                        StartWorkflowChainConfiguration workflowConfig,
-                                                                                                        CancellationToken cancelToken)
+                                                                                                     string workflowId,
+                                                                                                     string taskQueue,
+                                                                                                     IDataValue wokflowArgs,
+                                                                                                     string signalName,
+                                                                                                     IDataValue signalArgs,
+                                                                                                     StartWorkflowChainConfiguration workflowConfig,
+                                                                                                     CancellationToken cancelToken)
         {
             cancelToken.ThrowIfCancellationRequested();
             Workflow = await NextInterceptor.OnServiceClient_StartWorkflowWithSignalAsync(workflowTypeName,
-                                                                                             workflowId,
-                                                                                             taskQueue,
-                                                                                             wokflowArgs,
-                                                                                             signalName,
-                                                                                             signalArgs,
-                                                                                             workflowConfig,
-                                                                                             cancelToken);
+                                                                                          workflowId,
+                                                                                          taskQueue,
+                                                                                          wokflowArgs,
+                                                                                          signalName,
+                                                                                          signalArgs,
+                                                                                          workflowConfig,
+                                                                                          cancelToken);
             return Workflow;
         }
 
@@ -973,7 +973,7 @@ namespace Temporal.WorkflowClient
             cancelToken.ThrowIfCancellationRequested();
             return NextInterceptor.OnServiceClient_GetWorkflowRunAsync(workflowId,
                                                                        workflowRunId,
-                                                                      cancelToken);
+                                                                       cancelToken);
         }
 
         // ...
