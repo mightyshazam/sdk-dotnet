@@ -17,15 +17,10 @@ namespace Temporal.Sdk.BasicSamples
         public static void Main(string[] args)
         {
             Minimal(args).GetAwaiter().GetResult();
-            SpecifyNamespace(args).GetAwaiter().GetResult();
-            SpecifyNamespaceAndValidate(args).GetAwaiter().GetResult();
-            ValidateConnectionEagerly(args).GetAwaiter().GetResult();
-            ValidateConnectionEagerly2(args).GetAwaiter().GetResult();
             WorkflowIsAlreadyRunning(args).GetAwaiter().GetResult();
             WorkflowMayAlreadyBeRunning(args).GetAwaiter().GetResult();
             AvoidLongPolls(args).GetAwaiter().GetResult();
             AccessResultOfWorkflow(args).GetAwaiter().GetResult();
-            AccessResultOfWorkflowWithNonDataValueResult(args).GetAwaiter().GetResult();
             UseSignalsAndQueries(args).GetAwaiter().GetResult();
             CancelWorkflow(args).GetAwaiter().GetResult();
             UsePayloadCodecToCompressPayloadsForAllWorkflows(args).GetAwaiter().GetResult();
