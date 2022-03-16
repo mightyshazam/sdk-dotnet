@@ -1,9 +1,51 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace Temporal.WorkflowClient
 {
     public class WorkflowStubAttributes
     {
+    }
+
+    public enum WorkflowMainMethodStubInvocationPolicy
+    {
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        Unspecified = WorkflowChainBindingPolicy.Unspecified,
+
+        /// <summary>
+        /// If a Main Method Stub attributed with this policy is invoked on a stub instance that is ALREADY BOUND to a particular chain:
+        ///   Then the method stub will return a Task representing the completion of that chain (which may or may not already be completed).
+        ///   The main routine will not be invoked again. Method arguments, if any, will be ignored.
+        /// If a Main Method Stub attributed with this policy is invoked on a stub instance that is NOT YET BOUND to a particular chain:
+        ///   Start-New-Workflow gRPC API will be invoked to start a new chain.
+        ///   If Start succeeds, the stub will be bound to the new chain and the returned Task will represent the chan's completion.
+        ///   If Start fails with "workflow-already-exists", use Descripe gRPC API to get the latest chain, bind to that chain
+        ///   and return a Task representing that chains completion.
+        ///   If Start fails with other errors, then propagate the failure.
+        /// </summary>
+        StartNewOrGetResult = WorkflowChainBindingPolicy.NewOrLatestChain,
+
+        /// <summary>
+        /// If a Main Method Stub attributed with this policy is invoked on a stub instance that is ALREADY BOUND to a particular chain:
+        ///   Then the method stub will return a Task representing the completion of that chain (which may or may not already be completed).
+        ///   The main routine will not be invoked again. Method arguments, if any, will be ignored.
+        /// If a Main Method Stub attributed with this policy is invoked on a stub instance that is NOT YET BOUND to a particular chain:
+        ///   Use Descripe gRPC API to get the latest chain, bind to that chain and return a Task representing that chains completion.
+        ///   Method arguments, if any, will be ignored.        
+        /// </summary>
+        GetResult = WorkflowChainBindingPolicy.LatestChain,
+
+        /// <summary>
+        /// If a Main Method Stub attributed with this policy is invoked on a stub instance that is ALREADY BOUND to a particular chain:
+        ///   Throw Invalid Operation. 
+        /// If a Main Method Stub attributed with this policy is invoked on a stub instance that is NOT YET BOUND to a particular chain:
+        ///   Start-New-Workflow gRPC API will be invoked to start a new chain.
+        ///   If Start succeeds, the stub will be bound to the new chain and the returned Task will represent the chan's completion.
+        ///   If Start fails with "workflow-already-exists", use Descripe gRPC API to get the latest chain, bind to that chain
+        ///   and return a Task representing that chains completion.
+        ///   If Start fails with other errors, then propagate the failure.
+        /// </summary>
+        StartNew = WorkflowChainBindingPolicy.NewChainOnly
     }
 
     /// <summary>
@@ -12,35 +54,24 @@ namespace Temporal.WorkflowClient
     /// This attribute can be applied to methods with these signatures:
     ///     Task SomeMethod()
     ///     Task{TResult} SomeMethod() where TResult : IDataValue
-    ///     Task SomeMethod(TArg args)	 where TArg : IDataValue
+    ///     Task SomeMethod(TArg args) where TArg : IDataValue
     ///     Task{TResult} SomeMethod(TArg args) where TArg : IDataValue where TResult : IDataValue
     /// otherwise an error during stub generation is thrown.
     /// 
-    /// The workflow type name is specified to the API that generated the stub. It is not specified here.
+    /// The workflow type name is specified when invoking the API that generates the stub. It is not specified here.
     /// 
     /// It is NOT prohibited to have MULTIPLE stub methods point to the main workflow method.
     /// 
     /// Parameters are not validated by the client and are sent to the workflow as provided.
     /// If no parameters are provided, an empty payload is sent.
     /// 
-    /// If a MainMethodStub is invoked on a stub instance that is NOT yet bound to a workflow chain,
-    /// it will attempt to bind the stub instance to the first option permitted by `WorkflowChainStubConfiguration`
-    /// specified to the stub creation method in the following order:
-    ///   1) Bind to an existing Active chain ("active" as in Status=Running)
-    ///   2) Start a New chain and bind to it
-    ///   3) Bind to an existing Finished chain
-    /// If it cannot find anything to bind to based on above-mentioned permissions, an error is thrown.
-    /// If permissions specify a binding strategy, but the execution fails, the respective error is thrown
-    /// and no other binding is attempted.For example, assume that all CanBindToXxx settings are True, and
-    /// there are existing chains, yet all of them are finished.In that case, based on the above order,
-    /// it will try to start a New chain and bind to it.
-    /// If, however, starting a new chain fails based on the 'WorkflowIdReusePolicy', the failure will be
-    /// propagated and binding to an existing Finished run will not be attempted.
-    /// 
-    /// If `CanBindToExistingRunningChain` (or `CanBindToExistingFinishedChain`) is true, then the
-    /// MainMethodStub can be called for a given workflow chain multiple times.In that case the returned
-    /// Task represents the completion of the respective chain; the chain is NOT started again.
-    /// Potential arguments are ignored in such cases.
+    /// When a WorkflowMainMethodStub is invoked, several things (or may not) happen:
+    ///  - Starting a new workflow chain and thus invoking the workflow's main routine;
+    ///  - Binding the workflow stub to a particular chain;
+    ///  - Returning a Task that represents the eventual completion of the bound workflow chain.
+    ///  
+    /// Which of these things happen, and in what order is defined by the specified
+    /// <see cref="WorkflowMainMethodStubInvocationPolicy"/>.
     /// 
     /// This and other 'WorkflowXxxStub' attributes can only be applied to method definitions in interfaces.
     /// They are ignored in classes.
@@ -56,8 +87,13 @@ namespace Temporal.WorkflowClient
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = true)]
     public sealed class WorkflowMainMethodStubAttribute : Attribute
-    {        
-        public WorkflowMainMethodStubAttribute() { }
+    {
+        public WorkflowMainMethodStubInvocationPolicy InvocationPolicy { get; }
+
+        public WorkflowMainMethodStubAttribute(WorkflowMainMethodStubInvocationPolicy invocationPolicy)
+        {
+            InvocationPolicy = invocationPolicy;
+        }
     }
 
     /// <summary>

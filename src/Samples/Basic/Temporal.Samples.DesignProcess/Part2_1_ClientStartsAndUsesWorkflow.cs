@@ -14,57 +14,146 @@ namespace Temporal.Sdk.BasicSamples
 {
     public class Part2_1_ClientStartsAndUsesWorkflow
     {
-        public static void Main(string[] args)
+        public static void Main(string[] _)
         {
-            Minimal(args).GetAwaiter().GetResult();
-            WorkflowIsAlreadyRunning(args).GetAwaiter().GetResult();
-            WorkflowMayAlreadyBeRunning(args).GetAwaiter().GetResult();
-            AvoidLongPolls(args).GetAwaiter().GetResult();
-            AccessResultOfWorkflow(args).GetAwaiter().GetResult();
-            UseSignalsAndQueries(args).GetAwaiter().GetResult();
-            CancelWorkflow(args).GetAwaiter().GetResult();
-            UsePayloadCodecToCompressPayloadsForAllWorkflows(args).GetAwaiter().GetResult();
         }
 
-        public static async Task Minimal(string[] _)
+        public static async Task Minimal()
         {
             TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
 
-            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("workflowId", "workflowTypeName", "taskQueue");
+            await workflowChain.GetResultAsync();
 
-            IWorkflowChainResult result = await workflowChain.GetResultAsync();
-            Console.WriteLine($"Final state: {result.Status}.");
+            Console.WriteLine($"Workflow finshed.");
         }
 
-        public static async Task WorkflowIsAlreadyRunning(string[] _)
+        public static async Task InvokeExamples()
         {
             TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
 
-            IWorkflowChain workflowChain = await serviceClient.GetWorkflowAsync("workflowId");
+            await GetResultOfWorkflowThatIsKnownToBeStarted(serviceClient);
+            await QueryWorkflowThatIsKnownToBeStarted(serviceClient);
+            await StartNewWorkflow1(serviceClient);
+            // ...
+        }
+
+        public static async Task GetResultOfWorkflowThatIsKnownToBeStarted(ITemporalServiceClient serviceClient)
+        {
+            IWorkflowChain workflowChain = serviceClient.CreateUnboundWorkflowHandle("workflowId");
+
+            // At this point, `workflowChain` will bind to the latest chain with `workflowId`, regardless of status:
+            await workflowChain.GetResultAsync();
+
+            Console.WriteLine("Workflow finished.");
+        }
+
+        record SomeDataValue() : IDataValue;
+
+        public static async Task QueryWorkflowThatIsKnownToBeStarted(ITemporalServiceClient serviceClient)
+        {
+            IWorkflowChain workflowChain = serviceClient.CreateUnboundWorkflowHandle("workflowId");
+
+            // This will query the currently latest chain (regardless of status), and then bind to the chain that ended up being queried.
+            SomeDataValue val = await workflowChain.QueryAsync<SomeDataValue>("queryName");
+            
+            Console.WriteLine($"Query result: \"{val}\".");
 
             await workflowChain.GetResultAsync();
-            Console.WriteLine("Workflow completed.");
+            Console.WriteLine("Workflow finished.");
         }
 
-        public static async Task WorkflowMayAlreadyBeRunning(string[] _)
+        public static async Task StartNewWorkflow1(ITemporalServiceClient serviceClient)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
-
-            IWorkflowChain workflowChain = await serviceClient.GetOrStartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue", CancellationToken.None);
+            // This exemplifies the "largest" (most complete) Start Workflow overload:
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync(workflowId:       "SomeCustomerId",
+                                                                                  workflowTypeName: "CustomerRegistrationProcess",
+                                                                                  taskQueue:        "SomeTaskQueue",
+                                                                                  inputArgs:        DataValue.Wrap(42),
+                                                                                  workflowConfig:   new StartWorkflowChainConfiguration()
+                                                                                                    {
+                                                                                                        Identity = "Some Id"
+                                                                                                    },
+                                                                                  cancelToken: CancellationToken.None);
 
             await workflowChain.GetResultAsync();
-            Console.WriteLine("Workflow completed.");
+            Console.WriteLine("Workflow finished.");
         }
 
-        public static async Task AvoidLongPolls(string[] _)
+        public static async Task StartNewWorkflow2(ITemporalServiceClient serviceClient)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
+            // The previous example is equivalet to the following:
+            IWorkflowChain workflowChain = serviceClient.CreateUnboundWorkflowHandle(workflowId: "SomeCustomerId");
+            await workflowChain.StartAsync(workflowTypeName: "CustomerRegistrationProcess",
+                                           taskQueue:        "SomeTaskQueue",
+                                           inputArgs:        DataValue.Wrap(42),
+                                           workflowConfig:   new StartWorkflowChainConfiguration()
+                                                             {
+                                                                 Identity = "Some Id"
+                                                             },
+                                           cancelToken:      CancellationToken.None);
 
-            IWorkflowChain workflowChain = await serviceClient.GetWorkflowAsync("workflowId");
+            await workflowChain.GetResultAsync();
+            Console.WriteLine("Workflow finished.");
+        }
+
+        public static async Task StartWorkflowOnlyIfNotAlreadyRunning(ITemporalServiceClient serviceClient)
+        {
+            // In this example, we need to connect to a workflow while ensuring it is running.
+            // If the workflow is not already running, we will start it.
+            // If we end up starting the workflow, we want to run some particular query.
+            // Otherwise, we do not need to run any query, but we still want to bind the Chain Handle to the current chain.
+
+            // ! In general, be aware that this code is not atomic in respect to concurrency with the remote workflow: !
+            // A chain that was running at some time may finish by the time the client executes the next API.
+            // However, a user familiar with the internal logic of a workflow may very well make certain safe assumptions
+            // about cuncurrent scenarios.
+
+            IWorkflowChain workflowChain = serviceClient.CreateUnboundWorkflowHandle("workflowId");
+
+            if (await workflowChain.StartIfNotRunningAsync("workflowTypeName", "taskQueue"))
+            {
+                // Start has bound `workflowChain`, so we are guatanteed to query that chain that we just started:
+                SomeDataValue val = await workflowChain.QueryAsync<SomeDataValue>("queryAfterStartName");
+                Console.WriteLine($"Query result: \"{val}\".");
+            }
+            else
+            {
+                // Start returned False, implying that a chain with the specified workflow Id was already running. Bind to that chain.
+                // Note that in general we have no guarantee that it is still running, but based on the knowledge of the overall
+                // scenario, the developer may or may not assume that in practice.
+                await workflowChain.EnsureBoundAsync();
+            }
+
+            // Work with the `workflowChain` instance...
+
+            await workflowChain.GetResultAsync();
+            Console.WriteLine("Workflow finished.");
+        }
+
+        public static async Task CheckIfParticularWorkflowExists(ITemporalServiceClient serviceClient)
+        {
+            const string WorkflowId = "Required Workflow Id";
+
+            if ((await serviceClient.TryGetWorkflowAsync(WorkflowId)).IsSuccess(out IWorkflowChain workflowChain))
+            {
+                // `TryGetWorkflowAsync(..)` ensured that the chain exists and is bound,
+                // so `GetWorkflowChainIdAsync()` will complete synchronously:
+
+                Console.WriteLine($"Workflow with Workflow-Id \"{WorkflowId}\" exists"
+                                + $" and its Workflow-Chain-Id is \"{ await workflowChain.GetWorkflowChainIdAsync()}\".");
+            }
+            else
+            {
+                Console.WriteLine($"Workflow with Workflow-Id \"{WorkflowId}\" does not exist.");
+            }
+        }
+
+        public static async Task AvoidLongPolls(ITemporalServiceClient serviceClient)
+        {
+            IWorkflowChain workflowChain = serviceClient.CreateUnboundWorkflowHandle("workflowId");
 
             if ((await workflowChain.TryGetResultIfAvailableAync()).IsSuccess(out IWorkflowChainResult result))
             {                                
@@ -84,25 +173,19 @@ namespace Temporal.Sdk.BasicSamples
 
         record ComputationResult(int Number) : IDataValue;
 
-        public static async Task AccessResultOfWorkflow(string[] _)
+        public static async Task AccessResultOfWorkflow(ITemporalServiceClient serviceClient)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
-
-            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("NumbersComputer", "ComputeSomeNumber", "TaskQueue");
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("ComputeSomeNumber", "NumbersComputer", "TaskQueue");
 
             IWorkflowChainResult<ComputationResult> result = await workflowChain.GetResultAsync<ComputationResult>();
             Console.WriteLine($"The result of the workflow is {result.Value.Number}.");
         }
 
-        public static async Task UseSignalsAndQueries(string[] _)
+        public static async Task UseSignalsAndQueries(ITemporalServiceClient serviceClient)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
-
             // Start countdown timer to finish in 1 min:   
-            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("CountdownTimer",
-                                                                                  "TestTimerXyz",
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("TestTimerXyz",
+                                                                                  "CountdownTimer",
                                                                                   "TaskQueue",
                                                                                   new TargetTimePayload(DateTime.UtcNow.AddMinutes(1)));
 
@@ -111,7 +194,7 @@ namespace Temporal.Sdk.BasicSamples
 
             // Push out target time by 30 secs:
             // Query the workflow, add a minute, signal workflow.
-            TargetTimePayload prevTargetTime = (await workflowChain.QueryAsync<TargetTimePayload>("GetCurrentTargetTimeUtc")).Value;
+            TargetTimePayload prevTargetTime = await workflowChain.QueryAsync<TargetTimePayload>("GetCurrentTargetTimeUtc");
             TargetTimePayload newTargetTime = new(prevTargetTime.UtcDateTime.AddSeconds(30));
             await workflowChain.SignalAsync(RemoteApiNames.CountdownTimerWorkflow.Signals.UpdateTargetTime, newTargetTime);
 
@@ -120,20 +203,19 @@ namespace Temporal.Sdk.BasicSamples
             Console.WriteLine($"The workflow {(result.IsTargetTimeReached ? "did" : "did not")} reach the target time.");
         }
 
-        public static async Task CancelWorkflow(string[] _)
+        public static async Task CancelWorkflow(ITemporalServiceClient serviceClient)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
+            // Get unbound handle to the latest workflow chain:
+            IWorkflowChain latestChain = serviceClient.CreateUnboundWorkflowHandle("workflowId");
 
-            // Get latest workflow with the specified Id or throw if no workflows with the specified Id can be found:
-            IWorkflowChain latestChain = await serviceClient.GetWorkflowAsync("workflowId");
-
+            // Request to cancel the latest chain:
             // The Task returned by this API is completed when the cancellation request call is completed,
             // i.e. the server persisted the request to cancel into the workflow history.
-            // At that time the workflow implementation may not have yet processed the cancellation request.
-            // This API will throw if latestChain is no longer running which may happen concurrently
-            // after the above check.
+            // At that time the workflow implementation may not have yet processed the cancellation request.            
             await latestChain.RequestCancellationAsync();
+
+            // After requesting the cancellation, `latestChain` will be bound to the chain that was actually addressed. 
+            // The code below is safe in regard to interacting with the same chain.
 
             // We must await the completion of the workflow to learn whether the remote workflow actually
             // honored the cancellation request.
@@ -144,36 +226,32 @@ namespace Temporal.Sdk.BasicSamples
                             + " by the workflow.");
         }
 
-        public static async Task CancelWorkflow2(string[] _)
+        public static async Task CancelWorkflow2(ITemporalServiceClient serviceClient)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
+            // Get unbound handle to the latest workflow chain:
+            IWorkflowChain latestChain = serviceClient.CreateUnboundWorkflowHandle("workflowId");
 
-            // Get latest workflow with the specified Id or throw if no workflows with the specified Id can be found:
-            IWorkflowChain latestChain = await serviceClient.GetWorkflowAsync("workflowId");
-            
+            // Request to cancel the latest chain:
             // The Task returned by this API is completed when the cancellation request call is completed,
             // i.e. the server persisted the request to cancel into the workflow history.
-            // At that time the workflow implementation may not have yet processed the cancellation request.
-            // This API will throw if latestChain is no longer running which may happen concurrently
-            // after the above check.
+            // At that time the workflow implementation may not have yet processed the cancellation request.            
             await latestChain.RequestCancellationAsync();
+
+            // After requesting the cancellation, `latestChain` will be bound to the chain that was actually addressed. 
+            // The code below is safe in regard to interacting with the same chain.
 
             // If we want to know that the workflow reacted to the cancellation we must await its conclusion.            
             // (note that if the workflow does not respect the cancellation, this may await indefinitely)
             await latestChain.GetResultAsync();            
         }
 
-        public static async Task CancelWorkflowAndWaitWithProgress()
+        public static async Task CancelWorkflowAndWaitWithProgress(ITemporalServiceClient serviceClient)
         {
             TimeSpan progressUpdatePeriod = TimeSpan.FromSeconds(10);
 
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
-           
-            IWorkflowChain workflow = await serviceClient.GetWorkflowAsync("workflowId");
+            IWorkflowChain workflow = serviceClient.CreateUnboundWorkflowHandle("workflowId");
 
-            // Request cancellation:
+            // Request cancellation and bind the handle:
             await workflow.RequestCancellationAsync();
             DateTime cancellationTime = DateTime.Now;
 
@@ -201,26 +279,22 @@ namespace Temporal.Sdk.BasicSamples
             Console.WriteLine($"Workflow finished. Terminal status: {workflowResult.Status}.");
         }
 
-        public static async Task AccessWorkflowResultValue()
+        public static async Task AccessWorkflowResultValue(ITemporalServiceClient serviceClient)
         {
-            // Get the workflow:
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);
-            IWorkflowChain workflow = await serviceClient.GetWorkflowAsync("workflowId");
-            
-            // Get the workflow result:
+            // Get the workflow handle:
+            IWorkflowChain workflow = serviceClient.CreateUnboundWorkflowHandle("workflowId");
+
+            // Get bind the handle and the workflow result:
             ComputationResult resultValue = (await workflow.GetResultAsync<ComputationResult>()).Value;
 
             // Print result:
             Console.WriteLine($"Workflow completed. Result value: \"{resultValue}\".");
         }
 
-        public static async Task AccessWorkflowResultValue2()
+        public static async Task AccessWorkflowResultValue2(ITemporalServiceClient serviceClient)
         {
-            // Get the workflow:
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "namespace" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.CreateAndInitializeAsync(serviceConfig);           
-            IWorkflowChain workflow = await serviceClient.GetWorkflowAsync("workflowId");
+            // Get the workflow handle:
+            IWorkflowChain workflow = serviceClient.CreateUnboundWorkflowHandle("workflowId");
 
             // Declare variables used below:
             Task<IWorkflowChainResult<ComputationResult>> workflowConclusion;
@@ -265,7 +339,7 @@ namespace Temporal.Sdk.BasicSamples
         }
 
 
-        public static async Task UsePayloadCodecToCompressPayloadsForAllWorkflows(string[] _)
+        public static async Task UsePayloadCodecToCompressPayloadsForAllWorkflows()
         {
             TemporalServiceClientConfiguration serviceConfig = new()
             {
@@ -273,8 +347,8 @@ namespace Temporal.Sdk.BasicSamples
                 Namespace = "namespace",
             };
 
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
-            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("workflowTypeName", "workflowId", "taskQueue");
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
+            IWorkflowChain workflowChain = await serviceClient.StartWorkflowAsync("workflowId", "workflowTypeName", "taskQueue");
 
             await workflowChain.GetResultAsync();
         }
@@ -342,7 +416,7 @@ namespace Temporal.Sdk.BasicSamples
         }
         #endregion class GZipPayloadCodec
 
-        public static async Task UseInterceptorToLogClientCallsForAllWorkflows(string[] _)
+        public static async Task UseInterceptorToLogClientCallsForAllWorkflows()
         {
             TemporalServiceClientConfiguration serviceConfig = new()
             {
@@ -351,8 +425,8 @@ namespace Temporal.Sdk.BasicSamples
                             interceptors.Insert(0, new FileLoggerWorkflowClientInterceptor("SampleLog.txt")),
             };
 
-            ITemporalServiceClient serviceClient = new TemporalServiceClient(serviceConfig);
-            IWorkflowChain workflowChain = await serviceClient.GetWorkflowAsync("workflowId");
+            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
+            IWorkflowChain workflowChain = serviceClient.CreateUnboundWorkflowHandle("workflowId");
 
             await workflowChain.GetResultAsync();
         }

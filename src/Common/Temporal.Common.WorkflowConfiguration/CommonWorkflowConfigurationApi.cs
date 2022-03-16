@@ -43,7 +43,6 @@ namespace Temporal.Common.WorkflowConfiguration
 
     public class Memo
     {
-
     }
 
     public class SearchAttributes
@@ -52,6 +51,14 @@ namespace Temporal.Common.WorkflowConfiguration
     }
 
     public class Header
+    {
+
+    }
+
+    /// <summary>
+    /// DescribeWorkflowExecutionResponse
+    /// </summary>
+    public class WorkflowChainInfo
     {
 
     }

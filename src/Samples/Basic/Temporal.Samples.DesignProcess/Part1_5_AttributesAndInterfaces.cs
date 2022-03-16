@@ -88,8 +88,11 @@ namespace Temporal.Sdk.BasicSamples
             [WorkflowSignalStub(SignalTypeName = RemoteApiNames.ShoppingCartWorkflow.Signals.Pay)]
             Task ApplyPaymentAsync(MoneyAmount amount);
 
-            [WorkflowMainMethodStub]
+            [WorkflowMainMethodStub(WorkflowMainMethodStubInvocationPolicy.StartNewOrGetResult)]
             Task<OrderConfirmation> ShopAsync(User shopper);
+
+            [WorkflowMainMethodStub(WorkflowMainMethodStubInvocationPolicy.GetResult)]
+            Task<OrderConfirmation> GetOrderAsync();
         }
 
         public static class RemoteApiNames
@@ -245,6 +248,11 @@ namespace Temporal.Sdk.BasicSamples
                         : new MoneyAmount(0, 50);
 
                 return new TryGetResult<MoneyAmount>(preTax + tax);
+            }
+
+            Task<OrderConfirmation> IShoppingCart.GetOrderAsync()
+            {
+                return _orderCompletion.Task;
             }
 
             public async Task<OrderConfirmation> ShopAsync(User shopper)
