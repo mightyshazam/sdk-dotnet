@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{56A27013-A5E
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{E4E2565D-4449-4CD4-993A-193C006C3884}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExceptionSerialization", "InternalAlgorithms\ExceptionSerialization\ExceptionSerialization.csproj", "{4C9F6316-E58E-4C90-8253-159682DD4CAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +64,10 @@ Global
 		{C9EF371F-BFA2-4B3E-8377-77B4673AC8F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C9EF371F-BFA2-4B3E-8377-77B4673AC8F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C9EF371F-BFA2-4B3E-8377-77B4673AC8F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C9F6316-E58E-4C90-8253-159682DD4CAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C9F6316-E58E-4C90-8253-159682DD4CAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C9F6316-E58E-4C90-8253-159682DD4CAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C9F6316-E58E-4C90-8253-159682DD4CAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -71,6 +77,7 @@ Global
 		{C9EF371F-BFA2-4B3E-8377-77B4673AC8F5} = {8DD18538-75F1-4B23-A084-CE5F19964057}
 		{56A27013-A5E4-4526-B5FB-433B7533E55C} = {C6AF3396-C4FD-4CB4-836E-4BFCBB18EAE3}
 		{E4E2565D-4449-4CD4-993A-193C006C3884} = {C6AF3396-C4FD-4CB4-836E-4BFCBB18EAE3}
+		{4C9F6316-E58E-4C90-8253-159682DD4CAD} = {8DD18538-75F1-4B23-A084-CE5F19964057}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55779F94-BE5C-4A79-9C28-202FFEAAAEF5}
