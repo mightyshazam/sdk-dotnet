@@ -74,7 +74,7 @@ namespace ExceptionSerialization
         }
 
 
-        static void Main(string[] _)
+        internal static void Main(string[] _)
         {
             (new Program()).Exec();
         }
@@ -178,17 +178,17 @@ namespace ExceptionSerialization
             }
         }
 
-        void FuncA1()
+        internal void FuncA1()
         {
             FuncA2();
         }
 
-        void FuncA2()
+        internal void FuncA2()
         {
             FuncA3();
         }
 
-        void FuncA3()
+        internal void FuncA3()
         {
             ArgumentOutOfRangeException ex = new("myParam", "This is a test exception.");
             Console.WriteLine($"\n-----------\nException being thrown first time:\n {ex}");
@@ -196,12 +196,12 @@ namespace ExceptionSerialization
             throw ex;
         }
 
-        void FuncB1(SerializationInfo serializedEx)
+        internal void FuncB1(SerializationInfo serializedEx)
         {
             FuncB2(serializedEx);
         }
 
-        void FuncB2(SerializationInfo serializedEx)
+        internal void FuncB2(SerializationInfo serializedEx)
         {
             FuncB3(serializedEx);
         }
@@ -217,13 +217,13 @@ namespace ExceptionSerialization
             Console.WriteLine($"    StackTraceString:       \"{serializedEx.GetString("StackTraceString")}\"");
             Console.WriteLine($"    RemoteStackTraceString: \"{serializedEx.GetString("RemoteStackTraceString")}\"");
             Console.WriteLine($"    RemoteStackIndex:       \"{serializedEx.GetInt32("RemoteStackIndex")}\"");
-            Console.WriteLine($"    ExceptionMethod:        \"{serializedEx.GetValue("ExceptionMethod", typeof(String))}\"");
+            Console.WriteLine($"    ExceptionMethod:        \"{serializedEx.GetValue("ExceptionMethod", typeof(string))}\"");
             Console.WriteLine($"    HResult:                \"{serializedEx.GetInt32("HResult")}\"");
             Console.WriteLine($"    Source:                 \"{serializedEx.GetString("Source")}\"");
             Console.WriteLine($"    WatsonBuckets:          \"{serializedEx.GetValue("WatsonBuckets", typeof(byte[]))}\"");
         }
 
-        static class StackTraceMarkers
+        internal static class StackTraceMarkers
         {
             public static class Literals
             {
@@ -242,7 +242,7 @@ namespace ExceptionSerialization
             }
         }
 
-        static Exception RehydrateException(SerializationInfo serializedEx, bool formatForBeingWrapped)
+        static internal Exception RehydrateException(SerializationInfo serializedEx, bool formatForBeingWrapped)
         {
             bool useNewLineAfterRemoteStack = !formatForBeingWrapped;
             //PrintSerializationInfo(serializedEx);
@@ -322,17 +322,17 @@ namespace ExceptionSerialization
             {
                 SerializationEntry curr = serInfoEnum.Current;
 
-                if (curr.Name.Equals("StackTraceString") && curr.ObjectType == typeof(String))
+                if (curr.Name.Equals("StackTraceString") && curr.ObjectType == typeof(string))
                 {
-                    mutatedSerializedEx.AddValue("StackTraceString", stackTrace, typeof(String));
+                    mutatedSerializedEx.AddValue("StackTraceString", stackTrace, typeof(string));
                 }
-                else if (curr.Name.Equals("RemoteStackTraceString") && curr.ObjectType == typeof(String))
+                else if (curr.Name.Equals("RemoteStackTraceString") && curr.ObjectType == typeof(string))
                 {
-                    mutatedSerializedEx.AddValue("RemoteStackTraceString", remoteTraceBuilder.ToString(), typeof(String));
+                    mutatedSerializedEx.AddValue("RemoteStackTraceString", remoteTraceBuilder.ToString(), typeof(string));
                 }
-                else if (curr.Name.Equals("ClassName") && curr.ObjectType == typeof(String))
+                else if (curr.Name.Equals("ClassName") && curr.ObjectType == typeof(string))
                 {
-                    mutatedSerializedEx.AddValue("ClassName", typeof(MySpecialException).FullName, typeof(String));
+                    mutatedSerializedEx.AddValue("ClassName", typeof(MySpecialException).FullName, typeof(string));
                 }
                 else
                 {
@@ -349,7 +349,7 @@ namespace ExceptionSerialization
             return ex;
         }
 
-        void FuncB3(SerializationInfo serializedEx)
+        internal void FuncB3(SerializationInfo serializedEx)
         {
             Exception ex = RehydrateException(serializedEx, formatForBeingWrapped: false);
             //Console.WriteLine($"\n-----------\nException being thrown after rehydration:\n {ex}");
@@ -358,32 +358,32 @@ namespace ExceptionSerialization
             throw ex;
         }
 
-        void FuncC1(Exception ex)
+        internal void FuncC1(Exception ex)
         {
             FuncC2(ex);
         }
 
-        void FuncC2(Exception ex)
+        internal void FuncC2(Exception ex)
         {
             FuncC3(ex);
         }
 
-        void FuncC3(Exception ex)
+        internal void FuncC3(Exception ex)
         {
             ExceptionDispatchInfo.Capture(ex).Throw();
         }
 
-        void FuncD1(Exception ex)
+        internal void FuncD1(Exception ex)
         {
             FuncD2(ex);
         }
 
-        void FuncD2(Exception ex)
+        internal void FuncD2(Exception ex)
         {
             FuncD3(ex);
         }
 
-        void FuncD3(Exception ex)
+        internal void FuncD3(Exception ex)
         {
             if (ex is ITemporalFailure failure)
             {
@@ -395,17 +395,17 @@ namespace ExceptionSerialization
             }
         }
 
-        void FuncE1(SerializationInfo serializedEx)
+        internal void FuncE1(SerializationInfo serializedEx)
         {
             FuncE2(serializedEx);
         }
 
-        void FuncE2(SerializationInfo serializedEx)
+        internal void FuncE2(SerializationInfo serializedEx)
         {
             FuncE3(serializedEx);
         }
 
-        void FuncE3(SerializationInfo serializedEx)
+        internal void FuncE3(SerializationInfo serializedEx)
         {
             Exception ex = RehydrateException(serializedEx, formatForBeingWrapped: true);
             //Console.WriteLine($"\n-----------\nException being wrapped-thrown after rehydration:\n {ex}");

@@ -12,11 +12,14 @@ using Temporal.Worker.Workflows;
 namespace Temporal.Sdk.BasicSamples
 {
     public class Part1_4_TimersAndComposition2
-    {        
+    {
         [Workflow(mainMethod: nameof(CountdownAsync))]
         public class CountdownTimer
         {
-            private static readonly TimeSpan CountdownStep = TimeSpan.FromSeconds(10);
+            private static class Settings
+            {
+                public static readonly TimeSpan CountdownStep = TimeSpan.FromSeconds(10);
+            }
 
             private DateTime _targetTimeUtc;
 
@@ -37,7 +40,7 @@ namespace Temporal.Sdk.BasicSamples
                 while (true)
                 {
                     // Set up a target timer for one countdown step.
-                    Task stepTask = workflowCtx.SleepAsync(CountdownStep);
+                    Task stepTask = workflowCtx.SleepAsync(Settings.CountdownStep);
 
                     // Wait until any of the timers fire or until any of the signals are received.
                     await Task.WhenAny(targetTask, stepTask, _requestAbort.Task, _updateTarget.Task);
@@ -59,7 +62,7 @@ namespace Temporal.Sdk.BasicSamples
                     {
                         // If a countdown step period has passed, compute and didplay the the number of remaining steps.
                         TimeSpan remainingTime = _targetTimeUtc - workflowCtx.DeterministicApi.DateTimeUtcNow;
-                        var remainingSteps = new DisplayRemainingStepsPayload((int) (remainingTime.TotalMilliseconds / CountdownStep.TotalMilliseconds));
+                        var remainingSteps = new DisplayRemainingStepsPayload((int) (remainingTime.TotalMilliseconds / Settings.CountdownStep.TotalMilliseconds));
 
                         // We do not want to wait for the result of the DisplayRemainingSteps Activity; we treat it as fire-and-forget.
                         // Thus, we do not need the resulting task.

@@ -2,7 +2,7 @@
 
 namespace ReflectionAnalysisPoC
 {
-    class Attributes
+    internal class Attributes
     {
     }
 

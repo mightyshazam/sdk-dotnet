@@ -50,7 +50,7 @@ namespace Temporal.Sdk.BasicSamples
             Console.WriteLine("Workflow finished.");
         }
 
-        record SomeDataValue() : IDataValue;
+        internal record SomeDataValue() : IDataValue;
 
         public static async Task QueryWorkflowThatIsKnownToBeStarted(ITemporalServiceClient serviceClient)
         {
@@ -171,7 +171,7 @@ namespace Temporal.Sdk.BasicSamples
             Console.WriteLine($"Workflow still did not complete. Good bye.");
         }
 
-        record ComputationResult(int Number) : IDataValue;
+        internal record ComputationResult(int Number) : IDataValue;
 
         public static async Task AccessResultOfWorkflow(ITemporalServiceClient serviceClient)
         {
@@ -354,7 +354,7 @@ namespace Temporal.Sdk.BasicSamples
         }
 
         #region class GZipPayloadCodec
-        class GZipPayloadCodec : IPayloadCodec
+        internal class GZipPayloadCodec : IPayloadCodec
         {
             private const string MetadataKey = nameof(GZipPayloadCodec);
 
@@ -432,7 +432,7 @@ namespace Temporal.Sdk.BasicSamples
         }
 
         #region class FileLoggerWorkflowClientInterceptor
-        class FileLoggerWorkflowClientInterceptor : TemporalServiceClientInterceptorBase
+        internal class FileLoggerWorkflowClientInterceptor : TemporalServiceClientInterceptorBase
         {
             private readonly string _fileName;
 

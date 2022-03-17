@@ -6,7 +6,7 @@ namespace ControlTaskContinuationOrder
 {
     public class Program
     {
-        static void Main(string[] _)
+        internal static void Main(string[] _)
         {
             WriteLine("Hello World!");
             (new Program()).Execute();
