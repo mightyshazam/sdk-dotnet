@@ -1,0 +1,14 @@
+# Some Code Style rules make sense in general, but should be disagked for the Scratchpad area.
+# This file configures that.
+# Refer to the upper directory for most rules.
+root = false
+
+# Apply to C# files
+[*.cs]
+
+# Disable formatting enforcement
+dotnet_diagnostic.IDE0055.severity = silent  # Fix formatting
+
+# Parameter preferences
+dotnet_code_quality_unused_parameters = all:silent
+dotnet_diagnostic.IDE0060.severity = silent  # Remove unused parameter
