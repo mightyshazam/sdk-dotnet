@@ -1,10 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
-<!-- This Directory.Build.props file needs to apply to all projects and solutions in this repository. It is placed near the top of the repo accordingly.    -->
-<!-- If you use more specific Directory.Build.props files, you need to reference this file from there. You can do it with a statement such as this:         -->
-<!--     <Import Condition="Exists($([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../')))"                            -->
-<!--             Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />                                   -->
-<!-- For details see: https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019#use-case-multi-level-merging                  -->
+<!-- This `RepoAndBuild-DirectoryStructure.props` file needs to apply to all projects and solutions in this repository.                                     -->
+<!-- It is imported from within the `Directory.Build.props` which is placed near the top of the repo.                                                       -->
+<!-- If you use more specific `Directory.Build.props` in subdirectories, make sure to reference the repo-wide `Directory.Build.props` from there.           -->
+<!-- Look into the top-level `Directory.Build.props` for info on how to do that.                                                                            -->
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
@@ -16,9 +15,9 @@
     <!-- ## Cloning / Enlisting                                                                                                                             -->
     <!-- The “git clone” command must be issued from an "wrapper directory" that has a short, descriptive name for the repo or repo-group.                  -->
     <!-- E.g.:                                                                                                                                              -->
-    <!--     C:\Code>mkdir Tmprl-SDK-DotNet                                                                                                                   -->
-    <!--     C:\Code>cd Tmprl-SDK-DotNet                                                                                                                      -->
-    <!--     C:\Code\Tmprl-SDK-DotNet>git clone https://github.com/temporalio/sdk-dotnet.git                                                                  -->
+    <!--     C:\Code>mkdir Tmprl-SDK-DotNet                                                                                                                 -->
+    <!--     C:\Code>cd Tmprl-SDK-DotNet                                                                                                                    -->
+    <!--     C:\Code\Tmprl-SDK-DotNet>git clone https://github.com/temporalio/sdk-dotnet.git                                                                -->
     <!--     Cloning into 'sdk-dotnet'...                                                                                                                   -->
     <!--                                                                                                                                                    -->
     <!-- This structure has some beneficial properties:                                                                                                     -->
@@ -45,7 +44,8 @@
     <!--                             .gitignore                                                                                                             -->
     <!--                             LICENSE                    <== A file within the repo root folder                                                      -->
     <!--                             README.md                  <== . . .                                                                                   -->
-    <!--                             Directory.Build.props      <== A version of THIS FILE                                                                  -->
+    <!--                             Directory.Build.props      <== The repo-wide build properties (THIS FILE is imported from there)                       -->
+    <!--                             RepoAndBuild-DirectoryStructure.props  <== A version of THIS FILE                                                      -->
     <!--                             . . .                                                                                                                  -->
     <!--                                                                                                                                                    -->
     <!--                     api\                               <== The root folder for another repo that builds within this group                          -->
@@ -53,8 +53,10 @@
     <!--                             dependencies\              <== Repo files and subdirectories                                                           -->
     <!--                                     . . .                                                                                                          -->
     <!--                             . . .                                                                                                                  -->
-    <!--                             Directory.Build.props      <== A version of THIS FILE is included in every repo in the build group                     -->
+    <!--                             Directory.Build.props      <== The repo-wide build properties (THIS FILE is imported from there)                       -->
     <!--                             . . .                          (may be omitted when MSBuild is not used by any projects in the repo)                   -->
+    <!--                             RepoAndBuild-DirectoryStructure.props  <== A version of THIS FILE is included in every repo in the build group         -->
+    <!--                             . . .                                      (may be omitted when MSBuild is not used by any projects in the repo)       -->
     <!--             Tmprl-SDK-Java\                            <== Some groups have only one repository                                                    -->
     <!--                     sdk-java\                          <== Such mono-repos are the only child within their container folders                       -->
     <!--                             gradle\                                                                                                                -->
@@ -121,7 +123,7 @@
 
         <!-- Set PrintDetailedOutputRedirectionInfo to true/false to control whether detailed output is printed during the build.                           -->
         <!-- Use "false" if the details are too verbose for your needs.                                                                                     -->
-        <PrintDetailedOutputRedirectionInfo>true</PrintDetailedOutputRedirectionInfo>
+        <PrintDetailedOutputRedirectionInfo>false</PrintDetailedOutputRedirectionInfo>
 
     </PropertyGroup>
     <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
@@ -153,11 +155,11 @@
         <!-- By default, Configuration is DEBUG, but user can (and will) overwrite it.                                                                      -->
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
 
-        <!-- By default, Platform is AnyCPU, but user can (and may) overwrite it.                                                                       -->
+        <!-- By default, Platform is AnyCPU, but user can (and may) overwrite it.                                                                           -->
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
         <Platform Condition=" '$(Platform)' == 'Win32' ">x86</Platform>
 
-        <!-- ConfigBasedRelativeOutputPath is the relative subdir such as "Debug-AnyCPU" or "Release-x64" or similar within the project              -->
+        <!-- ConfigBasedRelativeOutputPath is the relative subdir such as "Debug-AnyCPU" or "Release-x64" or similar within the project                     -->
         <ConfigBasedRelativeOutputPath>$(Configuration)</ConfigBasedRelativeOutputPath>
         <ConfigBasedRelativeOutputPath Condition=" '$(Platform)' != '' ">$(ConfigBasedRelativeOutputPath)-$(Platform)</ConfigBasedRelativeOutputPath>
 
@@ -233,7 +235,7 @@
                  Importance="high" />
 
         <Message Condition=" '$(PrintDetailedOutputRedirectionInfo)' == 'True' "
-                 Text="[$(RdrctOutptMsgPrefix)] Details are printed below; set the &quot;PrintDetailedOutputRedirectionInfo&quot; property in the listed Set-Output-Dirs PROPS file to FALSE to suppress the detailed output."
+                 Text="[$(RdrctOutptMsgPrefix)] Details are printed below; to suppress the detailed output, set the &quot;PrintDetailedOutputRedirectionInfo&quot; property in the Set-Output-Dirs PROPS file (&quot;$(MSBuildThisFile)&quot;) to FALSE."
                  Importance="high" />
 
         <Message Condition=" '$(PrintDetailedOutputRedirectionInfo)' != 'True' "
