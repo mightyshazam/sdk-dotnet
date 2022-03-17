@@ -292,8 +292,8 @@ dotnet_diagnostic.IDE0070.severity = warning     # Use 'System.HashCode.Combine'
 
 #### Rules that have dotnet_style_blah or csharp_style_blah specification, but are not in the VS UI: ####
 
-csharp_style_implicit_object_creation_when_type_is_apparent = true:silent
-dotnet_diagnostic.IDE0090.severity = silent  # Simplify new expression
+csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
+dotnet_diagnostic.IDE0090.severity = suggestion  # Simplify new expression
 
 #### Naming styles ####
 

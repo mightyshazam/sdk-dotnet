@@ -249,7 +249,7 @@ namespace Temporal.Common.DataModel
 
                 public ForN(IReadOnlyList<object> namedValues)
                 {
-                    if (typeof(TNamedValsItem) == typeof(Object))
+                    if (typeof(TNamedValsItem) == typeof(object))
                     {
                         throw new InvalidOperationException($"This ctor may only be used when the type parameter {nameof(TNamedValsItem)}"
                                                           + $" is \"{nameof(Object)}\".");
