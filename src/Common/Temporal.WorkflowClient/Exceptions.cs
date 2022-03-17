@@ -1,4 +1,5 @@
 ﻿using System;
+using Temporal.Common.Exceptions;
 
 namespace Temporal.WorkflowClient
 {
@@ -13,6 +14,37 @@ namespace Temporal.WorkflowClient
     /// </summary>
     public sealed class RemoteTemporalException : Exception
     {        
-        internal RemoteTemporalException(string message, Exception innerException) : base(message, innerException) { }
+        private static Exception AsException(ITemporalFailure failure)
+        {
+            if (failure == null)
+            {
+                throw new ArgumentNullException(nameof(failure));
+            }
+
+            if (failure is not Exception exception)
+            {
+                throw new ArgumentException($"The type of the specified instance of {nameof(ITemporalFailure)} must"
+                                          + $" be a subclass of {nameof(Exception)}, but it is not the case for the actual"
+                                          + $" runtime type (\"{failure.GetType().FullName}\").", nameof(failure));
+            }
+
+            return exception;
+        }
+
+#if NET6_0_OR_GREATER
+        [System.Diagnostics.StackTraceHidden]
+#endif
+        public static RemoteTemporalException Throw(string message, ITemporalFailure innerException)
+        {
+            throw new RemoteTemporalException(message, innerException);
+        }
+
+        public RemoteTemporalException(string message, ITemporalFailure innerException)
+            : base(message, AsException(innerException))
+        {
+            Cause = innerException;
+        }
+
+        public ITemporalFailure Cause { get; }
     }
 }
