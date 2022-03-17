@@ -23,7 +23,7 @@ namespace Temporal.Sdk.BasicSamples
 
             private DateTime _targetTimeUtc;
 
-            private TaskCompletionSource<bool> _requestAbort = new TaskCompletionSource<bool>();
+            private readonly TaskCompletionSource<bool> _requestAbort = new TaskCompletionSource<bool>();
             private TaskCompletionSource<DateTime> _updateTarget = new TaskCompletionSource<DateTime>();
 
             public async Task<CountdownResult> CountdownAsync(TargetTimePayload target, IWorkflowContext workflowCtx)

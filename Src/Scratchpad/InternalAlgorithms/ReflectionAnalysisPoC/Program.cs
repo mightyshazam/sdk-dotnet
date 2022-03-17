@@ -516,7 +516,7 @@ namespace ReflectionAnalysisPoC
             Console.WriteLine("}");
         }
 
-        private static void PrintAttributes2(Type type)
+        internal static void PrintAttributes2(Type type)
         {
             Console.WriteLine();
             Console.WriteLine($"{type.FullName} {{");

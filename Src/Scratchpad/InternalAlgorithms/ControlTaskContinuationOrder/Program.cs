@@ -12,7 +12,7 @@ namespace ControlTaskContinuationOrder
             (new Program()).Execute();
         }
 
-        private static object s_writeLineLock = new();
+        private static readonly object s_writeLineLock = new();
         private static int s_lastWriteLineThreadId = -1;
 
         public static void WriteLine(string msg = null)
@@ -59,7 +59,7 @@ namespace ControlTaskContinuationOrder
         }
        
 
-        private TaskCompletionSource<string> _signalReceivedCompletion = new TaskCompletionSource<string>();
+        private readonly  TaskCompletionSource<string> _signalReceivedCompletion = new TaskCompletionSource<string>();
         private TaskCompletionSource<string> _activityCompletion = null;
         private string _activityName = null;
         private bool _phaseBReached = false;

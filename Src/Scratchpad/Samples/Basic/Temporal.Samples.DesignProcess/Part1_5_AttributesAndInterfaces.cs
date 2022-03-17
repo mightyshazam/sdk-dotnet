@@ -132,9 +132,9 @@ namespace Temporal.Sdk.BasicSamples
         public class ShoppingCart : IShoppingCart
         {
             private User _owner = null;
-            private List<Product> _products = new List<Product>();
+            private readonly List<Product> _products = new List<Product>();
             private MoneyAmount _appliedPayment = new MoneyAmount(0, 0);
-            private TaskCompletionSource<OrderConfirmation> _orderCompletion = new();
+            private readonly TaskCompletionSource<OrderConfirmation> _orderCompletion = new();
             private DeliveryInfo _deliveryInfo = null;
 
             [WorkflowSignalHandler]

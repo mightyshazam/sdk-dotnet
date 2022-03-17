@@ -176,6 +176,8 @@ namespace ExceptionSerialization
                 caughtEx = ex;
                 Console.WriteLine($"\n-----------\nException caught 7th time:\n {ex}");
             }
+
+            Console.WriteLine(caughtEx.ToString().Substring(0, 0));
         }
 
         internal void FuncA1()
@@ -206,7 +208,7 @@ namespace ExceptionSerialization
             FuncB3(serializedEx);
         }
 
-        private static void PrintSerializationInfo(SerializationInfo serializedEx)
+        internal static void PrintSerializationInfo(SerializationInfo serializedEx)
         {
             Console.WriteLine("\n*********** SerializationInfo:");
             Console.WriteLine($"    ClassName:              \"{serializedEx.GetString("ClassName")}\"");
@@ -242,7 +244,7 @@ namespace ExceptionSerialization
             }
         }
 
-        static internal Exception RehydrateException(SerializationInfo serializedEx, bool formatForBeingWrapped)
+        internal static Exception RehydrateException(SerializationInfo serializedEx, bool formatForBeingWrapped)
         {
             bool useNewLineAfterRemoteStack = !formatForBeingWrapped;
             //PrintSerializationInfo(serializedEx);
