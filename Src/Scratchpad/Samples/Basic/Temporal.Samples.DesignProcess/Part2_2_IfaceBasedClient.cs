@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Temporal.Common.DataModel;
 using Temporal.Common.WorkflowConfiguration;
 using Temporal.WorkflowClient;
 
@@ -11,12 +12,12 @@ namespace Temporal.Sdk.BasicSamples
     {        
         public static async Task Minimal(string[] _)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
+            TemporalClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalClient client = await TemporalClient.ConnectAsync(serviceConfig);
 
             // Create a workflow stub that implements the `IShoppingCart` iface:
             // (The stub will start a new workflow chain and bind to it later, when its main routine is invoked later.)
-            IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>("SomeUserCard-ID", "ShoppingCart", "taskQueue");
+            IShoppingCart cart = client.CreateWorkflowStub<IShoppingCart>("SomeUserCard-ID", "ShoppingCart", "taskQueue");
 
             // Start the workflow chain by invoking the stub's main routine:
             Task<OrderConfirmation> order = cart.ShopAsync(new User("Jean-Luc", "Picard", Guid.NewGuid()));
@@ -38,13 +39,13 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task<bool> TryAddShippingInfoToExistingCart_Main(User shopper, DeliveryInfo shippingInfo)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
+            TemporalClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalClient client = await TemporalClient.ConnectAsync(serviceConfig);
 
             // Create a new stub for the latest workflow with workflowId `shopper.UserKey`:
             // (The stub is NOT bound to any particular chain, until we invoke any method.)
             // (Note that both 'IProductList' and 'IShoppingCart' are valid here, but we need 'IShoppingCart' later.)
-            IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>(shopper.UserKey);
+            IShoppingCart cart = client.CreateWorkflowStub<IShoppingCart>(shopper.UserKey);
 
             return await TryAddShippingInfoToExistingCart_Logic(shippingInfo, cart);
         }
@@ -65,12 +66,12 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task<bool> AddProductToCartIfUserIsShopping_Main(User shopper, Product product)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
+            TemporalClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalClient client = await TemporalClient.ConnectAsync(serviceConfig);
 
             // Get a handle to a EXISTING chain with the workflowId `shopper.UserKey` AND make sure it is running:
-            IWorkflowChain wfChain = serviceClient.CreateUnboundWorkflowHandle(shopper.UserKey);
-            if (await wfChain.IsRunningAsync())
+            IWorkflowChain wfChain = client.CreateWorkflowHandle(shopper.UserKey);
+            if (WorkflowExecutionStatus.Running == await wfChain.GetStatusAsync())
             {
                 // Get a stub that is bound to the specified chain:
                 // (Note that both 'IProductList' and 'IShoppingCart' are valid here.)
@@ -102,11 +103,11 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task<bool> PayAndWaitForOrderCompletionIfUserIsShopping_Main(User shopper, MoneyAmount paymentAmount)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
+            TemporalClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalClient client = await TemporalClient.ConnectAsync(serviceConfig);
 
             // Create an unbound stub using `WorkflowChainBindingConfiguration.Strategy.LatestChain`:
-            IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>(shopper.UserKey);
+            IShoppingCart cart = client.CreateWorkflowStub<IShoppingCart>(shopper.UserKey);
             
             return await PayAndWaitForOrderCompletionIfUserIsShopping_Logic(paymentAmount, cart);
         }
@@ -135,14 +136,14 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task AddProductToNewOrExistingCart_Main(User shopper, Product product)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
+            TemporalClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalClient client = await TemporalClient.ConnectAsync(serviceConfig);
 
             // Create an unbound stub, that can bing to a new (preferred) or an existing workflow.
             // Binding occurs when an appropriate main routine stub is invoked.
-            IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>(shopper.UserKey,
-                                                                                        "ShoppingCart",
-                                                                                        "taskQueue");
+            IShoppingCart cart = client.CreateWorkflowStub<IShoppingCart>(shopper.UserKey,
+                                                                          "ShoppingCart",
+                                                                          "taskQueue");
             await AddProductToNewOrExistingCart_Logic(shopper, product, cart);
         }
 
@@ -168,15 +169,15 @@ namespace Temporal.Sdk.BasicSamples
 
         public static async Task AddProductToNewCart_Main(User shopper, Product product)
         {
-            TemporalServiceClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
-            ITemporalServiceClient serviceClient = await TemporalServiceClient.ConnectNewAsync(serviceConfig);
+            TemporalClientConfiguration serviceConfig = new() { Namespace = "Shopping" };
+            ITemporalClient client = await TemporalClient.ConnectAsync(serviceConfig);
 
             // Create an unbound stub, that can bing to a new workflow only.
             // Binding occurs when an appropriate main routine stub is invoked.
-            IShoppingCart cart = serviceClient.CreateUnboundWorkflowStub<IShoppingCart>(WorkflowChainBindingPolicy.NewChainOnly,
-                                                                                        shopper.UserKey,
-                                                                                        "ShoppingCart",
-                                                                                        "taskQueue");
+            IShoppingCart cart = client.CreateWorkflowStub<IShoppingCart>(WorkflowChainBindingPolicy.NewChainOnly,
+                                                                          shopper.UserKey,
+                                                                          "ShoppingCart",
+                                                                          "taskQueue");
             await AddProductToNewCart_Logic(shopper, product, cart);
         }
 
