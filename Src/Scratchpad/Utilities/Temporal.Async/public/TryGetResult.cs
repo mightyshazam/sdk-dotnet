@@ -39,5 +39,10 @@ namespace Temporal.Async
             result = _result;
             return _isSuccess;
         }
+
+        public static implicit operator bool(TryGetResult<T> res)
+        {
+            return res.IsSuccess();
+        }
     }
 }

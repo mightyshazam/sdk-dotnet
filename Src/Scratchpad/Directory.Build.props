@@ -2,18 +2,6 @@
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     
-  <Import Condition="Exists($([MSBuild]::GetPathOfFileAbove($(MSBuildThisFile), '$(MSBuildThisFileDirectory)../')))"
-          Project="$([MSBuild]::GetPathOfFileAbove($(MSBuildThisFile), '$(MSBuildThisFileDirectory)../'))" />
-  
-  <PropertyGroup>
-    <TargetFrameworks>net462;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
-    <LangVersion>9.0</LangVersion>
-  </PropertyGroup>
-  
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'netcoreapp3.1'">
+    <Import Project="$(MSBuildThisFileDirectory)..\SDK\Directory.Build.props" />
     
-    <Compile Include="$(MSBuildThisFileDirectory)_Build\IsExternalInit.cs" 
-             Link="_Build\%(Filename)%(Extension)" />        
-  </ItemGroup>
-  
 </Project>
