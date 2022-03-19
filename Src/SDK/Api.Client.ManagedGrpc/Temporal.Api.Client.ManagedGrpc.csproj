@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>    
+    <PackageReference Include="Grpc" Version="2.44.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.44.0" PrivateAssets="All" />
+    <PackageReference Include="Google.Protobuf" Version="3.19.4" />
+  </ItemGroup>
+
+  <PropertyGroup>    
+    <ProtoApiRepoBaseDir>$(EnlistmentRoot)\..\api</ProtoApiRepoBaseDir>
+    <AutoGenOutputBaseDir>$(MSBuildThisFileDirectory)AutoGenOutput</AutoGenOutputBaseDir>
+  </PropertyGroup>
+
+  <!--
+  The auto-generated CS files are initially placed in the Obj folder:
+    _build\obj\Debug-AnyCPU\SDK\RawClient-Managed\<TargetFx>\temporal\**\*.cs
+  and
+    _build\obj\Debug-AnyCPU\SDK\RawClient-Managed\<TargetFx>\dependencies\**\*.cs
+  
+  They are build into the binary assembly FROM THERE.
+  
+  We MANUALLY copy them into $(AutoGenOutputBaseDir) so that we can diff them with earlier versons as a part of code review.
+  We need to make sure that the copy is not included into the complication to avoid duplicated. This is done below.
+  In the long term, that copy process needs to be automated. Ideally, just emit the auto-gen into $(AutoGenOutputBaseDir).
+  For that we need to find a resolution or a workaround for 
+    https://github.com/grpc/grpc/issues/29161
+  Then, `OutputDir` and `GrpcOutputDir` below will need to be moved into the `Protobuf` item set definition.
+  
+  However, we can also create a target that will just copy the files out of the Obj folder:
+    <Target Name="CopyAutoGenFilesIntoProjectFolder" AfterTargets="Build">
+      <Copy ... />...</Copy> 
+    </Target>  
+  -->
+    
+  <ItemGroup>
+    <Protobuf Include = "$(ProtoApiRepoBaseDir)\**\*.proto" 
+              Link = "ProtoApi\%(RecursiveDir)%(Filename)%(Extension)" 
+              Access = "Public"
+              ProtoCompile = "True"
+              ProtoRoot = "$(ProtoApiRepoBaseDir)"
+              CompileOutputs = "true"
+         
+              GrpcServices = "client" />
+    <!--
+              OutputDir = "$(AutoGenOutputBaseDir)"
+              GrpcOutputDir = "$(AutoGenOutputBaseDir)"
+    -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Ensure we do not try to compile the files in $(AutoGenOutputBaseDir). See the long comment above for details. -->
+    <Compile Remove = "$(AutoGenOutputBaseDir)\**\*.*" />
+    <None Include = "$(AutoGenOutputBaseDir)\**\*.*" />    
+  </ItemGroup>
+
+
+</Project>
