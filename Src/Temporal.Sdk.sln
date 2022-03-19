@@ -21,7 +21,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Repo", "_Repo", "{1F96769B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Src", "Src", "{FF933DEC-86A3-4061-B431-623D75560363}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		.SourceRoot.marker = .SourceRoot.marker
+		CodeAnalysis.props = CodeAnalysis.props
+		Directory.Build.props = Directory.Build.props
 		NuGet.config = NuGet.config
 	EndProjectSection
 EndProject
@@ -33,6 +36,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SDK", "SDK", "{6828F816-FE6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scratchpad", "Scratchpad", "{D2B8637C-F9D7-4743-BC3A-F3DEF453ACAD}"
 	ProjectSection(SolutionItems) = preProject
+		Scratchpad\.editorconfig = Scratchpad\.editorconfig
 		Scratchpad\Directory.Build.props = Scratchpad\Directory.Build.props
 		Scratchpad\Temporal.Sdk.Scratchpad.sln = Scratchpad\Temporal.Sdk.Scratchpad.sln
 	EndProjectSection

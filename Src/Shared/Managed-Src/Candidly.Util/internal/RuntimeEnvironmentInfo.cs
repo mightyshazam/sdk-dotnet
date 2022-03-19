@@ -252,11 +252,20 @@ namespace Candidly.Util
                 case Architecture.Arm64:
                     return "Arm64";
 
+#if NET5_0_OR_GREATER
+                case Architecture.Wasm:
+                    return "WebAsm";
+#if NET6_0_OR_GREATER
+                case Architecture.S390x:
+                    return "S390x";
+#endif
+#endif
+
                 default:
                     return architecture.ToString();
             }
         }
-#endif
+#endif // RUNTIMEINFORMATION_TYPE_AVAILABLE
         #endregion Static APIs
 
         #region Non-Static APIs

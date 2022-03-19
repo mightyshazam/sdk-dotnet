@@ -2,30 +2,25 @@
 using System.Threading.Tasks;
 using Candidly.Util;
 using Grpc.Core;
-using Grpc.Net.Client;
-using Microsoft.Extensions.Logging;
 using Temporal.Api.Common.V1;
 using Temporal.Api.TaskQueue.V1;
 using Temporal.Api.Workflow.V1;
 using Temporal.Api.WorkflowService.V1;
 
+#if NETCOREAPP
+using Microsoft.Extensions.Logging;
+#endif
+
 namespace Temporal.Demos.AdHocScenarios
 {
     internal class UseRawGrpcClient
     {
+        private const string TemporalServerHost = "localhost";
+        private const int TemporalServerPort = 7233;
+
+
         public void Run()
         {
-            if (RuntimeEnvironmentInfo.SingeltonInstance.RuntimeName.Equals(".NET Framework", StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine("\n\n");
-                Console.WriteLine($" !!!");
-                Console.WriteLine($" !!! Running on the classic .NET Framework (ver {RuntimeEnvironmentInfo.SingeltonInstance.RuntimeVersion}).");
-                Console.WriteLine($" !!! This is currently not (yet) supported. Things are likely to break.");
-                Console.WriteLine($" !!! For now, use .NET Core or .NET 5+ instead.");
-                Console.WriteLine($" !!!");
-                Console.WriteLine("\n\n");
-            }
-
             ListWorkflowExecutionsAsync().GetAwaiter().GetResult();
             RunAsync().GetAwaiter().GetResult();
 
@@ -34,34 +29,63 @@ namespace Temporal.Demos.AdHocScenarios
             Console.ReadLine();
         }
 
-        public async Task ListWorkflowExecutionsAsync()
+        private WorkflowService.WorkflowServiceClient CreateClientNetFx()
         {
-            Console.WriteLine();
-            Console.WriteLine("----------- Workflow Executions { ----------- -----------");
+#if NETFRAMEWORK
+            Grpc.Core.Channel channel = new Grpc.Core.Channel(TemporalServerHost, TemporalServerPort, ChannelCredentials.Insecure);
 
-            if (RuntimeEnvironmentInfo.SingeltonInstance.RuntimeName.Equals(".NET Core", StringComparison.OrdinalIgnoreCase)
-                    && RuntimeEnvironmentInfo.SingeltonInstance.RuntimeVersion.StartsWith("3"))
+            WorkflowService.WorkflowServiceClient client = new(channel);
+            return client;
+#else
+            throw new NotSupportedException("This routine is only supported on Net Fx.");
+#endif
+        }
+
+        private WorkflowService.WorkflowServiceClient CreateClientNetCore()
+        {
+#if NETCOREAPP
+            if (!RuntimeEnvironmentInfo.SingeltonInstance.CoreAssembyInfo.IsSysPrivCoreLib)
+            {
+                throw new InvalidOperationException("RuntimeEnvironmentInfo.SingeltonInstance.CoreAssembyInfo.IsSysPrivCoreLib was expected to be True.");
+            }
+
+            if (RuntimeEnvironmentInfo.SingeltonInstance.RuntimeVersion.StartsWith("3"))
             {
                 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             }
 
             ILoggerFactory logFactory = LoggerFactory.Create((logBuilder) =>
-                {
-                    logBuilder.AddConsole();
-                    logBuilder.SetMinimumLevel(LogLevel.Trace);
-                });
+            {
+                ConsoleLoggerExtensions.AddConsole(logBuilder);
+                logBuilder.SetMinimumLevel(LogLevel.Trace);
+            });
 
-            using GrpcChannel channel = GrpcChannel.ForAddress(address: "http://localhost:7233",
-                                                               new GrpcChannelOptions()
-                                                               {
-                                                                   //LoggerFactory = logFactory
-                                                                   //,
-                                                                   //HttpHandler = new WinHttpHandler(),
-                                                                   //HttpHandler = new GrpcWebHandler(new HttpClientHandler())
-                                                                   //HttpHandler = new GrpcWebHandler(new WinHttpHandler())
-                                                               });
+            Grpc.Net.Client.GrpcChannel channel = Grpc.Net.Client.GrpcChannel.ForAddress($"http://{TemporalServerHost}:{TemporalServerPort}",
+                                                                                         new Grpc.Net.Client.GrpcChannelOptions()
+                                                                                         {
+                                                                                             //LoggerFactory = logFactory
+                                                                                         });
 
             WorkflowService.WorkflowServiceClient client = new(channel);
+            return client;
+#else
+            throw new NotSupportedException("This routine is only supported on Net Core and Net 5+.");
+#endif
+        }
+
+        private WorkflowService.WorkflowServiceClient CreateClient()
+        {
+            return RuntimeEnvironmentInfo.SingeltonInstance.CoreAssembyInfo.IsMscorlib
+                        ? CreateClientNetFx()
+                        : CreateClientNetCore();
+        }
+
+        public async Task ListWorkflowExecutionsAsync()
+        {
+            Console.WriteLine();
+            Console.WriteLine("----------- Workflow Executions { ----------- -----------");
+
+            WorkflowService.WorkflowServiceClient client = CreateClient();
 
             ListWorkflowExecutionsRequest reqListExecs = new()
             {
@@ -70,7 +94,7 @@ namespace Temporal.Demos.AdHocScenarios
 
             ListWorkflowExecutionsResponse resListExecs = await client.ListWorkflowExecutionsAsync(reqListExecs);
 
-            foreach(WorkflowExecutionInfo weInfo in resListExecs.Executions)
+            foreach (WorkflowExecutionInfo weInfo in resListExecs.Executions)
             {
                 Console.WriteLine($"WorkflowId=\"{weInfo.Execution.WorkflowId}\";"
                                 + $" RunId=\"{weInfo.Execution.RunId}\";"
@@ -85,8 +109,7 @@ namespace Temporal.Demos.AdHocScenarios
         {
             Console.WriteLine();
 
-            GrpcChannel channel = GrpcChannel.ForAddress("http://localhost:7233");
-            WorkflowService.WorkflowServiceClient client = new(channel);
+            WorkflowService.WorkflowServiceClient client = CreateClient();
 
             StartWorkflowExecutionRequest reqStartWf = new()
             {
