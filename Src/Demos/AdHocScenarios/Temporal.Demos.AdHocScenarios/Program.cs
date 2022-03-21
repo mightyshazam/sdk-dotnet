@@ -7,7 +7,7 @@ namespace Temporal.Demos.AdHocScenarios
     {
         public static void Main(string[] _)
         {
-            Console.WriteLine($"RuntimeEnvironmentInfo: \n{RuntimeEnvironmentInfo.SingeltonInstance}");
+            Console.WriteLine($"RuntimeEnvironmentInfo: \n{RuntimeEnvironmentInfo.SingletonInstance}");
 
             (new UseRawGrpcClient()).Run();
         }

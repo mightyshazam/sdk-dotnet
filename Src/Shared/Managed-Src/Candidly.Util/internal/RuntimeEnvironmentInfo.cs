@@ -23,9 +23,9 @@ namespace Candidly.Util
 
         #region Nested Types
 
-        public class CoreAssembyInformation
+        public class CoreAssemblyInformation
         {
-            internal CoreAssembyInformation(bool isMscorlib, bool isSysPrivCoreLib, string name)
+            internal CoreAssemblyInformation(bool isMscorlib, bool isSysPrivCoreLib, string name)
             {
                 Validate.NotNull(name, nameof(name));
                 this.IsMscorlib = isMscorlib;
@@ -42,20 +42,20 @@ namespace Candidly.Util
 
         #region Static APIs
 
-        private static RuntimeEnvironmentInfo s_singeltonInstance = null;
+        private static RuntimeEnvironmentInfo s_singletonInstance = null;
 
-        public static RuntimeEnvironmentInfo SingeltonInstance
+        public static RuntimeEnvironmentInfo SingletonInstance
         {
             get
             {
-                RuntimeEnvironmentInfo singeltonInstance = s_singeltonInstance;
-                if (singeltonInstance == null)
+                RuntimeEnvironmentInfo singletonInstance = s_singletonInstance;
+                if (singletonInstance == null)
                 {
-                    singeltonInstance = CreateNew();
-                    s_singeltonInstance = singeltonInstance;    // benign race
+                    singletonInstance = CreateNew();
+                    s_singletonInstance = singletonInstance;    // benign race
                 }
 
-                return singeltonInstance;
+                return singletonInstance;
             }
         }
 
@@ -65,16 +65,16 @@ namespace Candidly.Util
             {
                 Assembly objectTypeAssembly = (new object()).GetType().Assembly;
                 string objectTypeAssemblyName = objectTypeAssembly.GetName()?.Name ?? UnknownMoniker;
-                var coreAssembyInfo = new CoreAssembyInformation(isMscorlib: CoreLibName_Mscorlib.Equals(objectTypeAssemblyName, StringComparison.OrdinalIgnoreCase),
-                                                                 isSysPrivCoreLib: CoreLibName_CoreLib.Equals(objectTypeAssemblyName, StringComparison.OrdinalIgnoreCase),
-                                                                 name: objectTypeAssemblyName);
+                var coreAssembyInfo = new CoreAssemblyInformation(isMscorlib: CoreLibName_Mscorlib.Equals(objectTypeAssemblyName, StringComparison.OrdinalIgnoreCase),
+                                                                  isSysPrivCoreLib: CoreLibName_CoreLib.Equals(objectTypeAssemblyName, StringComparison.OrdinalIgnoreCase),
+                                                                  name: objectTypeAssemblyName);
 
                 string runtimeName = GetRuntimeName(coreAssembyInfo);
                 string runtimeVersion = GetRuntimeVersion(coreAssembyInfo, objectTypeAssembly);
                 string processArchitecture = GetProcessArchitecture();
                 string osPlatform = GetOsPlatform();
                 string osArchitecture = GetOsArchitecture();
-                string osDescription = GetOsDescriptio();
+                string osDescription = GetOsDescription();
 
                 return new RuntimeEnvironmentInfo(runtimeName,
                                                   runtimeVersion,
@@ -92,13 +92,13 @@ namespace Candidly.Util
                                                   osPlatform: UnknownMoniker,
                                                   osArchitecture: UnknownMoniker,
                                                   osDescription: UnknownMoniker,
-                                                  coreAssembyInfo: new CoreAssembyInformation(isMscorlib: false,
-                                                                                              isSysPrivCoreLib: false,
-                                                                                              name: UnknownMoniker));
+                                                  coreAssembyInfo: new CoreAssemblyInformation(isMscorlib: false,
+                                                                                               isSysPrivCoreLib: false,
+                                                                                               name: UnknownMoniker));
             }
         }
 
-        private static string GetRuntimeName(CoreAssembyInformation coreAssembyInfo)
+        private static string GetRuntimeName(CoreAssemblyInformation coreAssembyInfo)
         {
             string runtimeName = null;
 
@@ -147,7 +147,7 @@ namespace Candidly.Util
             return runtimeName;
         }
 
-        private static string GetRuntimeVersion(CoreAssembyInformation coreAssembyInfo, Assembly objectTypeAssembly)
+        private static string GetRuntimeVersion(CoreAssemblyInformation coreAssembyInfo, Assembly objectTypeAssembly)
         {
             Version environmentVersion = Environment.Version;
 
@@ -223,7 +223,7 @@ namespace Candidly.Util
 #endif
         }
 
-        private static string GetOsDescriptio()
+        private static string GetOsDescription()
         {
 #if RUNTIMEINFORMATION_TYPE_AVAILABLE
             string osDescription = RuntimeInformation.OSDescription;
@@ -279,7 +279,7 @@ namespace Candidly.Util
                                        string osPlatform,
                                        string osArchitecture,
                                        string osDescription,
-                                       CoreAssembyInformation coreAssembyInfo)
+                                       CoreAssemblyInformation coreAssembyInfo)
         {
             this.RuntimeName = runtimeName;
             this.RuntimeVersion = runtimeVersion;
@@ -296,7 +296,7 @@ namespace Candidly.Util
         public string OsPlatform { get; }
         public string OsArchitecture { get; }
         public string OsDescription { get; }
-        public CoreAssembyInformation CoreAssembyInfo { get; }
+        public CoreAssemblyInformation CoreAssembyInfo { get; }
 
         public override string ToString()
         {
