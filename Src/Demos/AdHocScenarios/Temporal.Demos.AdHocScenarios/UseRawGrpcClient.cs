@@ -149,65 +149,6 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine("\n----------- } Workflow StartWorkflowAsync ----------- -----------\n");
         }
 
-        public class UnexpectedServerResponseException : Exception
-        {
-            private static string FormatMessage(string serverCall, string scenario, string problemDescription)
-            {
-                StringBuilder message = new();
-
-                if (!String.IsNullOrWhiteSpace(problemDescription))
-                {
-                    message.Append(problemDescription);
-                }
-
-                if (!String.IsNullOrWhiteSpace(problemDescription))
-                {
-                    if (message.Length > 0 && message[message.Length - 1] != '.')
-                    {
-                        if (message[message.Length - 1] != '.')
-                        {
-                            message.Append('.');
-                        }
-
-                        message.Append(' ');
-                    }
-
-                    message.Append("Server Call: \"");
-                    message.Append(serverCall);
-                    message.Append("\".");
-                }
-
-                if (!String.IsNullOrWhiteSpace(scenario))
-                {
-                    if (message.Length > 0 && message[message.Length - 1] != '.')
-                    {
-                        if (message[message.Length - 1] != '.')
-                        {
-                            message.Append('.');
-                        }
-
-                        message.Append(' ');
-                    }
-
-                    message.Append("Scenario: \"");
-                    message.Append(scenario);
-                    message.Append("\".");
-                }
-
-                return message.ToString();
-            }
-
-            public UnexpectedServerResponseException(string serverCall, string scenario, string problemDescription)
-                : base(FormatMessage(serverCall, scenario, problemDescription))
-            {
-            }
-
-            public UnexpectedServerResponseException(string serverCall, string scenario, Exception unexpectedException)
-                : base(FormatMessage(serverCall, scenario, $"Unexpected exception occurred ({unexpectedException.GetType().Name})"))
-            {
-            }
-        }
-
         public async Task WaitForWorkflowAsync()
         {
             const string DemoWorkflowId = "Some-Workflow-Id";
@@ -313,6 +254,65 @@ namespace Temporal.Demos.AdHocScenarios
                                                                     $"Unexpected History EventType (\"{historyEvent.EventType}\")");
                 }
             }  // while(true)
+        }
+
+        public class UnexpectedServerResponseException : Exception
+        {
+            private static string FormatMessage(string serverCall, string scenario, string problemDescription)
+            {
+                StringBuilder message = new();
+
+                if (!String.IsNullOrWhiteSpace(problemDescription))
+                {
+                    message.Append(problemDescription);
+                }
+
+                if (!String.IsNullOrWhiteSpace(problemDescription))
+                {
+                    if (message.Length > 0 && message[message.Length - 1] != '.')
+                    {
+                        if (message[message.Length - 1] != '.')
+                        {
+                            message.Append('.');
+                        }
+
+                        message.Append(' ');
+                    }
+
+                    message.Append("Server Call: \"");
+                    message.Append(serverCall);
+                    message.Append("\".");
+                }
+
+                if (!String.IsNullOrWhiteSpace(scenario))
+                {
+                    if (message.Length > 0 && message[message.Length - 1] != '.')
+                    {
+                        if (message[message.Length - 1] != '.')
+                        {
+                            message.Append('.');
+                        }
+
+                        message.Append(' ');
+                    }
+
+                    message.Append("Scenario: \"");
+                    message.Append(scenario);
+                    message.Append("\".");
+                }
+
+                return message.ToString();
+            }
+
+            public UnexpectedServerResponseException(string serverCall, string scenario, string problemDescription)
+                : base(FormatMessage(serverCall, scenario, problemDescription))
+            {
+            }
+
+            public UnexpectedServerResponseException(string serverCall, string scenario, Exception unexpectedException)
+                : base(FormatMessage(serverCall, scenario, $"Unexpected exception occurred ({unexpectedException.GetType().Name})"))
+            {
+            }
         }
     }
 }
