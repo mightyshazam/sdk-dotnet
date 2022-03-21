@@ -44,12 +44,12 @@ namespace Temporal.Demos.AdHocScenarios
         private WorkflowService.WorkflowServiceClient CreateClientNetCore()
         {
 #if NETCOREAPP
-            if (!RuntimeEnvironmentInfo.SingeltonInstance.CoreAssembyInfo.IsSysPrivCoreLib)
+            if (!RuntimeEnvironmentInfo.SingletonInstance.CoreAssembyInfo.IsSysPrivCoreLib)
             {
                 throw new InvalidOperationException("RuntimeEnvironmentInfo.SingeltonInstance.CoreAssembyInfo.IsSysPrivCoreLib was expected to be True.");
             }
 
-            if (RuntimeEnvironmentInfo.SingeltonInstance.RuntimeVersion.StartsWith("3"))
+            if (RuntimeEnvironmentInfo.SingletonInstance.RuntimeVersion.StartsWith("3"))
             {
                 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             }
@@ -75,7 +75,7 @@ namespace Temporal.Demos.AdHocScenarios
 
         private WorkflowService.WorkflowServiceClient CreateClient()
         {
-            return RuntimeEnvironmentInfo.SingeltonInstance.CoreAssembyInfo.IsMscorlib
+            return RuntimeEnvironmentInfo.SingletonInstance.CoreAssembyInfo.IsMscorlib
                         ? CreateClientNetFx()
                         : CreateClientNetCore();
         }
