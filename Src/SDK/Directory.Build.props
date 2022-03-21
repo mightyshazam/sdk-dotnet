@@ -6,29 +6,9 @@
             Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
     <Import Project="$(MSBuildThisFileDirectory)ProductVersion.props" />
-    
-    <PropertyGroup>
-        <SharedSrcBaseDir>$(SourceRoot)\Shared\Managed-Src</SharedSrcBaseDir>
-        <SharedSrcBaseLabel>Shared-Src</SharedSrcBaseLabel>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <Company>Temporal</Company>
-        <Copyright>(c) Temporal 2022</Copyright>
+       
+    <PropertyGroup>    
         <Product>Temporal SDK for .NET</Product>
     </PropertyGroup>
-
-    <PropertyGroup>       
-        <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net462;netcoreapp3.1;net6.0</TargetFrameworks>
-        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp3.1;net6.0</TargetFrameworks>
-        
-        <LangVersion>9.0</LangVersion>
-    </PropertyGroup>
     
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'netcoreapp3.1'">
-    
-        <Compile Include="$(SharedSrcBaseDir)\System.Runtime.CompilerServices\IsExternalInit.cs" 
-                 Link="$(SharedSrcBaseLabel)\System.Runtime.CompilerServices\%(Filename)%(Extension)" />
-  </ItemGroup>
-
 </Project>

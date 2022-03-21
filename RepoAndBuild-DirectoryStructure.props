@@ -101,6 +101,10 @@
 
     <!-- - - - Control options (tweak as needed): - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
     <PropertyGroup>
+      
+        <!-- Set PrintDetailedOutputRedirectionInfo to true/false to control whether detailed output is printed during the build.                           -->
+        <!-- Use "false" if the details are too verbose for your needs.                                                                                     -->
+        <PrintDetailedOutputRedirectionInfo>false</PrintDetailedOutputRedirectionInfo>
 
         <!-- Set AvoidRedirectingBinaryOutput to True to turn off all redirects in tis file.                                                                -->
         <!-- This will result in the same build behavior as if this file did not exist, except for an informative log message during build.                 -->
@@ -120,10 +124,6 @@
         <!-- It is placed as a sibling of the repo root (default), or directly within the repo root (see the ForceBinaryOutputIntoEnlistment property).     -->
 
         <BuildOutputFolderName>_build</BuildOutputFolderName>
-
-        <!-- Set PrintDetailedOutputRedirectionInfo to true/false to control whether detailed output is printed during the build.                           -->
-        <!-- Use "false" if the details are too verbose for your needs.                                                                                     -->
-        <PrintDetailedOutputRedirectionInfo>false</PrintDetailedOutputRedirectionInfo>
 
     </PropertyGroup>
     <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
