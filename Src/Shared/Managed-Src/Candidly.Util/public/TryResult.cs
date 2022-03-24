@@ -1,24 +1,17 @@
-﻿using System;
-
-namespace Temporal.Async
+﻿namespace Temporal.Common
+//namespace Candidly.Util
 {
-    // @ToDo: If we want to support returning these from workflow APIs, we must either implement IDataValue or find some other solution.
-    public sealed class TryGetResult<T>
+    public struct TryResult<T>
     {
         private readonly bool _isSuccess;
         private readonly T _result;
 
-        public TryGetResult()
-            : this(false, default(T))
-        {
-        }
-
-        public TryGetResult(T result)
+        public TryResult(T result)
             : this(true, result)
         {
         }
 
-        internal TryGetResult(bool isSuccess, T result)
+        internal TryResult(bool isSuccess, T result)
         {
             _isSuccess = isSuccess;
             _result = result;
@@ -40,9 +33,9 @@ namespace Temporal.Async
             return _isSuccess;
         }
 
-        public static implicit operator bool(TryGetResult<T> res)
+        public static implicit operator bool(TryResult<T> tryResult)
         {
-            return res.IsSuccess();
+            return tryResult.IsSuccess();
         }
     }
 }

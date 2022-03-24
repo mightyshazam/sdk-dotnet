@@ -124,30 +124,6 @@ namespace Temporal.Common.DataModel
             return success;                
         }
 
-        private static bool TryCast<TSrc, TDest>(TSrc value, out TDest castValue)
-        {
-            if (value is TDest castVal)
-            {
-                castValue = castVal;
-                return true;
-            }
-            else
-            {
-                castValue = default(TDest);
-                return false;
-            }
-        }
-
-        private static TDest Cast<TSrc, TDest>(TSrc value)
-        {
-            if (TryCast<TSrc, TDest>(value, out TDest castValue))
-            {
-                return castValue;
-            }
-
-            throw new InvalidCastException($"Cannot cast value of type \"{typeof(TSrc).FullName}\" to type \"{typeof(TDest).FullName}\".");
-        }
-
         public interface IPackedDataValue : IDataValue
         {
             int Count { get; }

@@ -1,8 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Common\Temporal.Sdk.Common.csproj" />
     <ProjectReference Include="..\Utilities\Temporal.Util.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\public\TryResult.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\public\%(Filename)%(Extension)" />  
   </ItemGroup>
 
 </Project>

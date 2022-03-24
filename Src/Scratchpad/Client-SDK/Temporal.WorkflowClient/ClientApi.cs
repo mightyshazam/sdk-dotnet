@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Temporal.Common.DataModel;
 using Temporal.Common.WorkflowConfiguration;
 
-using Temporal.Async;
+using Temporal.Common;
 using Temporal.Collections;
 using Temporal.Serialization;
 
@@ -229,7 +229,7 @@ namespace Temporal.WorkflowClient
         ///   If exists => <c>workflowChainId</c> of the created <c>IWorkflowChain</c> instance is set by the found server value.
         /// </para>        
         /// </summary>
-        Task<TryGetResult<IWorkflowChain>> TryFindWorkflowAsync(string workflowId,
+        Task<TryResult<IWorkflowChain>> TryFindWorkflowAsync(string workflowId,
                                                                 string workflowChainId,
                                                                 CancellationToken cancelToken);
         #endregion TryFindWorkflowAsync(..)
@@ -246,7 +246,7 @@ namespace Temporal.WorkflowClient
         /// If a run with the specified <c>workflowRunId</c> exists, but the <c>workflowId</c> is not null and does not match,
         /// this API will NOT find that run. <br />
         /// </summary>        
-        Task<TryGetResult<IWorkflowRun>> TryFindWorkflowRunAsync(string workflowId,
+        Task<TryResult<IWorkflowRun>> TryFindWorkflowRunAsync(string workflowId,
                                                                  string workflowRunId,
                                                                  CancellationToken cancelToken);
         #endregion TryGetWorkflowRunAsync(..)
@@ -469,13 +469,13 @@ namespace Temporal.WorkflowClient
         #endregion CreateUnboundWorkflowStub<TStub>(..)
 
         #region TryFindWorkflowAsync(..)
-        public Task<TryGetResult<IWorkflowChain>> TryFindWorkflowAsync(string workflowId,
+        public Task<TryResult<IWorkflowChain>> TryFindWorkflowAsync(string workflowId,
                                                                        string workflowChainId,
                                                                        CancellationToken cancelToken) { return null; }
         #endregion TryFindWorkflowAsync(..)
 
         #region TryFindWorkflowRunAsync(..)        
-        public Task<TryGetResult<IWorkflowRun>> TryFindWorkflowRunAsync(string workflowId,
+        public Task<TryResult<IWorkflowRun>> TryFindWorkflowRunAsync(string workflowId,
                                                                         string workflowRunId,
                                                                         CancellationToken cancelToken) { return null; }
         #endregion TryFindWorkflowRunAsync(..)
@@ -544,8 +544,8 @@ namespace Temporal.WorkflowClient
         Task<WorkflowExecutionStatus> GetStatusAsync(CancellationToken cancelToken);
 
         /// <summary>Should this be called TryDescribeAsync?</summary>        
-        Task<TryGetResult<WorkflowChainInfo>> CheckExistsAsync();
-        Task<TryGetResult<WorkflowChainInfo>> CheckExistsAsync(CancellationToken cancelToken);
+        Task<TryResult<WorkflowChainInfo>> CheckExistsAsync();
+        Task<TryResult<WorkflowChainInfo>> CheckExistsAsync(CancellationToken cancelToken);
 
         Task<WorkflowChainInfo> DescribeAsync();
         Task<WorkflowChainInfo> DescribeAsync(CancellationToken cancelToken);
@@ -588,7 +588,7 @@ namespace Temporal.WorkflowClient
 
         /// <summary>Get the run with the specified run-id, if such run exists within THIS workflow chain.
         /// Return false if not found.</summary>
-        Task<TryGetResult<IWorkflowRun>> TryGetRunAsync(string workflowRunId, CancellationToken cancelToken);
+        Task<TryResult<IWorkflowRun>> TryGetRunAsync(string workflowRunId, CancellationToken cancelToken);
 
         /// <summary>Get the first / initial run in this chain.</summary>
         Task<IWorkflowRun> GetFirstRunAsync(CancellationToken cancelToken);
@@ -601,8 +601,8 @@ namespace Temporal.WorkflowClient
         /// If it is not yet known whether the latest run is final, this API will not fail, but it will return False.
         /// There is no long poll. This can be used to get result of the chain IF chain has finished (grab result of final run).</summary>
         /// </summary>
-        Task<TryGetResult<IWorkflowRun>> TryGetFinalRunAsync();
-        Task<TryGetResult<IWorkflowRun>> TryGetFinalRunAsync(CancellationToken cancelToken);
+        Task<TryResult<IWorkflowRun>> TryGetFinalRunAsync();
+        Task<TryResult<IWorkflowRun>> TryGetFinalRunAsync(CancellationToken cancelToken);
 
         #endregion --- GetXxxRunAsync(..) APIs to access a specific run ---
 
@@ -662,7 +662,7 @@ namespace Temporal.WorkflowClient
         Task<WorkflowExecutionStatus> GetStatusAsync(CancellationToken cancelToken);
 
         /// <summary>Should this be called TryDescribeAsync?</summary>  
-        Task<TryGetResult<WorkflowRunInfo>> CheckExistsAsync(CancellationToken cancelToken);
+        Task<TryResult<WorkflowRunInfo>> CheckExistsAsync(CancellationToken cancelToken);
         Task<WorkflowRunInfo> DescribeAsync(CancellationToken cancelToken);
         
         #region --- APIs to interact with the run ---
@@ -719,7 +719,7 @@ namespace Temporal.WorkflowClient
         bool IsCompletedNormally { get; }
         RetryState RetryState { get; }
         bool IsContinuedAsNew { get; }
-        Task<TryGetResult<IWorkflowRun>> TryGetContinuationRunAsync();
+        Task<TryResult<IWorkflowRun>> TryGetContinuationRunAsync();
     }    
     #endregion Workflow Routine Results
 

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
 
-using Temporal.Async;
+using Temporal.Common;
 using Temporal.Common.DataModel;
 using Temporal.Worker.Hosting;
 using Temporal.Worker.Workflows;
@@ -77,7 +77,7 @@ namespace Temporal.Sdk.BasicSamples
         public interface IShoppingCart : IProductList
         {
             [WorkflowQueryStub]
-            Task<TryGetResult<MoneyAmount>> TryGetTotalWithTaxAsync();
+            Task<TryResult<MoneyAmount>> TryGetTotalWithTaxAsync();
 
             [WorkflowQueryStub]
             Task<User> GetOwnerAsync();
@@ -221,17 +221,17 @@ namespace Temporal.Sdk.BasicSamples
                 _deliveryInfo = deliveryInfo;
             }
 
-            Task<TryGetResult<MoneyAmount>> IShoppingCart.TryGetTotalWithTaxAsync()
+            Task<TryResult<MoneyAmount>> IShoppingCart.TryGetTotalWithTaxAsync()
             {
                 return Task.FromResult(TryGetTotalWithTax());
             }
 
             [WorkflowQueryHandler]
-            public TryGetResult<MoneyAmount> TryGetTotalWithTax()
+            public TryResult<MoneyAmount> TryGetTotalWithTax()
             {
                 if (_deliveryInfo == null)
                 {
-                    return new TryGetResult<MoneyAmount>();
+                    return new TryResult<MoneyAmount>();
                 }
 
                 MoneyAmount preTax = GetTotal();
@@ -239,7 +239,7 @@ namespace Temporal.Sdk.BasicSamples
                 // No tax on zero:
                 if (preTax.TotalCents == 0)
                 {
-                    return new TryGetResult<MoneyAmount>(preTax);
+                    return new TryResult<MoneyAmount>(preTax);
                 }
 
                 // Mock tax calculation uses fixed tax:
@@ -247,7 +247,7 @@ namespace Temporal.Sdk.BasicSamples
                         ? new MoneyAmount(1, 0)
                         : new MoneyAmount(0, 50);
 
-                return new TryGetResult<MoneyAmount>(preTax + tax);
+                return new TryResult<MoneyAmount>(preTax + tax);
             }
 
             Task<OrderConfirmation> IShoppingCart.GetOrderAsync()
