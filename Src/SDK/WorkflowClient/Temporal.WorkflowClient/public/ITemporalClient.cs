@@ -28,15 +28,8 @@ namespace Temporal.WorkflowClient
                                                         string workflowTypeName,
                                                         string taskQueue,
                                                         TWfArg workflowArg,
+                                                        StartWorkflowChainConfiguration workflowConfig = null,
                                                         CancellationToken cancelToken = default);
-
-        Task<IWorkflowChain> StartWorkflowAsync<TWfArg>(string workflowId,
-                                                        string workflowTypeName,
-                                                        string taskQueue,
-                                                        TWfArg workflowArg,
-                                                        StartWorkflowChainConfiguration workflowConfig,
-                                                        CancellationToken cancelToken = default)
-                                                where TWfArg : IDataValue;
         #endregion StartWorkflowAsync(..)
 
 
@@ -71,18 +64,8 @@ namespace Temporal.WorkflowClient
                                                                            TWfArg workflowArg,
                                                                            string signalName,
                                                                            TSigArg signalArg,
+                                                                           StartWorkflowChainConfiguration workflowConfig = null,
                                                                            CancellationToken cancelToken = default);
-
-        Task<IWorkflowChain> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
-                                                                           string workflowTypeName,
-                                                                           string taskQueue,
-                                                                           TWfArg workflowArg,
-                                                                           string signalName,
-                                                                           TSigArg signalArg,
-                                                                           StartWorkflowChainConfiguration workflowConfig,
-                                                                           CancellationToken cancelToken = default)
-                                                    where TWfArg : IDataValue
-                                                    where TSigArg : IDataValue;
 
         #endregion StartWorkflowWithSignalAsync(..)
 

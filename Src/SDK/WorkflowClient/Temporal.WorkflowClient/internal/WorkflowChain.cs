@@ -142,14 +142,14 @@ namespace Temporal.WorkflowClient
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartAsync(String, String, IDataValue, StartWorkflowChainConfiguration, CancellationToken)"/>
+        /// <see cref="IWorkflowChain.StartAsync{TWfArg}(String, String, TWfArg, StartWorkflowChainConfiguration, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
         public Task StartAsync<TWfArg>(string workflowTypeName,
                                        string taskQueue,
-                                       IDataValue wokflowArgs,
-                                       StartWorkflowChainConfiguration workflowConfig,
-                                       CancellationToken cancelToken) where TWfArg : IDataValue
+                                       TWfArg wokflowArg,
+                                       StartWorkflowChainConfiguration workflowConfig = null,
+                                       CancellationToken cancelToken = default)
         {
             throw new NotImplementedException("@ToDo");
         }
@@ -160,16 +160,16 @@ namespace Temporal.WorkflowClient
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartWithSignalAsync(String, String, IDataValue, String, IDataValue, StartWorkflowChainConfiguration, CancellationToken)"/>
+        /// <see cref="IWorkflowChain.StartWithSignalAsync{TWfArg, TSigArg}(String, String, TWfArg, String, TSigArg, StartWorkflowChainConfiguration, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
-        public Task StartWithSignalAsync(string workflowTypeName,
-                                         string taskQueue,
-                                         IDataValue wokflowArgs,
-                                         string signalName,
-                                         IDataValue signalArgs,
-                                         StartWorkflowChainConfiguration workflowConfig,
-                                         CancellationToken cancelToken = default)
+        public Task StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
+                                                          string taskQueue,
+                                                          TWfArg wokflowArg,
+                                                          string signalName,
+                                                          TSigArg signalArg,
+                                                          StartWorkflowChainConfiguration workflowConfig = null,
+                                                          CancellationToken cancelToken = default)
         {
             throw new NotImplementedException("@ToDo");
         }
@@ -180,52 +180,29 @@ namespace Temporal.WorkflowClient
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartIfNotRunningAsync(String, String, CancellationToken)"/>
+        /// <see cref="IWorkflowChain.StartIfNotRunningAsync(String, String, StartWorkflowChainConfiguration, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
         public Task<bool> StartIfNotRunningAsync(string workflowTypeName,
                                                  string taskQueue,
+                                                 StartWorkflowChainConfiguration workflowConfig = null,
                                                  CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            return StartIfNotRunningAsync(workflowTypeName, taskQueue, DataValue.Void, workflowConfig, cancelToken);
         }
+
+
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartIfNotRunningAsync(String, String, IDataValue, CancellationToken)"/>
-        /// ) for a detailed description.
-        /// </summary>
-        public Task<bool> StartIfNotRunningAsync(string workflowTypeName,
-                                                 string taskQueue,
-                                                 IDataValue workflowArgs,
-                                                 CancellationToken cancelToken = default)
-        {
-            throw new NotImplementedException("@ToDo");
-        }
-
-        /// <summary>
-        /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartIfNotRunningAsync{TWfArg}(String, String, TWfArg, CancellationToken)"/>
+        /// <see cref="IWorkflowChain.StartIfNotRunningAsync{TWfArg}(String, String, TWfArg, StartWorkflowChainConfiguration, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
         public Task<bool> StartIfNotRunningAsync<TWfArg>(string workflowTypeName,
                                                          string taskQueue,
                                                          TWfArg workflowArg,
+                                                         StartWorkflowChainConfiguration workflowConfig = null,
                                                          CancellationToken cancelToken = default)
-        {
-            throw new NotImplementedException("@ToDo");
-        }
-
-        /// <summary>
-        /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartWithSignalAsync(String, String, IDataValue, String, IDataValue, StartWorkflowChainConfiguration, CancellationToken)"/>
-        /// ) for a detailed description.
-        /// </summary>
-        public Task<bool> StartIfNotRunningAsync(string workflowTypeName,
-                                                 string taskQueue,
-                                                 IDataValue workflowArgs,
-                                                 StartWorkflowChainConfiguration workflowConfig,
-                                                 CancellationToken cancelToken = default)
         {
             throw new NotImplementedException("@ToDo");
         }

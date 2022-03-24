@@ -20,6 +20,8 @@ namespace Temporal.WorkflowClient
             return client;
         }
 
+        #endregion -- Static APIs --
+
         public TemporalClient()
             : this(TemporalClientConfiguration.ForLocalHost())
         {
@@ -29,10 +31,8 @@ namespace Temporal.WorkflowClient
         {
             TemporalClientConfiguration.Validate(config);
             Configuration = config;
+            IsConectionInitialized = false;
         }
-
-        #endregion -- Static APIs --
-
 
         #region -- Common properties --
 
@@ -53,77 +53,7 @@ namespace Temporal.WorkflowClient
                                                        StartWorkflowChainConfiguration workflowConfig = null,
                                                        CancellationToken cancelToken = default)
         {
-            return StartWorkflowAsync<IDataValue.Void>(workflowId,
-                                                       workflowTypeName,
-                                                       taskQueue,
-                                                       DataValue.Void,
-                                                       workflowConfig,
-                                                       cancelToken);
-        }
-
-        public Task<IWorkflowChain> StartWorkflowAsync<TWfArg>(string workflowId,
-                                                                     string workflowTypeName,
-                                                                     string taskQueue,
-                                                                     TWfArg workflowArg,
-                                                                     CancellationToken cancelToken = default)
-        {
-            Task<IWorkflowChain> startCompletion;
-
-            if (workflowArg == null)
-            {
-                startCompletion = StartWorkflowAsync<IDataValue.Void>(workflowId,
-                                                                      workflowTypeName,
-                                                                      taskQueue,
-                                                                      DataValue.Void,
-                                                                      cancelToken);
-            }
-
-            if (workflowArg is IDataValue.Void voidData)
-            {
-                startCompletion = StartWorkflowAsync<IDataValue.Void>(workflowId,
-                                                                      workflowTypeName,
-                                                                      taskQueue,
-                                                                      voidData,
-                                                                      cancelToken);
-            }
-            else if (workflowArg is DataValue.INamedContainer namedCont)
-            {
-                startCompletion = StartWorkflowAsync<DataValue.INamedContainer>(workflowId,
-                                                                                workflowTypeName,
-                                                                                taskQueue,
-                                                                                namedCont,
-                                                                                cancelToken);
-            }
-            else if (workflowArg is DataValue.IUnnamedContainer unnamedCont)
-            {
-                startCompletion = StartWorkflowAsync<DataValue.IUnnamedContainer>(workflowId,
-                                                                                  workflowTypeName,
-                                                                                  taskQueue,
-                                                                                  unnamedCont,
-                                                                                  cancelToken);
-            }
-            else if (workflowArg is IDataValue dataValue)
-            {
-                startCompletion = StartWorkflowAsync<IDataValue>(workflowId,
-                                                                 workflowTypeName,
-                                                                 taskQueue,
-                                                                 dataValue,
-                                                                 cancelToken);
-            }
-            else if (workflowArg is System.Collections.IEnumerable)
-            {
-                throw CreateCannotUseEnumerableArgumentException(nameof(workflowArg), nameof(TWfArg), typeof(TWfArg).FullName);
-            }
-            else
-            {
-                startCompletion = StartWorkflowAsync<DataValue.UnnamedContainers.For1<TWfArg>>(workflowId,
-                                                                                               workflowTypeName,
-                                                                                               taskQueue,
-                                                                                               DataValue.Unnamed<TWfArg>(workflowArg),
-                                                                                               cancelToken);
-            }
-
-            return startCompletion;
+            return StartWorkflowAsync<IDataValue.Void>(workflowId, workflowTypeName, taskQueue, DataValue.Void, workflowConfig, cancelToken);
         }
 
         public async Task<IWorkflowChain> StartWorkflowAsync<TWfArg>(string workflowId,
@@ -132,14 +62,9 @@ namespace Temporal.WorkflowClient
                                                                      TWfArg workflowArg,
                                                                      StartWorkflowChainConfiguration workflowConfig = null,
                                                                      CancellationToken cancelToken = default)
-                                                            where TWfArg : IDataValue
         {
             IWorkflowChain workflow = CreateWorkflowHandle(workflowId);
-            await workflow.StartAsync<TWfArg>(workflowTypeName,
-                                              taskQueue,
-                                              workflowArg,
-                                              workflowConfig,
-                                              cancelToken);
+            await workflow.StartAsync<TWfArg>(workflowTypeName, taskQueue, workflowArg, workflowConfig, cancelToken);
             return workflow;
         }
 
@@ -158,9 +83,9 @@ namespace Temporal.WorkflowClient
             return StartWorkflowWithSignalAsync<IDataValue.Void, IDataValue.Void>(workflowId,
                                                                                   workflowTypeName,
                                                                                   taskQueue,
-                                                                                  DataValue.Void,
+                                                                                  workflowArg: DataValue.Void,
                                                                                   signalName,
-                                                                                  DataValue.Void,
+                                                                                  signalArg: DataValue.Void,
                                                                                   workflowConfig,
                                                                                   cancelToken);
         }
@@ -173,14 +98,14 @@ namespace Temporal.WorkflowClient
                                                                           StartWorkflowChainConfiguration workflowConfig = null,
                                                                           CancellationToken cancelToken = default)
         {
-            return StartWorkflowWithSignalArgConvertAsync<IDataValue.Void, TSigArg>(workflowId,
-                                                                                    workflowTypeName,
-                                                                                    taskQueue,
-                                                                                    DataValue.Void,
-                                                                                    signalName,
-                                                                                    signalArg,
-                                                                                    workflowConfig,
-                                                                                    cancelToken);
+            return StartWorkflowWithSignalAsync<IDataValue.Void, TSigArg>(workflowId,
+                                                                          workflowTypeName,
+                                                                          taskQueue,
+                                                                          workflowArg: DataValue.Void,
+                                                                          signalName,
+                                                                          signalArg,
+                                                                          workflowConfig,
+                                                                          cancelToken);
         }
 
         public Task<IWorkflowChain> StartWorkflowWithSignalAsync<TWfArg>(string workflowId,
@@ -191,177 +116,14 @@ namespace Temporal.WorkflowClient
                                                                          StartWorkflowChainConfiguration workflowConfig = null,
                                                                          CancellationToken cancelToken = default)
         {
-            return StartWorkflowWithSignalArgConvertAsync<TWfArg, IDataValue.Void>(workflowId,
-                                                                                   workflowTypeName,
-                                                                                   taskQueue,
-                                                                                   workflowArg,
-                                                                                   signalName,
-                                                                                   DataValue.Void,
-                                                                                   workflowConfig,
-                                                                                   cancelToken);
-        }
-
-        public Task<IWorkflowChain> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
-                                                                                  string workflowTypeName,
-                                                                                  string taskQueue,
-                                                                                  TWfArg workflowArg,
-                                                                                  string signalName,
-                                                                                  TSigArg signalArg,
-                                                                                  CancellationToken cancelToken = default)
-        {
-            return StartWorkflowWithSignalArgConvertAsync<TWfArg, TSigArg>(workflowId,
-                                                                           workflowTypeName,
-                                                                           taskQueue,
-                                                                           workflowArg,
-                                                                           signalName,
-                                                                           signalArg,
-                                                                           workflowConfig: null,
-                                                                           cancelToken);
-        }
-
-        private Task<IWorkflowChain> StartWorkflowWithSignalArgConvertAsync<TWfArg, TSigArg>(string workflowId,
-                                                                                             string workflowTypeName,
-                                                                                             string taskQueue,
-                                                                                             TWfArg workflowArg,
-                                                                                             string signalName,
-                                                                                             TSigArg signalArg,
-                                                                                             StartWorkflowChainConfiguration workflowConfig,
-                                                                                             CancellationToken cancelToken)
-        {
-            if (workflowArg != null && workflowArg is System.Collections.IEnumerable)
-            {
-                throw CreateCannotUseEnumerableArgumentException(nameof(workflowArg), nameof(TWfArg), typeof(TWfArg).FullName);
-            }
-
-            if (signalArg != null && signalArg is System.Collections.IEnumerable)
-            {
-                throw CreateCannotUseEnumerableArgumentException(nameof(signalArg), nameof(TSigArg), typeof(TSigArg).FullName);
-            }
-
-            Task<IWorkflowChain> startCompletion;
-
-            if (workflowArg == null || workflowArg is IDataValue.Void)
-            {
-                IDataValue.Void wfVoidArg = (workflowArg as IDataValue.Void) ?? DataValue.Void;
-
-                if (signalArg == null || signalArg is IDataValue.Void)
-                {
-                    startCompletion = StartWorkflowWithSignalAsync<IDataValue.Void, IDataValue.Void>(
-                                                                            workflowId,
-                                                                            workflowTypeName,
-                                                                            taskQueue,
-                                                                            wfVoidArg,
-                                                                            signalName,
-                                                                            (signalArg as IDataValue.Void) ?? DataValue.Void,
-                                                                            workflowConfig,
-                                                                            cancelToken);
-                }
-                else if (signalArg is IDataValue sigDataValArg)
-                {
-                    startCompletion = StartWorkflowWithSignalAsync<IDataValue.Void, IDataValue>(
-                                                                            workflowId,
-                                                                            workflowTypeName,
-                                                                            taskQueue,
-                                                                            wfVoidArg,
-                                                                            signalName,
-                                                                            sigDataValArg,
-                                                                            workflowConfig,
-                                                                            cancelToken);
-                }
-                else
-                {
-                    startCompletion = StartWorkflowWithSignalAsync<IDataValue.Void, DataValue.UnnamedContainers.For1<TSigArg>>(
-                                                                            workflowId,
-                                                                            workflowTypeName,
-                                                                            taskQueue,
-                                                                            wfVoidArg,
-                                                                            signalName,
-                                                                            DataValue.Unnamed<TSigArg>(signalArg),
-                                                                            workflowConfig,
-                                                                            cancelToken);
-                }
-            }
-            else if (workflowArg is IDataValue wfDataValArg)
-            {
-                if (signalArg == null || signalArg is IDataValue.Void)
-                {
-                    startCompletion = StartWorkflowWithSignalAsync<IDataValue, IDataValue.Void>(
-                                                                            workflowId,
-                                                                            workflowTypeName,
-                                                                            taskQueue,
-                                                                            wfDataValArg,
-                                                                            signalName,
-                                                                            (signalArg as IDataValue.Void) ?? DataValue.Void,
-                                                                            workflowConfig,
-                                                                            cancelToken);
-                }
-                else if (signalArg is IDataValue sigDataValArg)
-                {
-                    startCompletion = StartWorkflowWithSignalAsync<IDataValue, IDataValue>(
-                                                                            workflowId,
-                                                                            workflowTypeName,
-                                                                            taskQueue,
-                                                                            wfDataValArg,
-                                                                            signalName,
-                                                                            sigDataValArg,
-                                                                            workflowConfig,
-                                                                            cancelToken);
-                }
-                else
-                {
-                    startCompletion = StartWorkflowWithSignalAsync<IDataValue, DataValue.UnnamedContainers.For1<TSigArg>>(
-                                                                            workflowId,
-                                                                            workflowTypeName,
-                                                                            taskQueue,
-                                                                            wfDataValArg,
-                                                                            signalName,
-                                                                            DataValue.Unnamed<TSigArg>(signalArg),
-                                                                            workflowConfig,
-                                                                            cancelToken);
-                }
-            }
-            else
-            {
-                DataValue.UnnamedContainers.For1<TWfArg> wfArgCont = DataValue.Unnamed<TWfArg>(workflowArg);
-                if (signalArg == null || signalArg is IDataValue.Void)
-                {
-                    startCompletion = StartWorkflowWithSignalAsync<DataValue.UnnamedContainers.For1<TWfArg>, IDataValue.Void>(
-                                                                            workflowId,
-                                                                            workflowTypeName,
-                                                                            taskQueue,
-                                                                            wfArgCont,
-                                                                            signalName,
-                                                                            (signalArg as IDataValue.Void) ?? DataValue.Void,
-                                                                            workflowConfig,
-                                                                            cancelToken);
-                }
-                else if (signalArg is IDataValue sigDataValArg)
-                {
-                    startCompletion = StartWorkflowWithSignalAsync<DataValue.UnnamedContainers.For1<TWfArg>, IDataValue>(
-                                                                            workflowId,
-                                                                            workflowTypeName,
-                                                                            taskQueue,
-                                                                            wfArgCont,
-                                                                            signalName,
-                                                                            sigDataValArg,
-                                                                            workflowConfig,
-                                                                            cancelToken);
-                }
-                else
-                {
-                    startCompletion = StartWorkflowWithSignalAsync<DataValue.UnnamedContainers.For1<TWfArg>, DataValue.UnnamedContainers.For1<TSigArg>>(
-                                                                            workflowId,
-                                                                            workflowTypeName,
-                                                                            taskQueue,
-                                                                            wfArgCont,
-                                                                            signalName,
-                                                                            DataValue.Unnamed<TSigArg>(signalArg),
-                                                                            workflowConfig,
-                                                                            cancelToken);
-                }
-            }
-
-            return startCompletion;
+            return StartWorkflowWithSignalAsync<TWfArg, IDataValue.Void>(workflowId,
+                                                                         workflowTypeName,
+                                                                         taskQueue,
+                                                                         workflowArg,
+                                                                         signalName,
+                                                                         signalArg: DataValue.Void,
+                                                                         workflowConfig,
+                                                                         cancelToken);
         }
 
         public async Task<IWorkflowChain> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
@@ -370,14 +132,11 @@ namespace Temporal.WorkflowClient
                                                                                         TWfArg workflowArg,
                                                                                         string signalName,
                                                                                         TSigArg signalArg,
-                                                                                        StartWorkflowChainConfiguration workflowConfig,
+                                                                                        StartWorkflowChainConfiguration workflowConfig = null,
                                                                                         CancellationToken cancelToken = default)
-                                                            where TWfArg : IDataValue
-                                                            where TSigArg : IDataValue
         {
             IWorkflowChain workflow = CreateWorkflowHandle(workflowId);
-            await workflow.StartWithSignalAsync<TWfArg, TSigArg>(workflowTypeName,
-                                                                 taskQueue,
+            await workflow.StartWithSignalAsync<TWfArg, TSigArg>(workflowTypeName, taskQueue,
                                                                  workflowArg,
                                                                  signalName,
                                                                  signalArg,
@@ -409,7 +168,7 @@ namespace Temporal.WorkflowClient
         public IWorkflowChain CreateWorkflowHandle(string workflowId,
                                                    string workflowChainId)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("@ToDo");
         }
         #endregion CreateWorkflowHandle(..)
 
@@ -420,14 +179,17 @@ namespace Temporal.WorkflowClient
         /// Create an workflow run handle that represents a workflow run with the specified <c>workflowId</c> and <c>workflowRunId</c>.
         /// </summary>
         public IWorkflowRun CreateWorkflowRunHandle(string workflowId,
-                                                    string workflowRunId);
+                                                    string workflowRunId)
+        {
+            throw new NotImplementedException("@ToDo");
+        }
         #endregion CreateWorkflowRunHandle(..)
 
         #endregion -- Workflow access and control APIs --
 
 
         #region -- Connection management --
-        public bool IsConectionInitialized { get; }
+        public bool IsConectionInitialized { get; private set; }
 
         /// <summary>
         /// <para>Ensure that the connection to the server is initialized and valid.</para>
@@ -454,7 +216,10 @@ namespace Temporal.WorkflowClient
         /// Invoking <c>EnsureConnectionInitializedAsync</c> will initialize the connection as a controled point in time where the user can
         /// control any such side-effects.
         /// </remarks>
-        public Task EnsureConnectionInitializedAsync(CancellationToken cancelToken = default);
+        public Task EnsureConnectionInitializedAsync(CancellationToken cancelToken = default)
+        {
+            throw new NotImplementedException("@ToDo");
+        }
         #endregion -- Connection management --
 
         #region Privates

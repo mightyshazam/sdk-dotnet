@@ -56,20 +56,19 @@ namespace Temporal.WorkflowClient
         Task StartAsync<TWfArg>(string workflowTypeName,
                                 string taskQueue,
                                 TWfArg wokflowArg,
-                                StartWorkflowChainConfiguration workflowConfig,
-                                CancellationToken cancelToken)
-                            where TWfArg : IDataValue;
+                                StartWorkflowChainConfiguration workflowConfig = null,
+                                CancellationToken cancelToken = default);
         #endregion StartAsync(..)
 
         #region StartWithSignalAsync(..)
         /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
-        Task StartWithSignalAsync(string workflowTypeName,
-                                  string taskQueue,
-                                  IDataValue wokflowArg,
-                                  string signalName,
-                                  IDataValue signalArg,
-                                  StartWorkflowChainConfiguration workflowConfig,
-                                  CancellationToken cancelToken = default);
+        Task StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
+                                                   string taskQueue,
+                                                   TWfArg wokflowArg,
+                                                   string signalName,
+                                                   TSigArg signalArg,
+                                                   StartWorkflowChainConfiguration workflowConfig = null,
+                                                   CancellationToken cancelToken = default);
         #endregion StartWithSignalAsync(..)
 
         #region StartIfNotRunningAsync(..)
@@ -77,22 +76,14 @@ namespace Temporal.WorkflowClient
         /// If start fails due to already-running, then return false and don't bind, instead of throwing.</summary>
         Task<bool> StartIfNotRunningAsync(string workflowTypeName,
                                           string taskQueue,
+                                          StartWorkflowChainConfiguration workflowConfig = null,
                                           CancellationToken cancelToken = default);
 
-        Task<bool> StartIfNotRunningAsync(string workflowTypeName,
-                                          string taskQueue,
-                                          IDataValue workflowArg,
-                                          CancellationToken cancelToken = default);
         Task<bool> StartIfNotRunningAsync<TWfArg>(string workflowTypeName,
                                                   string taskQueue,
                                                   TWfArg workflowArg,
+                                                  StartWorkflowChainConfiguration workflowConfig = null,
                                                   CancellationToken cancelToken = default);
-
-        Task<bool> StartIfNotRunningAsync(string workflowTypeName,
-                                          string taskQueue,
-                                          IDataValue workflowArg,
-                                          StartWorkflowChainConfiguration workflowConfig,
-                                          CancellationToken cancelToken = default);
         #endregion StartIfNotRunningAsync(..)
 
         #region --- GetXxxRunAsync(..) APIs to access a specific run ---
