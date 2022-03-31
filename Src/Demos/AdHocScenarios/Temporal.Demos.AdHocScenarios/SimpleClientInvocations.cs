@@ -51,6 +51,13 @@ namespace Temporal.Demos.AdHocScenarios
             {
                 Console.WriteLine("Received expected exception.");
                 Console.WriteLine(waeEx.TypeAndMessage());
+
+                Exception innerEx = waeEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n  Inner --> " + innerEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
             }
 
             Console.WriteLine();
@@ -72,7 +79,14 @@ namespace Temporal.Demos.AdHocScenarios
             catch (InvalidOperationException invOpEx)
             {
                 Console.WriteLine($"    Expected exception while getting {nameof(workflow2.WorkflowChainId)}:");
-                Console.WriteLine($"    {invOpEx.TypeAndMessage()}");
+                Console.WriteLine($"    --> {invOpEx.TypeAndMessage()}");
+
+                Exception innerEx = invOpEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n      Inner --> " + invOpEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
             }
 
             Console.WriteLine();
@@ -103,6 +117,46 @@ namespace Temporal.Demos.AdHocScenarios
             {
                 Console.WriteLine("Received expected exception.");
                 Console.WriteLine(wcaEx.TypeAndMessage());
+
+                Exception innerEx = wcaEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n  Inner --> " + innerEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Creating a handle to a non-existing workflow...");
+
+            IWorkflowChain workflow3 = client.CreateWorkflowHandle("Non-Existing-Workflow-Id");
+
+            Console.WriteLine("Created. Info:");
+            Console.WriteLine($"    Namespace:       {workflow3.Namespace}");
+            Console.WriteLine($"    WorkflowId:      {workflow3.WorkflowId}");
+            Console.WriteLine($"    IsBound:         {workflow3.IsBound}");
+
+            Console.WriteLine();
+            Console.WriteLine("Waiting for result on a non-existing workflow...");
+            Console.WriteLine();
+
+            try
+            {
+                await workflow3.GetResultAsync<object>();
+
+                throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
+            }
+            catch (WorkflowNotFoundException wnfEx)
+            {
+                Console.WriteLine("Received expected exception.");
+                Console.WriteLine(wnfEx.TypeAndMessage());
+
+                Exception innerEx = wnfEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n  Inner --> " + innerEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
             }
         }
     }

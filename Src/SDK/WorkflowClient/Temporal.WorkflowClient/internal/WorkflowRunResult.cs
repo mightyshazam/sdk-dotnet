@@ -145,11 +145,11 @@ namespace Temporal.WorkflowClient
                     throw new WorkflowConcludedAbnormallyException($"Cannot {nameof(GetValue)}<{typeof(TValue).Name}>() because the remote"
                                                                  + $" workflow represented by this {nameof(IWorkflowRunResult)}-instance"
                                                                  + $" did not conclude successfully.",
+                                                                   Status,
                                                                    Namespace,
                                                                    WorkflowId,
                                                                    _workflowChainId,
                                                                    WorkflowRunId,
-                                                                   Status,
                                                                    Failure);
                 }
             }

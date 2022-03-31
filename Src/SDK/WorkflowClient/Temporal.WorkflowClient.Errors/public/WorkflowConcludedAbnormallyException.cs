@@ -43,11 +43,11 @@ namespace Temporal.WorkflowClient.Errors
         }
 
         private static string FormatMessage(string message,
+                                            WorkflowExecutionStatus conclusionStatus,
                                             string @namespace,
                                             string workflowId,
                                             string workflowChainId,
                                             string workflowRunId,
-                                            WorkflowExecutionStatus conclusionStatus,
                                             ITemporalFailure innerException)
         {
             message = String.IsNullOrWhiteSpace(message) ? nameof(WorkflowConcludedAbnormallyException) : message.Trim();
@@ -62,45 +62,45 @@ namespace Temporal.WorkflowClient.Errors
                 message = message + " Inner Exception may have additional details.";
             }
 
-            message = $"{message} (Namespace={@namespace.QuoteOrNull()}; WorkflowId={workflowId.QuoteOrNull()};"
-                    + $" WorkflowChainId={workflowChainId.QuoteOrNull()}; WorkflowRunId={workflowRunId.QuoteOrNull()};"
-                    + $" ConclusionStatus='{conclusionStatus}')";
+            message = $"{message} (ConclusionStatus='{conclusionStatus}'; Namespace={@namespace.QuoteOrNull()};"
+                    + $" WorkflowId={workflowId.QuoteOrNull()}; WorkflowChainId={workflowChainId.QuoteOrNull()};"
+                    + $" WorkflowRunId={workflowRunId.QuoteOrNull()})";
 
             return message;
         }
 
         public WorkflowConcludedAbnormallyException(string message,
+                                                    WorkflowExecutionStatus conclusionStatus,
                                                     string @namespace,
                                                     string workflowId,
                                                     string workflowChainId,
                                                     string workflowRunId,
-                                                    WorkflowExecutionStatus conclusionStatus,
                                                     Exception innerException)
-            : this(message, @namespace, workflowId, workflowChainId, workflowRunId, conclusionStatus, AsTemporalFailure(innerException))
+            : this(message, conclusionStatus, @namespace, workflowId, workflowChainId, workflowRunId, AsTemporalFailure(innerException))
         {
         }
 
         public WorkflowConcludedAbnormallyException(string message,
+                                                    WorkflowExecutionStatus conclusionStatus,
                                                     string @namespace,
                                                     string workflowId,
                                                     string workflowChainId,
                                                     string workflowRunId,
-                                                    WorkflowExecutionStatus conclusionStatus,
                                                     ITemporalFailure innerException)
-            : base(FormatMessage(message, @namespace, workflowId, workflowChainId, workflowRunId, conclusionStatus, innerException),
+            : base(FormatMessage(message, conclusionStatus, @namespace, workflowId, workflowChainId, workflowRunId, innerException),
                    AsException(innerException))
         {
+            ConclusionStatus = conclusionStatus;
             Namespace = @namespace;
             WorkflowId = workflowId;
             WorkflowChainId = workflowChainId;
             WorkflowRunId = workflowRunId;
-            ConclusionStatus = conclusionStatus;
         }
 
+        public WorkflowExecutionStatus ConclusionStatus { get; }
         public string Namespace { get; }
         public string WorkflowId { get; }
         public string WorkflowChainId { get; }
         public string WorkflowRunId { get; }
-        public WorkflowExecutionStatus ConclusionStatus { get; }
     }
 }
