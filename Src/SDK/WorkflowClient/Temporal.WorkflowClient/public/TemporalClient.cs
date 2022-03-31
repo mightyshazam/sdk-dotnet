@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Candidly.Util;
 using Grpc.Core;
-using Temporal.Api.WorkflowService.V1;
 using Temporal.Common;
 using Temporal.Serialization;
 using Temporal.WorkflowClient.Interceptors;
@@ -20,10 +19,10 @@ namespace Temporal.WorkflowClient
         /// <summary>
         /// </summary>
         /// <remarks></remarks>
-        public static async Task<TemporalClient> ConnectAsync(TemporalClientConfiguration config)
+        public static async Task<ITemporalClient> ConnectAsync(TemporalClientConfiguration config, CancellationToken cancelToken = default)
         {
             TemporalClient client = new(config);
-            await client.EnsureConnectedAsync(CancellationToken.None);
+            await client.EnsureConnectedAsync(cancelToken);
             return client;
         }
 

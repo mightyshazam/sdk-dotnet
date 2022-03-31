@@ -62,9 +62,9 @@ namespace Temporal.WorkflowClient.Errors
                 message = message + " Inner Exception may have additional details.";
             }
 
-            message = $"{message} (@namespace={@namespace.QuoteOrNull()}; workflowId={workflowId.QuoteOrNull()};"
-                    + $" workflowChainId={workflowChainId.QuoteOrNull()}; workflowRunId={workflowRunId.QuoteOrNull()};"
-                    + $" conclusionStatus='{conclusionStatus}')";
+            message = $"{message} (Namespace={@namespace.QuoteOrNull()}; WorkflowId={workflowId.QuoteOrNull()};"
+                    + $" WorkflowChainId={workflowChainId.QuoteOrNull()}; WorkflowRunId={workflowRunId.QuoteOrNull()};"
+                    + $" ConclusionStatus='{conclusionStatus}')";
 
             return message;
         }

@@ -11,12 +11,8 @@ namespace Temporal.Demos.AdHocScenarios
         {
             Console.WriteLine($"RuntimeEnvironmentInfo: \n{RuntimeEnvironmentInfo.SingletonInstance}");
 
-            Console.WriteLine($"name1=\"{nameof(PayloadContainers)}\"");
-            Console.WriteLine($"name2=\"{nameof(Temporal.Common.Payload)}\"");
-            Console.WriteLine($"name3=\"{typeof(PayloadContainers).Name}\"");
-            Console.WriteLine($"name4=\"{typeof(PayloadContainers).FullName}\"");
-
-            (new UseRawGrpcClient()).Run();
+            // (new UseRawGrpcClient()).Run();
+            (new SimpleClientInvocations()).Run();
         }
     }
 }

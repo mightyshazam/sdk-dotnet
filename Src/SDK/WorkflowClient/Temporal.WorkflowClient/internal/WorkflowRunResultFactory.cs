@@ -110,14 +110,13 @@ namespace Temporal.WorkflowClient
                                                WorkflowExecutionTerminatedEventAttributes eventAttributes)
         {
             Validate.NotNull(eventAttributes);
-            Validate.NotNull(eventAttributes.Details);
             return new WorkflowRunResult(_dataConverter,
                                          _namespace,
                                          _workflowId,
                                          _workflowChainId,
                                          workflowRunId,
                                          WorkflowExecutionStatus.Terminated,
-                                         serializedPayloads: eventAttributes.Details,
+                                         serializedPayloads: eventAttributes.Details, // these may be null!
                                          failure: null,
                                          continuationRunId: null,
                                          eventAttributes);

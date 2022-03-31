@@ -213,5 +213,21 @@ namespace Candidly.Util
         {
             return dto.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF");
         }
+
+        public static string TypeAndMessage(this Exception ex)
+        {
+            return TypeAndMessage(ex, useFullTypeName: false);
+        }
+
+        public static string TypeAndMessage(this Exception ex, bool useFullTypeName)
+        {
+            if (ex == null)
+            {
+                return NullWord;
+            }
+
+            string typeName = useFullTypeName ? ex.GetType().FullName : ex.GetType().Name;
+            return $"{typeName}: {ex.Message}";
+        }
     }
 }
