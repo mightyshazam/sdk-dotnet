@@ -93,6 +93,8 @@ namespace Temporal.Demos.AdHocScenarios
 
             try
             {
+                // At this point, we expect the user to manually terminate the workflow via the UI
+                // (or course, manual interventions need to be removed in the mid-term).
                 await workflow.GetResultAsync<object>();
 
                 throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");

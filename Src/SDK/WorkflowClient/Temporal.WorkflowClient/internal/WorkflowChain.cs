@@ -361,7 +361,7 @@ namespace Temporal.WorkflowClient
                                                                                          workflowRunId: null,
                                                                                          followChain: true,
                                                                                          cancelToken);
-                
+
                 if (resWfRun != null && resWfRun is WorkflowRunResult resWfRunIntrnlImpl)
                 {
                     resWfRunIntrnlImpl.TemporalClient = _temporalClient;
