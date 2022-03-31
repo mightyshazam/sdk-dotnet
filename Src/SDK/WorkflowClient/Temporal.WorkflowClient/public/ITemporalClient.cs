@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Temporal.Common;
+using Temporal.WorkflowClient.Interceptors;
 
 namespace Temporal.WorkflowClient
 {
@@ -104,7 +105,7 @@ namespace Temporal.WorkflowClient
 
         #region -- Connection management --
 
-        bool IsConectionInitialized { get; }
+        bool IsConnected { get; }
 
         /// <summary>
         /// <para>Ensure that the connection to the server is initialized and valid.</para>
@@ -120,7 +121,7 @@ namespace Temporal.WorkflowClient
         /// </summary>
         /// <remarks>The default implementation of an <c>ITemporalClient</c> is <see cref="TemporalClient" />.
         /// It is recommended to use the factory method <see cref="TemporalClient.ConnectAsync" /> to create instanced of
-        /// <c>TemporalClient</c>, and in such cases it is not required to explicitly call <c>EnsureConnectionInitializedAsync</c> on
+        /// <c>TemporalClient</c>, and in such cases it is not required to explicitly call <c>EnsureConnectedAsync</c> on
         /// a new client instace (calling it will be a no-op).
         /// However, in some specific cases the user may NOT want to initialize the connection at client creation.
         /// For example, some clients require CancellationToken support. In some other scenarios, where the client is initialized by a
@@ -128,10 +129,10 @@ namespace Temporal.WorkflowClient
         /// In such cases, it is possible to create an instance of <c>TemporalClient</c> using the constructor. In such cases the client
         /// will automatically initialize its connection before it is used for the first time. However, in such scenarios, applications must
         /// be aware of the additional latency and possible errors which may occur during connection initialization.
-        /// Invoking <c>EnsureConnectionInitializedAsync</c> will initialize the connection as a controled point in time where the user can
+        /// Invoking <c>EnsureConnectedAsync</c> will initialize the connection as a controled point in time where the user can
         /// control any such side-effects.
         /// </remarks>
-        Task EnsureConnectionInitializedAsync(CancellationToken cancelToken = default);
+        Task EnsureConnectedAsync(CancellationToken cancelToken = default);
 
         #endregion -- Connection management --
     }

@@ -38,6 +38,11 @@ namespace Candidly.Util
             throw new InvalidCastException($"Cannot cast value of type \"{typeof(TSrc).FullName}\" to type \"{typeof(TDest).FullName}\".");
         }
 
+        public static Type TypeOf<T>(this T value)
+        {
+            return (value == null) ? typeof(T) : value.GetType();
+        }
+
         #endregion Cast Utils
 
 

@@ -8,6 +8,16 @@
     <ProjectReference Include="..\Api.Client.ManagedGrpc\Temporal.Api.Client.ManagedGrpc.csproj" />
     <ProjectReference Include="..\Common\Temporal.Sdk.Common.csproj" />
   </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4')) == false">
+    <PackageReference Include="Grpc.Net.Client" Version="2.44.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <PackageReference Include="Grpc.Core" Version="2.44.0" />
+  </ItemGroup>
   
   <ItemGroup>
     <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\public\TryResult.cs"
@@ -15,6 +25,28 @@
     
     <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Validate.cs"
              Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Concurrent.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\RuntimeEnvironmentInfo.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\CurrentProcess.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\ExceptionExtensions.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Format.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Converter.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Temporal.WorkflowClient.Interceptors\internal\" />
   </ItemGroup>
 
 </Project>

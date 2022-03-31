@@ -21,7 +21,6 @@ namespace Temporal.Demos.AdHocScenarios
         public async Task RunAsync()
         {
             ITemporalClient client = null;
-            IDataValue arg = null;
 
             await client.StartWorkflowAsync("workflowId",
                                             "workflowTypeName",

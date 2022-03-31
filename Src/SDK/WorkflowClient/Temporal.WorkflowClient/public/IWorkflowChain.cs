@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 using Temporal.Api.Enums.V1;
 using Temporal.Api.WorkflowService.V1;
 using Temporal.Common;
+using Temporal.WorkflowClient.Interceptors;
 
 namespace Temporal.WorkflowClient
 {
-    public interface IWorkflowChain
+    public interface IWorkflowChain : IDisposable
     {
         string Namespace { get; }
         string WorkflowId { get; }
@@ -119,10 +120,9 @@ namespace Temporal.WorkflowClient
         // and invoke the corresponding API on that instance.
 
         /// <summary>The returned task completes when this chain finishes (incl. any runs not yet started). Performs long poll.</summary>
-        Task GetResultAsync(CancellationToken cancelToken = default);
         Task<TResult> GetResultAsync<TResult>(CancellationToken cancelToken = default);
 
-        Task<IWorkflowChainResult> AwaitConclusionAync(CancellationToken cancelToken = default);
+        Task<IWorkflowRunResult> AwaitConclusionAsync(CancellationToken cancelToken = default);
 
         Task SignalAsync(string signalName,
                          CancellationToken cancelToken = default);
@@ -131,10 +131,6 @@ namespace Temporal.WorkflowClient
                                   TSigArg signalArg,
                                   CancellationToken cancelToken = default);
 
-        Task SignalAsync(string signalName,
-                         IDataValue signalArg,
-                         CancellationToken cancelToken = default);
-
         Task<TResult> QueryAsync<TResult>(string queryName,
                                           CancellationToken cancelToken = default);
 
@@ -142,18 +138,14 @@ namespace Temporal.WorkflowClient
                                                    TQryArg queryArg,
                                                    CancellationToken cancelToken = default);
 
-        Task<TResult> QueryAsync<TResult>(string queryName,
-                                          IDataValue queryArg,
-                                          CancellationToken cancelToken = default);
-
         Task RequestCancellationAsync(CancellationToken cancelToken = default);
 
         Task TerminateAsync(string reason = null,
                             CancellationToken cancelToken = default);
 
-        Task TerminateAsync(string reason,
-                            IDataValue details,
-                            CancellationToken cancelToken = default);
+        Task TerminateAsync<TTermArg>(string reason,
+                                      TTermArg details,
+                                      CancellationToken cancelToken = default);
 
         #endregion --- APIs to interact with the chain ---
     }

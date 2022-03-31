@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Candidly.Util;
+using Grpc.Core;
+using Temporal.Api.WorkflowService.V1;
 using Temporal.Common;
+using Temporal.Serialization;
+using Temporal.WorkflowClient.Interceptors;
 
 namespace Temporal.WorkflowClient
 {
@@ -10,17 +15,44 @@ namespace Temporal.WorkflowClient
     {
         #region -- Static APIs --
 
+        private static int s_identityMarkersCount = 0;
+
         /// <summary>
         /// </summary>
         /// <remarks></remarks>
         public static async Task<TemporalClient> ConnectAsync(TemporalClientConfiguration config)
         {
             TemporalClient client = new(config);
-            await client.EnsureConnectionInitializedAsync(CancellationToken.None);
+            await client.EnsureConnectedAsync(CancellationToken.None);
             return client;
         }
 
+        private static string CreateIdentityMarker()
+        {
+            int identityMarkersIndex;
+            unchecked
+            {
+                identityMarkersIndex = Interlocked.Increment(ref s_identityMarkersCount);
+            }
+
+            try
+            {
+                CurrentProcess.GetIdentityInfo(out string processName, out string machineName, out int processId);
+                return $"{machineName}/{processName}/{processId}/{identityMarkersIndex}";
+            }
+            catch
+            {
+                return $"{Guid.NewGuid().ToString("D")}/{identityMarkersIndex}";
+            }
+        }
+
         #endregion -- Static APIs --
+
+
+        #region -- Fields, Ctors, Common properties --
+
+        private readonly ChannelBase _grpcChannel;
+        private readonly string _identityMarker;
 
         public TemporalClient()
             : this(TemporalClientConfiguration.ForLocalHost())
@@ -30,17 +62,18 @@ namespace Temporal.WorkflowClient
         public TemporalClient(TemporalClientConfiguration config)
         {
             TemporalClientConfiguration.Validate(config);
+
             Configuration = config;
-            IsConectionInitialized = false;
+
+            _grpcChannel = GrpcChannelFactory.SingletonInstance.GetOrCreateChannel(config);
+            _identityMarker = CreateIdentityMarker();
         }
 
-        #region -- Common properties --
-
-        public TemporalClientConfiguration Configuration { get; init; }
+        public TemporalClientConfiguration Configuration { get; }
 
         public string Namespace { get { return Configuration.Namespace; } }
 
-        #endregion -- Common properties --
+        #endregion -- Fields, Ctors, Common properties --
 
 
         #region -- Workflow access and control APIs --
@@ -53,7 +86,7 @@ namespace Temporal.WorkflowClient
                                                        StartWorkflowChainConfiguration workflowConfig = null,
                                                        CancellationToken cancelToken = default)
         {
-            return StartWorkflowAsync<IDataValue.Void>(workflowId, workflowTypeName, taskQueue, DataValue.Void, workflowConfig, cancelToken);
+            return StartWorkflowAsync<IPayload.Void>(workflowId, workflowTypeName, taskQueue, Payload.Void, workflowConfig, cancelToken);
         }
 
         public async Task<IWorkflowChain> StartWorkflowAsync<TWfArg>(string workflowId,
@@ -80,14 +113,14 @@ namespace Temporal.WorkflowClient
                                                                  StartWorkflowChainConfiguration workflowConfig = null,
                                                                  CancellationToken cancelToken = default)
         {
-            return StartWorkflowWithSignalAsync<IDataValue.Void, IDataValue.Void>(workflowId,
-                                                                                  workflowTypeName,
-                                                                                  taskQueue,
-                                                                                  workflowArg: DataValue.Void,
-                                                                                  signalName,
-                                                                                  signalArg: DataValue.Void,
-                                                                                  workflowConfig,
-                                                                                  cancelToken);
+            return StartWorkflowWithSignalAsync<IPayload.Void, IPayload.Void>(workflowId,
+                                                                              workflowTypeName,
+                                                                              taskQueue,
+                                                                              workflowArg: Payload.Void,
+                                                                              signalName,
+                                                                              signalArg: Payload.Void,
+                                                                              workflowConfig,
+                                                                              cancelToken);
         }
 
         public Task<IWorkflowChain> StartWorkflowWithSignalAsync<TSigArg>(string workflowId,
@@ -98,14 +131,14 @@ namespace Temporal.WorkflowClient
                                                                           StartWorkflowChainConfiguration workflowConfig = null,
                                                                           CancellationToken cancelToken = default)
         {
-            return StartWorkflowWithSignalAsync<IDataValue.Void, TSigArg>(workflowId,
-                                                                          workflowTypeName,
-                                                                          taskQueue,
-                                                                          workflowArg: DataValue.Void,
-                                                                          signalName,
-                                                                          signalArg,
-                                                                          workflowConfig,
-                                                                          cancelToken);
+            return StartWorkflowWithSignalAsync<IPayload.Void, TSigArg>(workflowId,
+                                                                        workflowTypeName,
+                                                                        taskQueue,
+                                                                        workflowArg: Payload.Void,
+                                                                        signalName,
+                                                                        signalArg,
+                                                                        workflowConfig,
+                                                                        cancelToken);
         }
 
         public Task<IWorkflowChain> StartWorkflowWithSignalAsync<TWfArg>(string workflowId,
@@ -116,14 +149,14 @@ namespace Temporal.WorkflowClient
                                                                          StartWorkflowChainConfiguration workflowConfig = null,
                                                                          CancellationToken cancelToken = default)
         {
-            return StartWorkflowWithSignalAsync<TWfArg, IDataValue.Void>(workflowId,
-                                                                         workflowTypeName,
-                                                                         taskQueue,
-                                                                         workflowArg,
-                                                                         signalName,
-                                                                         signalArg: DataValue.Void,
-                                                                         workflowConfig,
-                                                                         cancelToken);
+            return StartWorkflowWithSignalAsync<TWfArg, IPayload.Void>(workflowId,
+                                                                       workflowTypeName,
+                                                                       taskQueue,
+                                                                       workflowArg,
+                                                                       signalName,
+                                                                       signalArg: Payload.Void,
+                                                                       workflowConfig,
+                                                                       cancelToken);
         }
 
         public async Task<IWorkflowChain> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
@@ -189,7 +222,8 @@ namespace Temporal.WorkflowClient
 
 
         #region -- Connection management --
-        public bool IsConectionInitialized { get; private set; }
+
+        public bool IsConnected { get; private set; }
 
         /// <summary>
         /// <para>Ensure that the connection to the server is initialized and valid.</para>
@@ -205,7 +239,7 @@ namespace Temporal.WorkflowClient
         /// </summary>
         /// <remarks>The default implementation of an <c>ITemporalClient</c> is <see cref="TemporalClient" />.
         /// It is recommended to use the factory method <see cref="TemporalClient.ConnectAsync" /> to create instanced of
-        /// <c>TemporalClient</c>, and in such cases it is not required to explicitly call <c>EnsureConnectionInitializedAsync</c> on
+        /// <c>TemporalClient</c>, and in such cases it is not required to explicitly call <c>EnsureConnectedAsync</c> on
         /// a new client instace (calling it will be a no-op).
         /// However, in some specific cases the user may NOT want to initialize the connection at client creation.
         /// For example, some clients require CancellationToken support. In some other scenarios, where the client is initialized by a
@@ -213,32 +247,79 @@ namespace Temporal.WorkflowClient
         /// In such cases, it is possible to create an instance of <c>TemporalClient</c> using the constructor. In such cases the client
         /// will automatically initialize its connection before it is used for the first time. However, in such scenarios, applications must
         /// be aware of the additional latency and possible errors which may occur during connection initialization.
-        /// Invoking <c>EnsureConnectionInitializedAsync</c> will initialize the connection as a controled point in time where the user can
+        /// Invoking <c>EnsureConnectedAsync</c> will initialize the connection as a controled point in time where the user can
         /// control any such side-effects.
         /// </remarks>
-        public Task EnsureConnectionInitializedAsync(CancellationToken cancelToken = default)
+        public Task EnsureConnectedAsync(CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            if (IsConnected)
+            {
+                return Task.CompletedTask;
+            }
+
+            return ConnectAndValidateAsync(cancelToken);
         }
+
+        private Task ConnectAndValidateAsync(CancellationToken cancelToken)
+        {
+            // @ToDo: Call server to get capabilities
+
+            cancelToken.ThrowIfCancellationRequested();
+            IsConnected = true;
+            return Task.CompletedTask;
+        }
+
         #endregion -- Connection management --
 
-        #region Privates
-        private static ArgumentException CreateCannotUseEnumerableArgumentException(string argParamName, string typeParamName, string typeParamType)
+
+        #region -- Service invocation pipeline management --
+
+        internal ITemporalClientInterceptor CreateServiceInvocationPipeline(IWorkflowChain workflowHandle)
         {
-            throw new ArgumentException($"The specified {argParamName} is an IEnumerable (and the type argument"
-                                      + $" {typeParamName} is \"{typeParamType}\"). Specifying Enumerables (arrays,"
-                                      + $" collections, ...) as {argParamName} is not permitted because it is not clear"
-                                      + $" whether you intended to pass the Enumerable as the single argument, or whether you"
-                                      + $" intended to pass multiple arguments, one for each element of your collection."
-                                      + $" To pass an Enumerable as a single argument, or to pass several arguments to a workflow,"
-                                      + $" you need to wrap your data into an IDavaValue container. For example, to pass an array"
-                                      + $" of integers (`int[] data`) as a single argument, you can wrap it like this:"
-                                      + $" `{nameof(StartWorkflowAsync)}(.., {nameof(DataValue)}.{nameof(DataValue.Unnamed)}<int[]>(data))`."
-                                      + $" To pass the contents of `data` as multiple integer arguments, wrap it like this:"
-                                      + $" `{nameof(StartWorkflowAsync)}(.., {nameof(DataValue)}.{nameof(DataValue.Unnamed)}<int>(data))`."
-                                      + $" Also, if suported by the workflow implementation, it is better to use a"
-                                      + $" {nameof(DataValue.Named)} {nameof(DataValue)}-container.");
+            List<ITemporalClientInterceptor> pipeline = CreateDefaultServiceInvocationPipeline(workflowHandle);
+
+            Action<IWorkflowChain, IList<ITemporalClientInterceptor>> customInterceptFactory = Configuration.ClientInterceptorFactory;
+            if (customInterceptFactory != null)
+            {
+                customInterceptFactory(workflowHandle, pipeline);
+            }
+
+            IDataConverter dataConverter = null;
+            Func<IWorkflowChain, IDataConverter> customDataConvertFactory = Configuration.DataConverterFactory;
+            if (customDataConvertFactory != null)
+            {
+                dataConverter = customDataConvertFactory(workflowHandle);
+            }
+
+            if (dataConverter == null)
+            {
+                dataConverter = new DefaultDataConverter();
+            }
+
+            ITemporalClientInterceptor downstream = new TemporalServiceInvoker(_grpcChannel,
+                                                                               _identityMarker,
+                                                                               dataConverter);
+            downstream.Init(null);
+
+            for (int i = pipeline.Count - 1; i >= 0; i--)
+            {
+                ITemporalClientInterceptor current = pipeline[i];
+                if (current != null)
+                {
+                    current.Init(downstream);
+                    downstream = current;
+                }
+            }
+
+            return downstream;
         }
-        #endregion Privates
+
+        private List<ITemporalClientInterceptor> CreateDefaultServiceInvocationPipeline(IWorkflowChain _)
+        {
+            List<ITemporalClientInterceptor> pipeline = new List<ITemporalClientInterceptor>();
+            return pipeline;
+        }
+
+        #endregion -- Service invocation pipeline management --
     }
 }

@@ -6,13 +6,30 @@ namespace Temporal.WorkflowClient
 {
     public class StartWorkflowChainConfiguration
     {
-        public static StartWorkflowChainConfiguration Default { get { throw new NotImplementedException(); } }
+        private static readonly StartWorkflowChainConfiguration s_default = new StartWorkflowChainConfiguration()
+        {
+            WorkflowExecutionTimeout = null,
+            WorkflowRunTimeout = null,
+            WorkflowTaskTimeout = null,
+            Identity = null,
+            WorkflowIdReusePolicy = null,
+            RetryPolicy = null,
+            CronSchedule = null,
+            Memo = null,
+            SearchAttributes = null,
+            Header = null
+        };
 
-        public TimeSpan WorkflowExecutionTimeout { get; init; }
-        public TimeSpan WorkflowRunTimeout { get; init; }
-        public TimeSpan WorkflowTaskTimeout { get; init; }
+        public static StartWorkflowChainConfiguration Default
+        {
+            get { return s_default; }
+        }
+
+        public TimeSpan? WorkflowExecutionTimeout { get; init; }
+        public TimeSpan? WorkflowRunTimeout { get; init; }
+        public TimeSpan? WorkflowTaskTimeout { get; init; }
         public string Identity { get; init; }
-        public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; init; }
+        public WorkflowIdReusePolicy? WorkflowIdReusePolicy { get; init; }
         public RetryPolicy RetryPolicy { get; init; }
         public string CronSchedule { get; init; }
         public Memo Memo { get; init; }
