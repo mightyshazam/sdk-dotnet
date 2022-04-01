@@ -10,6 +10,8 @@ using Temporal.Common;
 using Temporal.Collections;
 using Temporal.Serialization;
 
+using IDataValue = Temporal.Common.DataModel.IDataValue;
+
 namespace Temporal.WorkflowClient
 {
     public class ClientApi

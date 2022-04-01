@@ -10,6 +10,8 @@ using Temporal.Worker.Hosting;
 using Temporal.Worker.Workflows;
 using Temporal.WorkflowClient;
 
+using IDataValue = Temporal.Common.DataModel.IDataValue;
+
 namespace Temporal.Sdk.BasicSamples
 {
     /// <summary>

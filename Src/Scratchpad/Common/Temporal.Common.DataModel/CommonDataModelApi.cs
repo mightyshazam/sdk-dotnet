@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Candidly.Util;
 
 namespace Temporal.Common.DataModel
 {
@@ -165,12 +166,12 @@ namespace Temporal.Common.DataModel
 
                 public TVal GetValue<TVal>(int index)
                 {
-                    return (index == 0) ? Cast<T1, TVal>(_value1) : throw new ArgumentOutOfRangeException(nameof(index));
+                    return (index == 0) ? _value1.Cast<T1, TVal>() : throw new ArgumentOutOfRangeException(nameof(index));
                 }
 
                 public bool TryGetValue<TVal>(int index, out TVal value)
                 {
-                    return (index == 0) ? TryCast<T1, TVal>(_value1, out value) : throw new ArgumentOutOfRangeException(nameof(index));
+                    return (index == 0) ? _value1.TryCast<T1, TVal>(out value) : throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
 
@@ -204,15 +205,15 @@ namespace Temporal.Common.DataModel
 
                 public TVal GetValue<TVal>(int index)
                 {
-                    return (index == 0) ? Cast<T1, TVal>(_value1)
-                            : (index == 1) ? Cast<T2, TVal>(_value2)
+                    return (index == 0) ? _value1.Cast<T1, TVal>()
+                            : (index == 1) ? _value2.Cast<T2, TVal>()
                             : throw new ArgumentOutOfRangeException(nameof(index));
                 }
 
                 public bool TryGetValue<TVal>(int index, out TVal value)
                 {
-                    return (index == 0) ? TryCast<T1, TVal>(_value1, out value)
-                            : (index == 1) ? TryCast<T2, TVal>(_value2, out value)
+                    return (index == 0) ? Converter.TryCast<T1, TVal>(_value1, out value)
+                            : (index == 1) ? Converter.TryCast<T2, TVal>(_value2, out value)
                             : throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
@@ -302,12 +303,12 @@ namespace Temporal.Common.DataModel
                     {
                         if (!_useKeyValPairs)
                         {
-                            return new KeyValuePair<string, T>(Cast<object, string>(_namedValues[index * 2]),
-                                                               Cast<object, T>(_namedValues[index * 2 + 1]));
+                            return new KeyValuePair<string, T>(Converter.Cast<object, string>(_namedValues[index * 2]),
+                                                               Converter.Cast<object, T>(_namedValues[index * 2 + 1]));
                         }
                         else
                         {
-                            return Cast<TNamedValsItem, KeyValuePair<string, T>>(_namedValues[index]);
+                            return Converter.Cast<TNamedValsItem, KeyValuePair<string, T>>(_namedValues[index]);
                         }
                     }
                 }
@@ -318,11 +319,11 @@ namespace Temporal.Common.DataModel
                 {
                     if (!_useKeyValPairs)
                     {
-                        return Cast<object, string>(_namedValues[index * 2]);
+                        return Converter.Cast<object, string>(_namedValues[index * 2]);
                     }
                     else
                     {                        
-                        return Cast<TNamedValsItem, KeyValuePair<string, T>>(_namedValues[index]).Key;
+                        return Converter.Cast<TNamedValsItem, KeyValuePair<string, T>>(_namedValues[index]).Key;
                     }
                 }
 
@@ -330,11 +331,11 @@ namespace Temporal.Common.DataModel
                 {                    
                     if (!_useKeyValPairs)
                     {
-                        return Cast<object, TVal>(_namedValues[index * 2 + 1]);
+                        return Converter.Cast<object, TVal>(_namedValues[index * 2 + 1]);
                     }
                     else
                     {
-                        return Cast<T, TVal>(Cast<TNamedValsItem, KeyValuePair<string, T>>(_namedValues[index]).Value);
+                        return Converter.Cast<T, TVal>(Converter.Cast<TNamedValsItem, KeyValuePair<string, T>>(_namedValues[index]).Value);
                     }
                 }
 
@@ -342,11 +343,11 @@ namespace Temporal.Common.DataModel
                 {
                     if (!_useKeyValPairs)
                     {
-                        return TryCast<object, TVal>(_namedValues[index * 2 + 1], out value);
+                        return Converter.TryCast<object, TVal>(_namedValues[index * 2 + 1], out value);
                     }
                     else
                     {
-                        return TryCast<T, TVal>(Cast<TNamedValsItem, KeyValuePair<string, T>>(_namedValues[index]).Value, out value);
+                        return Converter.TryCast<T, TVal>(Converter.Cast<TNamedValsItem, KeyValuePair<string, T>>(_namedValues[index]).Value, out value);
                     }
                 }
             }
@@ -369,13 +370,13 @@ namespace Temporal.Common.DataModel
 
                 public TVal GetValue<TVal>(int index)
                 {
-                    return (index == 0) ? Cast<T1, TVal>(_value1)
+                    return (index == 0) ? Converter.Cast<T1, TVal>(_value1)
                             : throw new ArgumentOutOfRangeException(nameof(index));
                 }
 
                 public bool TryGetValue<TVal>(int index, out TVal value)
                 {
-                    return (index == 0) ? TryCast<T1, TVal>(_value1, out value)
+                    return (index == 0) ? Converter.TryCast<T1, TVal>(_value1, out value)
                             : throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
@@ -398,15 +399,15 @@ namespace Temporal.Common.DataModel
 
                 public TVal GetValue<TVal>(int index)
                 {
-                    return (index == 0) ? Cast<T1, TVal>(_value1)
-                            : (index == 1) ? Cast<T2, TVal>(_value2)
+                    return (index == 0) ? Converter.Cast<T1, TVal>(_value1)
+                            : (index == 1) ? Converter.Cast<T2, TVal>(_value2)
                             : throw new ArgumentOutOfRangeException(nameof(index));
                 }
 
                 public bool TryGetValue<TVal>(int index, out TVal value)
                 {
-                    return (index == 0) ? TryCast<T1, TVal>(_value1, out value)
-                            : (index == 1) ? TryCast<T2, TVal>(_value2, out value)
+                    return (index == 0) ? Converter.TryCast<T1, TVal>(_value1, out value)
+                            : (index == 1) ? Converter.TryCast<T2, TVal>(_value2, out value)
                             : throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
@@ -426,12 +427,12 @@ namespace Temporal.Common.DataModel
 
                 public TVal GetValue<TVal>(int index)
                 {
-                    return Cast<T, TVal>(_values[index]);
+                    return Converter.Cast<T, TVal>(_values[index]);
                 }
 
                 public bool TryGetValue<TVal>(int index, out TVal value)
                 {
-                    return TryCast<object, TVal>(_values[index * 2 + 1], out value);
+                    return Converter.TryCast<object, TVal>(_values[index * 2 + 1], out value);
                 }
             }
         }  // interface Wrappers
