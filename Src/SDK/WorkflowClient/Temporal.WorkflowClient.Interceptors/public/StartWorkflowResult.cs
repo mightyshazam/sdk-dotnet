@@ -12,15 +12,15 @@
         public StartWorkflowResult(string workflowRunId, StartWorkflowResult.Status code)
         {
             WorkflowRunId = workflowRunId;
-            Code = code;
+            StatusCode = code;
         }
 
         public string WorkflowRunId { get; init; }
-        public Status Code { get; init; }
+        public Status StatusCode { get; init; }
 
         public bool TryGetBoundWorkflowChainId(out string workflowChainId)
         {
-            if (Code == Status.OK)
+            if (StatusCode == Status.OK)
             {
                 workflowChainId = WorkflowRunId;
                 return true;

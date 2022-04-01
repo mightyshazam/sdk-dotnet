@@ -170,28 +170,14 @@ namespace Temporal.WorkflowClient
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartAsync{TWfArg}(String, String, TWfArg, StartWorkflowChainConfiguration, CancellationToken)"/>
+        /// <see cref="IWorkflowChain.StartAsync{TWfArg}(String, String, TWfArg, StartWorkflowChainConfiguration, Boolean, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
-        public Task StartAsync<TWfArg>(string workflowTypeName,
-                                       string taskQueue,
-                                       TWfArg workflowArg,
-                                       StartWorkflowChainConfiguration workflowConfig = null,
-                                       CancellationToken cancelToken = default)
-        {
-            return StartAsync(workflowTypeName,
-                              taskQueue,
-                              workflowArg,
-                              failIfWorkflowChainAlreadyExists: true,
-                              workflowConfig,
-                              cancelToken);
-        }
-
         public async Task<StartWorkflowResult> StartAsync<TWfArg>(string workflowTypeName,
                                                                   string taskQueue,
                                                                   TWfArg workflowArg,
-                                                                  bool failIfWorkflowChainAlreadyExists,
                                                                   StartWorkflowChainConfiguration workflowConfig = null,
+                                                                  bool throwIfWorkflowChainAlreadyExists = true,
                                                                   CancellationToken cancelToken = default)
         {
             ValidateIsNotBound();
@@ -212,7 +198,7 @@ namespace Temporal.WorkflowClient
                                                                                           taskQueue,
                                                                                           workflowArg,
                                                                                           workflowConfig,
-                                                                                          failIfWorkflowChainAlreadyExists,
+                                                                                          throwIfWorkflowChainAlreadyExists,
                                                                                           cancelToken);
                 if (resStartWf.TryGetBoundWorkflowChainId(out string boundChainId))
                 {
@@ -236,57 +222,19 @@ namespace Temporal.WorkflowClient
         /// <see cref="IWorkflowChain.StartWithSignalAsync{TWfArg, TSigArg}(String, String, TWfArg, String, TSigArg, StartWorkflowChainConfiguration, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
-        public Task StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
-                                                          string taskQueue,
-                                                          TWfArg workflowArg,
-                                                          string signalName,
-                                                          TSigArg signalArg,
-                                                          StartWorkflowChainConfiguration workflowConfig = null,
-                                                          CancellationToken cancelToken = default)
+        public Task<StartWorkflowResult> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
+                                                                               string taskQueue,
+                                                                               TWfArg workflowArg,
+                                                                               string signalName,
+                                                                               TSigArg signalArg,
+                                                                               StartWorkflowChainConfiguration workflowConfig = null,
+                                                                               CancellationToken cancelToken = default)
         {
             throw new NotImplementedException("@ToDo");
         }
 
         #endregion StartWithSignalAsync(..)
 
-        #region StartIfNotRunningAsync(..)
-
-        /// <summary>
-        /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartIfNotRunningAsync(String, String, StartWorkflowChainConfiguration, CancellationToken)"/>
-        /// ) for a detailed description.
-        /// </summary>
-        public Task<bool> StartIfNotRunningAsync(string workflowTypeName,
-                                                 string taskQueue,
-                                                 StartWorkflowChainConfiguration workflowConfig = null,
-                                                 CancellationToken cancelToken = default)
-        {
-            return StartIfNotRunningAsync(workflowTypeName, taskQueue, Payload.Void, workflowConfig, cancelToken);
-        }
-
-
-
-        /// <summary>
-        /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartIfNotRunningAsync{TWfArg}(String, String, TWfArg, StartWorkflowChainConfiguration, CancellationToken)"/>
-        /// ) for a detailed description.
-        /// </summary>
-        public async Task<bool> StartIfNotRunningAsync<TWfArg>(string workflowTypeName,
-                                                         string taskQueue,
-                                                         TWfArg workflowArg,
-                                                         StartWorkflowChainConfiguration workflowConfig = null,
-                                                         CancellationToken cancelToken = default)
-        {
-            StartWorkflowResult resStartWf = await StartAsync(workflowTypeName,
-                                                              taskQueue,
-                                                              workflowArg,
-                                                              failIfWorkflowChainAlreadyExists: false,
-                                                              workflowConfig,
-                                                              cancelToken);
-
-            return (resStartWf.Code == StartWorkflowResult.Status.OK);
-        }
-        #endregion StartIfNotRunningAsync(..)
 
         #region --- GetXxxRunAsync(..) APIs to access a specific run ---
 

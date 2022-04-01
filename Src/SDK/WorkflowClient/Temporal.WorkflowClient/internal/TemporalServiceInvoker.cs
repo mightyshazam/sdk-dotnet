@@ -154,7 +154,7 @@ namespace Temporal.WorkflowClient
                             }
                             catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.AlreadyExists && !throwOnAlreadyExists)
                             {
-                                // Workflow already exixts, but user specified not to throw in such cases => make a note and swallow exception.
+                                // Workflow already exists, but user specified not to throw in such cases => make a note and swallow exception.
                                 // Other errors will be processed by invoker-wrapper.
                                 isAlreadyExists = true;
                                 return null;

@@ -12,14 +12,14 @@ namespace Temporal.Common
         public static readonly IPayload.Void Void = IPayload.Void.Instance;
         public static readonly Task<IPayload.Void> VoidTask = IPayload.Void.CompletedTask;
 
-        #region Unnamed(..)
+        #region Named(..)
 
-        public static object Named<T>(params object[] namedBalues)
+        public static object Named<T>(params object[] namedValues)
         {
             throw new NotImplementedException("@ToDo");
         }
 
-        #endregion Unnamed(..)
+        #endregion Named(..)
 
         #region Unnamed(..)
 

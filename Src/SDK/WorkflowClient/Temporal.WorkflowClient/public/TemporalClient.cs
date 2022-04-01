@@ -96,7 +96,12 @@ namespace Temporal.WorkflowClient
                                                                      CancellationToken cancelToken = default)
         {
             IWorkflowChain workflow = CreateWorkflowHandle(workflowId);
-            await workflow.StartAsync<TWfArg>(workflowTypeName, taskQueue, workflowArg, workflowConfig, cancelToken);
+            await workflow.StartAsync<TWfArg>(workflowTypeName,
+                                              taskQueue,
+                                              workflowArg,
+                                              workflowConfig,
+                                              throwIfWorkflowChainAlreadyExists: true,
+                                              cancelToken);
             return workflow;
         }
 

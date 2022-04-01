@@ -2,8 +2,10 @@
 using System.Threading.Tasks;
 using Candidly.Util;
 using Temporal.Api.Enums.V1;
+using Temporal.Common;
 using Temporal.WorkflowClient;
 using Temporal.WorkflowClient.Errors;
+using Temporal.WorkflowClient.Interceptors;
 
 namespace Temporal.Demos.AdHocScenarios
 {
@@ -87,18 +89,6 @@ namespace Temporal.Demos.AdHocScenarios
                     Console.WriteLine("\n      Inner --> " + invOpEx.TypeAndMessage());
                     innerEx = innerEx.InnerException;
                 }
-            }
-
-            Console.WriteLine();
-            Console.WriteLine("Now, Starting-If-Not-Running...");
-            Console.WriteLine();
-
-            bool canStart = await workflow2.StartIfNotRunningAsync("DemoWorkflowTypeName", "DemoTaskQueue");
-
-            Console.WriteLine($"Result: {canStart} ({(canStart ? "NOT expected" : "EXPECTED")}).");
-            if (canStart)
-            {
-                throw new Exception("ERROR. StartIfNotRunningAsync was not expected to succeed.");
             }
 
             Console.WriteLine();

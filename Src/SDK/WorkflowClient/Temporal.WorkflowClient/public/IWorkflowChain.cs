@@ -54,38 +54,24 @@ namespace Temporal.WorkflowClient
 
         #region StartAsync(..)
         /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
-        Task StartAsync<TWfArg>(string workflowTypeName,
-                                string taskQueue,
-                                TWfArg wokflowArg,
-                                StartWorkflowChainConfiguration workflowConfig = null,
-                                CancellationToken cancelToken = default);
+        Task<StartWorkflowResult> StartAsync<TWfArg>(string workflowTypeName,
+                                                     string taskQueue,
+                                                     TWfArg wokflowArg,
+                                                     StartWorkflowChainConfiguration workflowConfig = null,
+                                                     bool throwIfWorkflowChainAlreadyExists = true,
+                                                     CancellationToken cancelToken = default);
         #endregion StartAsync(..)
 
         #region StartWithSignalAsync(..)
         /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
-        Task StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
-                                                   string taskQueue,
-                                                   TWfArg wokflowArg,
-                                                   string signalName,
-                                                   TSigArg signalArg,
-                                                   StartWorkflowChainConfiguration workflowConfig = null,
-                                                   CancellationToken cancelToken = default);
+        Task<StartWorkflowResult> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
+                                                                        string taskQueue,
+                                                                        TWfArg wokflowArg,
+                                                                        string signalName,
+                                                                        TSigArg signalArg,
+                                                                        StartWorkflowChainConfiguration workflowConfig = null,
+                                                                        CancellationToken cancelToken = default);
         #endregion StartWithSignalAsync(..)
-
-        #region StartIfNotRunningAsync(..)
-        /// <summary>If already bound - fail. Otherwise, start and bind to result.
-        /// If start fails due to already-running, then return false and don't bind, instead of throwing.</summary>
-        Task<bool> StartIfNotRunningAsync(string workflowTypeName,
-                                          string taskQueue,
-                                          StartWorkflowChainConfiguration workflowConfig = null,
-                                          CancellationToken cancelToken = default);
-
-        Task<bool> StartIfNotRunningAsync<TWfArg>(string workflowTypeName,
-                                                  string taskQueue,
-                                                  TWfArg workflowArg,
-                                                  StartWorkflowChainConfiguration workflowConfig = null,
-                                                  CancellationToken cancelToken = default);
-        #endregion StartIfNotRunningAsync(..)
 
         #region --- GetXxxRunAsync(..) APIs to access a specific run ---
 
