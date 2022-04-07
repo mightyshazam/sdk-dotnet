@@ -74,7 +74,7 @@ namespace Temporal.WorkflowClient
 
             try
             {
-                Payloads serializedWfArg = _dataConverter.Serialize(wokflowArg);
+                Payloads serializedWfArg = await _dataConverter.SerializeAsync(wokflowArg, cancelToken);
 
                 if (serializedWfArg != null)
                 {
@@ -248,7 +248,9 @@ namespace Temporal.WorkflowClient
                             continue;
                         }
 
-                        return runResultFactory.ForCompleted(workflowRunId, historyEvent.WorkflowExecutionCompletedEventAttributes);
+                        return await runResultFactory.ForCompletedAsync(workflowRunId,
+                                                                        historyEvent.WorkflowExecutionCompletedEventAttributes,
+                                                                        cancelToken);
                     }
 
                     case EventType.WorkflowExecutionFailed:
@@ -261,7 +263,9 @@ namespace Temporal.WorkflowClient
                             continue;
                         }
 
-                        return runResultFactory.ForFailed(workflowRunId, historyEvent.WorkflowExecutionFailedEventAttributes);
+                        return await runResultFactory.ForFailedAsync(workflowRunId,
+                                                                     historyEvent.WorkflowExecutionFailedEventAttributes,
+                                                                     cancelToken);
                     }
 
                     case EventType.WorkflowExecutionTimedOut:
@@ -274,17 +278,23 @@ namespace Temporal.WorkflowClient
                             continue;
                         }
 
-                        return runResultFactory.ForTimedOut(workflowRunId, historyEvent.WorkflowExecutionTimedOutEventAttributes);
+                        return await runResultFactory.ForTimedOutAsync(workflowRunId,
+                                                                       historyEvent.WorkflowExecutionTimedOutEventAttributes,
+                                                                       cancelToken);
                     }
 
                     case EventType.WorkflowExecutionCanceled:
                     {
-                        return runResultFactory.ForCanceled(workflowRunId, historyEvent.WorkflowExecutionCanceledEventAttributes);
+                        return await runResultFactory.ForCanceledAsync(workflowRunId,
+                                                                       historyEvent.WorkflowExecutionCanceledEventAttributes,
+                                                                       cancelToken);
                     }
 
                     case EventType.WorkflowExecutionTerminated:
                     {
-                        return runResultFactory.ForTerminated(workflowRunId, historyEvent.WorkflowExecutionTerminatedEventAttributes);
+                        return await runResultFactory.ForTerminatedAsync(workflowRunId,
+                                                                         historyEvent.WorkflowExecutionTerminatedEventAttributes,
+                                                                         cancelToken);
                     }
 
                     case EventType.WorkflowExecutionContinuedAsNew:
@@ -305,7 +315,9 @@ namespace Temporal.WorkflowClient
                             continue;
                         }
 
-                        return runResultFactory.ForContinuedAsNew(workflowRunId, historyEvent.WorkflowExecutionContinuedAsNewEventAttributes);
+                        return await runResultFactory.ForContinuedAsNewAsync(workflowRunId,
+                                                                             historyEvent.WorkflowExecutionContinuedAsNewEventAttributes,
+                                                                             cancelToken);
                     }
 
                     default:

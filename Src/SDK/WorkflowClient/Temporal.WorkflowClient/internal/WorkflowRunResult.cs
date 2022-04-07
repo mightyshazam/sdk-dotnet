@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using Candidly.Util;
 using Temporal.Api.Common.V1;
 using Temporal.Api.Enums.V1;
@@ -171,7 +172,20 @@ namespace Temporal.WorkflowClient
                 return false;
             }
 
-            deserializedPayload = _dataConverter.Deserialize<TVal>(_serializedPayloads);
+
+            // For default DC we know that we already decoded, so we do not need to decode again, i.e. avoid async call on
+            // geting the data.
+            if (_dataConverter is DefaultDataConverter defaultDataConverter)
+            {
+                deserializedPayload = defaultDataConverter.ConvertFromPayloads<TVal>(_serializedPayloads);
+            }
+            else
+            {
+                deserializedPayload = _dataConverter.DeserializeAsync<TVal>(_serializedPayloads, CancellationToken.None)
+                                                    .GetAwaiter()
+                                                    .GetResult();
+            }
+
             return true;
         }
 

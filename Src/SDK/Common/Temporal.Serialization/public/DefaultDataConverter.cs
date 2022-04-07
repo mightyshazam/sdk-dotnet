@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Candidly.Util;
 
@@ -9,7 +11,7 @@ using SerializedPayloads = Temporal.Api.Common.V1.Payloads;
 
 namespace Temporal.Serialization
 {
-    public sealed class DefaultDataConverter : IDataConverter, IPayloadConverter
+    public sealed class DefaultDataConverter : IDataConverter, IPayloadConverter, IPayloadCodec
     {
         public static class ExceptionTags
         {
@@ -67,15 +69,10 @@ namespace Temporal.Serialization
 
         public IReadOnlyList<IPayloadCodec> PayloadCodecs { get { return _codecs; } }
 
-        public SerializedPayloads Serialize<T>(T item)
+        public async Task<SerializedPayloads> SerializeAsync<T>(T item, CancellationToken cancelToken)
         {
             SerializedPayloads serializedData = new();
 
-            if ((item != null && item is System.Collections.IEnumerable)
-                    || (typeof(System.Collections.IEnumerable).IsAssignableFrom(typeof(T))))
-            {
-                throw CreateCannotUseEnumerableArgumentException();
-            }
             if (item != null && item is IUnnamedValuesContainer itemsContainer)
             {
                 for (int i = 0; i < itemsContainer.Count; i++)
@@ -83,21 +80,31 @@ namespace Temporal.Serialization
                     ConvertToPayload(itemsContainer.GetValue<object>(i), serializedData);
                 }
             }
+            else if ((item != null && item is System.Collections.IEnumerable)
+                    || (typeof(System.Collections.IEnumerable).IsAssignableFrom(typeof(T))))
+            {
+                throw CreateCannotUseEnumerableArgumentException();
+            }
             else
             {
                 ConvertToPayload<T>(item, serializedData);
             }
 
-            serializedData = Encode(serializedData);
+            serializedData = await ((IPayloadCodec) this).EncodeAsync(serializedData, cancelToken);
 
             return serializedData;
         }
 
-        public T Deserialize<T>(SerializedPayloads serializedData)
+        public async Task<T> DeserializeAsync<T>(SerializedPayloads serializedData, CancellationToken cancelToken)
+        {
+            SerializedPayloads decodedSerializedData = await ((IPayloadCodec) this).DecodeAsync(serializedData, cancelToken);
+            T deserializedData = ConvertFromPayloads<T>(decodedSerializedData);
+            return deserializedData;
+        }
+
+        public T ConvertFromPayloads<T>(SerializedPayloads serializedData)
         {
             Validate.NotNull(serializedData);
-
-            serializedData = Decode(serializedData);
 
             if (serializedData.Payloads_.Count > 1)
             {
@@ -111,7 +118,7 @@ namespace Temporal.Serialization
                 }
                 else
                 {
-                    throw new ArgumentException($"Cannot {nameof(Deserialize)} an item of type \"{typeof(T).FullName}\""
+                    throw new ArgumentException($"Cannot {nameof(DeserializeAsync)} an item of type \"{typeof(T).FullName}\""
                                               + $" because the specified {nameof(serializedData)} contains {serializedData.Payloads_.Count}"
                                               + $" {nameof(Temporal.Api.Common.V1.Payload)} items"
                                               + $" ({nameof(serializedData)} with multiple {nameof(Temporal.Api.Common.V1.Payload)}-items"
@@ -130,7 +137,7 @@ namespace Temporal.Serialization
                 return deserializedItem;
             }
 
-            throw new ArgumentException($"Cannot {nameof(Deserialize)} the specified {nameof(serializedData)} becasue it"
+            throw new ArgumentException($"Cannot {nameof(DeserializeAsync)} the specified {nameof(serializedData)} becasue it"
                                       + $" contains {serializedData.Payloads_.Count} {nameof(Temporal.Api.Common.V1.Payload)} items.");
         }
 
@@ -146,7 +153,7 @@ namespace Temporal.Serialization
                 return;
             }
 
-            throw new InvalidOperationException($"Cannot {nameof(Serialize)} the specified item of type \"{item.TypeOf()}\""
+            throw new InvalidOperationException($"Cannot {nameof(SerializeAsync)} the specified item of type \"{item.TypeOf()}\""
                                               + $" because none of the {_converters.Count} {nameof(PayloadConverters)} inside"
                                               + $" of this {nameof(DefaultDataConverter)} instance can convert this item.");
         }
@@ -172,7 +179,7 @@ namespace Temporal.Serialization
                 return item;
             }
 
-            throw new InvalidOperationException($"Cannot {nameof(Deserialize)} an item of type \"{typeof(T).FullName}\""
+            throw new InvalidOperationException($"Cannot {nameof(DeserializeAsync)} an item of type \"{typeof(T).FullName}\""
                                               + $" because none of the {_converters.Count} {nameof(PayloadConverters)} inside"
                                               + $" of this {nameof(DefaultDataConverter)} instance can convert this item.");
         }
@@ -195,25 +202,29 @@ namespace Temporal.Serialization
             return false;
         }
 
-        private SerializedPayloads Encode(SerializedPayloads data)
+        async Task<SerializedPayloads> IPayloadCodec.EncodeAsync(SerializedPayloads data, CancellationToken cancelToken)
         {
+            Validate.NotNull(data);
+
             for (int c = 0; c < _codecs.Count; c++)
             {
                 if (_codecs[c] != null)
                 {
-                    data = _codecs[c].Encode(data);
+                    data = await _codecs[c].EncodeAsync(data, cancelToken);
                 }
             }
 
             return data;
         }
 
-        private SerializedPayloads Decode(SerializedPayloads data)
+        async Task<SerializedPayloads> IPayloadCodec.DecodeAsync(SerializedPayloads data, CancellationToken cancelToken)
         {
+            Validate.NotNull(data);
+
             // Since all codecs apply, must traverse in the reverse order of encoding.
             for (int c = _codecs.Count - 1; c >= 0; c--)
             {
-                data = _codecs[c].Decode(data);
+                data = await _codecs[c].DecodeAsync(data, cancelToken);
             }
 
             return data;
