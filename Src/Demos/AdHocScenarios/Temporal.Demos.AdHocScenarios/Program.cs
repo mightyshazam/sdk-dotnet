@@ -1,8 +1,6 @@
 ﻿using System;
 using Candidly.Util;
 
-using PayloadContainers = Temporal.Common.Payload;
-
 namespace Temporal.Demos.AdHocScenarios
 {
     public class Program
