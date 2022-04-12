@@ -278,32 +278,60 @@ namespace Temporal.WorkflowClient
 
         #region -- Service invocation pipeline management --
 
+        /// <summary>
+        /// <c>WorkflowChain</c> instances call this to create the invocation pipelie for themselves.
+        /// During races, this mthod may be called several times for a given chain, but only the pipeline returned
+        /// by the first completing invocation will atomically set, others will be discarded.
+        /// </summary>        
         internal ITemporalClientInterceptor CreateServiceInvocationPipeline(IWorkflowChain workflowHandle)
         {
+            // Create default interceptor pipelie for all workflows (tracing etc..):
+
             List<ITemporalClientInterceptor> pipeline = CreateDefaultServiceInvocationPipeline(workflowHandle);
 
-            Action<IWorkflowChain, IList<ITemporalClientInterceptor>> customInterceptFactory = Configuration.ClientInterceptorFactory;
-            if (customInterceptFactory != null)
+            // Apply custom interceptor factory:
+
+            Action<IWorkflowChain, IList<ITemporalClientInterceptor>> customInterceptorFactory = Configuration.ClientInterceptorFactory;
+            if (customInterceptorFactory != null)
             {
-                customInterceptFactory(workflowHandle, pipeline);
+                customInterceptorFactory(workflowHandle, pipeline);
             }
 
-            IDataConverter dataConverter = null;
-            Func<IWorkflowChain, IDataConverter> customDataConvertFactory = Configuration.DataConverterFactory;
-            if (customDataConvertFactory != null)
+            // Now we need to add the final interceptor, aka the "sink".
+
+            // Create the payload converter for the sink:
+
+            IPayloadConverter payloadConverter = null;
+            Func<IWorkflowChain, IPayloadConverter> customPayloadConverterFactory = Configuration.PayloadConverterFactory;
+            if (customPayloadConverterFactory != null)
             {
-                dataConverter = customDataConvertFactory(workflowHandle);
+                payloadConverter = customPayloadConverterFactory(workflowHandle);
             }
 
-            if (dataConverter == null)
+            if (payloadConverter == null)
             {
-                dataConverter = new DefaultDataConverter();
+                payloadConverter = new AggregatePayloadConverter();
             }
+
+            // Create the payload codec for the sink:
+
+            IPayloadCodec payloadCodec = null;
+            Func<IWorkflowChain, IPayloadCodec> customPayloadCodecFactory = Configuration.PayloadCodecFactory;
+            if (customPayloadCodecFactory != null)
+            {
+                payloadCodec = customPayloadCodecFactory(workflowHandle);
+            }
+
+            // Create the sink:
 
             ITemporalClientInterceptor downstream = new TemporalServiceInvoker(_grpcChannel,
                                                                                _identityMarker,
-                                                                               dataConverter);
-            downstream.Init(null);
+                                                                               payloadConverter,
+                                                                               payloadCodec);
+
+            // Build the pipeline by creating the chain of int3erceptors ending with the sink:
+
+            downstream.Init(nextInterceptor: null);
 
             for (int i = pipeline.Count - 1; i >= 0; i--)
             {

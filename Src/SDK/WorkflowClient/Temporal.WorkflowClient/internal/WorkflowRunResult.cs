@@ -13,12 +13,12 @@ namespace Temporal.WorkflowClient
 {
     internal class WorkflowRunResult : IWorkflowRunResult
     {
-        private readonly IDataConverter _dataConverter;
+        private readonly IPayloadConverter _payloadConverter;
         private readonly string _continuationRunId;
         private readonly string _workflowChainId;
         private readonly Payloads _serializedPayloads;
 
-        public WorkflowRunResult(IDataConverter dataConverter,
+        public WorkflowRunResult(IPayloadConverter payloadConverter,
                                  string @namespace,
                                  string workflowId,
                                  string workflowChainId,
@@ -29,8 +29,8 @@ namespace Temporal.WorkflowClient
                                  string continuationRunId,
                                  object conclusionEventAttributes)
         {
-            Validate.NotNull(dataConverter);
-            _dataConverter = dataConverter;
+            Validate.NotNull(payloadConverter);
+            _payloadConverter = payloadConverter;
 
             Validate.NotNullOrWhitespace(@namespace);
             Namespace = @namespace;
@@ -47,7 +47,7 @@ namespace Temporal.WorkflowClient
             Status = status;
             Failure = failure;
 
-            _serializedPayloads = serializedPayloads;
+            _serializedPayloads = serializedPayloads; // may be null
 
             WorkflowRun.ValidateWorkflowRunId(continuationRunId);
             _continuationRunId = continuationRunId;
@@ -101,49 +101,35 @@ namespace Temporal.WorkflowClient
 
         /// <summary>Throws for any Status except OK. This method backs GetResult(..) on WorkflowChain.</summary>        
         [SuppressMessage("Style", "IDE0010:Add missing cases", Justification = "Switch on Status groups all non-success cases")]
-        public TValue GetValue<TValue>()
+        public TVal GetValue<TVal>()
         {
             switch (Status)
             {
                 case WorkflowExecutionStatus.Completed:
+                case WorkflowExecutionStatus.ContinuedAsNew:
                 {
-                    if (TryGetPayload(out TValue value))
+                    if (_serializedPayloads != null)
+                    {
+                        return GetPayload<TVal>();
+                    }
+
+                    // If no `_payloadConverter` is specified, we can get the payload value of type `IPayload.Void`.
+                    if (Temporal.Common.Payload.Void.TryCast<IPayload.Void, TVal>(out TVal value))
                     {
                         return value;
                     }
 
-                    if (Temporal.Common.Payload.Void.TryCast<IPayload.Void, TValue>(out value))
-                    {
-                        return value;
-                    }
 
                     throw new MalformedServerResponseException(serverCall: null,
                                                                scenario: null,
-                                                               $"Cannot {nameof(GetValue)}<{typeof(TValue).Name}>() because the remote"
+                                                               $"Cannot {nameof(GetValue)}<{typeof(TVal).Name}>() because the remote"
                                                              + $" operation represented by this {nameof(IWorkflowRunResult)}-instance"
                                                              + $" returned no appropriate result payload (conclusion status: {Status}).");
                 }
 
-                case WorkflowExecutionStatus.ContinuedAsNew:
-                {
-                    if (TryGetPayload(out TValue value))
-                    {
-                        return value;
-                    }
-
-                    if (Temporal.Common.Payload.Void.TryCast<IPayload.Void, TValue>(out value))
-                    {
-                        return value;
-                    }
-
-                    throw new InvalidOperationException($"Cannot {nameof(GetValue)}<{typeof(TValue).Name}>() because the remote"
-                                                      + $" operation represented by this {nameof(IWorkflowRunResult)}-instance"
-                                                      + $" returned no appropriate result payload (conclusion status: {Status}).");
-                }
-
                 default:
                 {
-                    throw new WorkflowConcludedAbnormallyException($"Cannot {nameof(GetValue)}<{typeof(TValue).Name}>() because the remote"
+                    throw new WorkflowConcludedAbnormallyException($"Cannot {nameof(GetValue)}<{typeof(TVal).Name}>() because the remote"
                                                                  + $" workflow represented by this {nameof(IWorkflowRunResult)}-instance"
                                                                  + $" did not conclude successfully.",
                                                                    Status,
@@ -164,6 +150,31 @@ namespace Temporal.WorkflowClient
         /// <summary>
         /// Doesn't throw on non-OK Status. Can be used to retrieve payloads that came with non-OK (aka non-Completed) terminal events.
         /// </summary>
+        public TVal GetPayload<TVal>()
+        {
+            if (_serializedPayloads != null)
+            {
+                return PayloadConverter.Deserialize<TVal>(_payloadConverter, _serializedPayloads);
+            }
+
+            // If no `_payloadConverter` is specified, we can get the payload value of type `IPayload.Void`.
+            if (Temporal.Common.Payload.Void.TryCast<IPayload.Void, TVal>(out TVal value))
+            {
+                return value;
+            }
+
+            throw new InvalidOperationException($"Cannot {nameof(GetValue)}<{typeof(TVal).Name}>() becasue this {this.GetType().Name}"
+                                              + $" does not represent any serialized value payloads.");
+        }
+
+        public IUnnamedValuesContainer GetPayload()
+        {
+            return GetPayload<IUnnamedValuesContainer>();
+        }
+
+        /// <summary>
+        /// Doesn't throw on non-OK Status. Can be used to retrieve payloads that came with non-OK (aka non-Completed) terminal events.
+        /// </summary>
         public bool TryGetPayload<TVal>(out TVal deserializedPayload)
         {
             if (_serializedPayloads == null)
@@ -172,33 +183,14 @@ namespace Temporal.WorkflowClient
                 return false;
             }
 
-
-            // For default DC we know that we already decoded, so we do not need to decode again, i.e. avoid async call on
-            // geting the data.
-            if (_dataConverter is DefaultDataConverter defaultDataConverter)
-            {
-                deserializedPayload = defaultDataConverter.ConvertFromPayloads<TVal>(_serializedPayloads);
-            }
-            else
-            {
-                deserializedPayload = _dataConverter.DeserializeAsync<TVal>(_serializedPayloads, CancellationToken.None)
-                                                    .GetAwaiter()
-                                                    .GetResult();
-            }
-
-            return true;
+            return _payloadConverter.TryDeserialize<TVal>(_serializedPayloads, out deserializedPayload);
         }
 
         public bool TryGetPayload(out IUnnamedValuesContainer deserializedPayload)
         {
-            if (TryGetPayload(out PayloadContainers.ForUnnamedValues.SerializedDataBacked container))
-            {
-                deserializedPayload = container;
-                return true;
-            }
-
-            deserializedPayload = null;
-            return false;
+            bool canGet = TryGetPayload(out PayloadContainers.ForUnnamedValues.SerializedDataBacked container);
+            deserializedPayload = container;
+            return canGet;
         }
     }
 }

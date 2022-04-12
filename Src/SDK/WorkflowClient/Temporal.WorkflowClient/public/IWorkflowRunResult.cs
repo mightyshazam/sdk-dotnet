@@ -32,6 +32,9 @@ namespace Temporal.WorkflowClient
         /// <summary>
         /// Doesn't throw on non-OK Status. Can be used to retrieve payloads that came with non-OK (aka non-Completed) terminal events.
         /// </summary>
+        TVal GetPayload<TVal>();
+        IUnnamedValuesContainer GetPayload();
+
         bool TryGetPayload<TVal>(out TVal deserializedPayload);
         bool TryGetPayload(out IUnnamedValuesContainer deserializedPayload);
     }

@@ -14,6 +14,9 @@
 
     <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Converter.cs"
              Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Format.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
   </ItemGroup>
   
 </Project>

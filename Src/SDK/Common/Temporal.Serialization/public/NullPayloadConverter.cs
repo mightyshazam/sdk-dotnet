@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Candidly.Util;
 using Google.Protobuf;
 using Temporal.Api.Common.V1;
@@ -16,35 +17,36 @@ namespace Temporal.Serialization
             get { return PayloadConverter.GetOrCreateBytes(PayloadMetadataEncodingValue, ref s_payloadMetadataEncodingValueBytes); }
         }
 
-        public bool TryDeserialize<T>(Payload serializedData, out T item)
+        public bool TryDeserialize<T>(Payloads serializedData, out T item)
         {
             item = default(T);
 
-            if (serializedData == null)
+            // Check: `Payloads` have exactly one entry:
+            if (SerializationUtil.GetPayloadCount(serializedData, out IReadOnlyList<Payload> payloadList) == 1)
             {
-                return false;
-            }
-
-            if (item == null
-                    && serializedData.Metadata.TryGetValue(PayloadConverter.PayloadMetadataEncodingKey, out ByteString encodingBytes)
-                    && PayloadMetadataEncodingValueBytes.Equals(encodingBytes))
-            {
-                return true;
+                // Check: `T` is nullable AND the payloads entry has the matching encoding key in the metadata:
+                if (item == null
+                        && payloadList[0].Metadata.TryGetValue(PayloadConverter.PayloadMetadataEncodingKey, out ByteString encodingBytes)
+                        && PayloadMetadataEncodingValueBytes.Equals(encodingBytes))
+                {
+                    return true;
+                }
             }
 
             return false;
         }
 
-        public bool TrySerialize<T>(T item, out Payload serializedData)
+        public bool TrySerialize<T>(T item, Payloads serializedDataAccumulator)
         {
             if (item == null)
             {
-                serializedData = new Payload();
-                serializedData.Metadata.Add(PayloadConverter.PayloadMetadataEncodingKey, PayloadMetadataEncodingValueBytes);
+                Payload serializedItemData = new();
+                serializedItemData.Metadata.Add(PayloadConverter.PayloadMetadataEncodingKey, PayloadMetadataEncodingValueBytes);
+
+                SerializationUtil.Add(serializedDataAccumulator, serializedItemData);
                 return true;
             }
 
-            serializedData = null;
             return false;
         }
     }

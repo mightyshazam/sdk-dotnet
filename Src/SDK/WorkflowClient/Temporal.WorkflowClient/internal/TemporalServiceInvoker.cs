@@ -21,17 +21,23 @@ namespace Temporal.WorkflowClient
     {
         private readonly WorkflowService.WorkflowServiceClient _grpcServiceClient;
         private readonly string _clientIdentityMarker;
-        private readonly IDataConverter _dataConverter;
+        private readonly IPayloadConverter _payloadConverter;
+        private readonly IPayloadCodec _payloadCodec;
 
-        public TemporalServiceInvoker(ChannelBase grpcChannel, string clientIdentityMarker, IDataConverter dataConverter)
+        public TemporalServiceInvoker(ChannelBase grpcChannel,
+                                      string clientIdentityMarker,
+                                      IPayloadConverter payloadConverter,
+                                      IPayloadCodec payloadCodec)
         {
             Validate.NotNull(grpcChannel);
             Validate.NotNullOrWhitespace(clientIdentityMarker);
-            Validate.NotNull(dataConverter);
+            Validate.NotNull(payloadConverter);
+            // Note: payloadCodec may be null
 
             _grpcServiceClient = new WorkflowService.WorkflowServiceClient(grpcChannel);
             _clientIdentityMarker = clientIdentityMarker;
-            _dataConverter = dataConverter;
+            _payloadConverter = payloadConverter;
+            _payloadCodec = payloadCodec;
         }
 
         public void Dispose()
@@ -72,18 +78,12 @@ namespace Temporal.WorkflowClient
                 RequestId = Guid.NewGuid().ToString("D"),
             };
 
-            try
-            {
-                Payloads serializedWfArg = await _dataConverter.SerializeAsync(wokflowArg, cancelToken);
+            Payloads serializedWfArg = new();
+            PayloadConverter.Serialize(_payloadConverter, wokflowArg, serializedWfArg);
 
-                if (serializedWfArg != null)
-                {
-                    reqStartWf.Input = serializedWfArg;
-                }
-            }
-            catch (Exception ex) when (IsCannotSerializeEnumerableException(ex))
+            if (_payloadCodec != null)
             {
-                throw CreateCannotUseEnumerableArgumentException(nameof(wokflowArg), nameof(TWfArg), typeof(TWfArg).FullName, ex);
+                serializedWfArg = await _payloadCodec.EncodeAsync(serializedWfArg, cancelToken);
             }
 
             if (workflowConfig.WorkflowExecutionTimeout.HasValue)
@@ -187,7 +187,11 @@ namespace Temporal.WorkflowClient
 
             WorkflowRun.ValidateWorkflowRunId(workflowRunId);
 
-            WorkflowRunResultFactory runResultFactory = new WorkflowRunResultFactory(_dataConverter, @namespace, workflowId, workflowChainId);
+            WorkflowRunResultFactory runResultFactory = new WorkflowRunResultFactory(_payloadConverter,
+                                                                                     _payloadCodec,
+                                                                                     @namespace,
+                                                                                     workflowId,
+                                                                                     workflowChainId);
 
             ByteString nextPageToken = ByteString.Empty;
 
@@ -445,24 +449,6 @@ namespace Temporal.WorkflowClient
                 // Future: Log if user logger available.
                 throw new TemporalServiceException(@namespace, workflowId, workflowRunId, ex);
             }
-        }
-
-        private static ArgumentException CreateCannotUseEnumerableArgumentException(string argParamName,
-                                                                                    string typeParamName,
-                                                                                    string typeParamType,
-                                                                                    Exception inner)
-        {
-            return new ArgumentException($"The specified {argParamName} is an IEnumerable (and the type argument"
-                                       + $" {typeParamName} is \"{typeParamType}\"). Specifying Enumerables (arrays,"
-                                       + $" collections, ...) is not permitted for workflow routine arguments.",
-                                         inner);
-        }
-
-        private static bool IsCannotSerializeEnumerableException(Exception ex)
-        {
-            return ex.Data.Contains(DefaultDataConverter.ExceptionTags.IsCannotSerializeEnumerable)
-                        && ex.Data[DefaultDataConverter.ExceptionTags.IsCannotSerializeEnumerable] is bool isCannotSerializeEnumerable
-                        && isCannotSerializeEnumerable == true;
         }
     }
 }

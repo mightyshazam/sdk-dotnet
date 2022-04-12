@@ -65,14 +65,14 @@ namespace Temporal.Common.Payloads
                         int i = 0;
                         foreach (T value in _values)
                         {
-                            yield return new PayloadContainers.ForUnnamedValues.InstanceBacked<T>.Entry(i++, value);
+                            yield return new UnnamedValuesContainerEntry<T>(i++, this);
                         }
                     }
                 }
 
                 public IEnumerator<IUnnamedValuesContainerEntry> GetEnumerator()
                 {
-                    return new PayloadContainers.ForUnnamedValues.InstanceBacked<T>.Enumerator(this);
+                    return new UnnamedValuesContainerEnumerator(this);
                 }
 
                 IEnumerator IEnumerable.GetEnumerator()
@@ -86,7 +86,7 @@ namespace Temporal.Common.Payloads
                     {
                         if (index >= 0 && index < Count)
                         {
-                            return new PayloadContainers.ForUnnamedValues.InstanceBacked<T>.Entry(index, _values[index]);
+                            return new UnnamedValuesContainerEntry<T>(index, this);
                         }
 
                         throw CreateNoSuchIndexException(index, Count);
@@ -110,84 +110,6 @@ namespace Temporal.Common.Payloads
 
                     return new ArgumentException(message: $"Invalid value of {nameof(index)}: {index}.", paramName: nameof(index));
                 }
-
-                #region private struct Entry
-                private struct Entry : IUnnamedValuesContainerEntry
-                {
-                    private readonly int _index;
-                    private readonly T _value;
-
-                    internal Entry(int index, T value)
-                    {
-                        if (index < 0)
-                        {
-                            throw new ArgumentOutOfRangeException(nameof(index));
-                        }
-
-                        _index = index;
-                        _value = value;
-                    }
-
-                    public int Index { get { return _index; } }
-
-                    public object ValueObject
-                    {
-                        get { return (object) _value; }
-                    }
-
-                    public TVal GetValue<TVal>()
-                    {
-                        return _value.Cast<T, TVal>();
-                    }
-
-                    public bool TryGetValue<TVal>(out TVal value)
-                    {
-                        return _value.TryCast<T, TVal>(out value);
-                    }
-                }
-                #endregion private struct Entry
-
-                #region private class Enumerator
-                private class Enumerator : IEnumerator<IUnnamedValuesContainerEntry>
-                {
-                    private readonly IEnumerator<IUnnamedValuesContainerEntry> _payloadsEnumerator;
-
-                    public Enumerator(IUnnamedValuesContainer container)
-                    {
-                        Validate.NotNull(container);
-
-                        IEnumerator<IUnnamedValuesContainerEntry> payloadsEnumerator = container.Values?.GetEnumerator();
-                        Validate.NotNull(payloadsEnumerator);
-
-                        _payloadsEnumerator = payloadsEnumerator;
-                    }
-
-                    public IUnnamedValuesContainerEntry Current
-                    {
-                        get { return _payloadsEnumerator.Current; }
-                    }
-
-                    object IEnumerator.Current
-                    {
-                        get { return this.Current; }
-                    }
-
-                    public void Dispose()
-                    {
-                        _payloadsEnumerator.Dispose();
-                    }
-
-                    public bool MoveNext()
-                    {
-                        return _payloadsEnumerator.MoveNext();
-                    }
-
-                    public void Reset()
-                    {
-                        _payloadsEnumerator.Reset();
-                    }
-                }
-                #endregion private class Enumerator
             }
         }
     }

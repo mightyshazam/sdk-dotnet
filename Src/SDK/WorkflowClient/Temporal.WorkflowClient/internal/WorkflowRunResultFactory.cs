@@ -12,19 +12,25 @@ namespace Temporal.WorkflowClient
 {
     internal struct WorkflowRunResultFactory
     {
-        private readonly IDataConverter _dataConverter;
+        private readonly IPayloadConverter _payloadConverter;
+        private readonly IPayloadCodec _payloadCodec;
         private readonly string _namespace;
         private readonly string _workflowId;
         private readonly string _workflowChainId;  // Once the server supports it, this will be updated form each event attrs.
 
-        public WorkflowRunResultFactory(IDataConverter dataConverter, string @namespace, string workflowId, string workflowChainId)
+        public WorkflowRunResultFactory(IPayloadConverter payloadConverter,
+                                        IPayloadCodec payloadCodec,
+                                        string @namespace,
+                                        string workflowId,
+                                        string workflowChainId)
         {
-            Validate.NotNull(dataConverter);
+            Validate.NotNull(payloadConverter);
             Validate.NotNullOrWhitespace(@namespace);
             Validate.NotNullOrWhitespace(workflowId);
             WorkflowChain.ValidateWorkflowChainId(workflowChainId);
 
-            _dataConverter = dataConverter;
+            _payloadConverter = payloadConverter;
+            _payloadCodec = payloadCodec;  // may be null
             _namespace = @namespace;
             _workflowId = workflowId;
             _workflowChainId = workflowChainId;  // Once the server supports it, this will be updated form each event attrs.
@@ -41,13 +47,13 @@ namespace Temporal.WorkflowClient
                                                 ? null
                                                 : eventAttributes.NewExecutionRunId;
 
-            return new WorkflowRunResult(_dataConverter,
+            return new WorkflowRunResult(_payloadConverter,
                                          _namespace,
                                          _workflowId,
                                          _workflowChainId,
                                          workflowRunId,
                                          WorkflowExecutionStatus.Completed,
-                                         await DecodePayloadsIfDefaultConverter(eventAttributes.Result, cancelToken),
+                                         await DecodePayloads(eventAttributes.Result, cancelToken),
                                          failure: null,
                                          continuationRunId,
                                          eventAttributes);
@@ -62,7 +68,7 @@ namespace Temporal.WorkflowClient
                                                 ? null
                                                 : eventAttributes.NewExecutionRunId;
 
-            return Task.FromResult(new WorkflowRunResult(_dataConverter,
+            return Task.FromResult(new WorkflowRunResult(_payloadConverter,
                                                          _namespace,
                                                          _workflowId,
                                                          _workflowChainId,
@@ -83,7 +89,7 @@ namespace Temporal.WorkflowClient
                                                 ? null
                                                 : eventAttributes.NewExecutionRunId;
 
-            return Task.FromResult(new WorkflowRunResult(_dataConverter,
+            return Task.FromResult(new WorkflowRunResult(_payloadConverter,
                                                          _namespace,
                                                          _workflowId,
                                                          _workflowChainId,
@@ -101,13 +107,13 @@ namespace Temporal.WorkflowClient
         {
             Validate.NotNull(eventAttributes);
             Validate.NotNull(eventAttributes.Details);
-            return new WorkflowRunResult(_dataConverter,
+            return new WorkflowRunResult(_payloadConverter,
                                          _namespace,
                                          _workflowId,
                                          _workflowChainId,
                                          workflowRunId,
                                          WorkflowExecutionStatus.Canceled,
-                                         await DecodePayloadsIfDefaultConverter(eventAttributes.Details, cancelToken),
+                                         await DecodePayloads(eventAttributes.Details, cancelToken),
                                          failure: null,
                                          continuationRunId: null,
                                          eventAttributes);
@@ -118,13 +124,13 @@ namespace Temporal.WorkflowClient
                                                                 CancellationToken cancelToken)
         {
             Validate.NotNull(eventAttributes);
-            return new WorkflowRunResult(_dataConverter,
+            return new WorkflowRunResult(_payloadConverter,
                                          _namespace,
                                          _workflowId,
                                          _workflowChainId,
                                          workflowRunId,
                                          WorkflowExecutionStatus.Terminated,
-                                         await DecodePayloadsIfDefaultConverter(eventAttributes.Details, cancelToken),  // Details may be null!
+                                         await DecodePayloads(eventAttributes.Details, cancelToken),  // Details may be null!
                                          failure: null,
                                          continuationRunId: null,
                                          eventAttributes);
@@ -136,30 +142,23 @@ namespace Temporal.WorkflowClient
         {
             Validate.NotNull(eventAttributes);
             Validate.NotNull(eventAttributes.LastCompletionResult);
-            return new WorkflowRunResult(_dataConverter,
+            return new WorkflowRunResult(_payloadConverter,
                                          _namespace,
                                          _workflowId,
                                          _workflowChainId,
                                          workflowRunId,
                                          WorkflowExecutionStatus.ContinuedAsNew,
-                                         await DecodePayloadsIfDefaultConverter(eventAttributes.LastCompletionResult, cancelToken),
+                                         await DecodePayloads(eventAttributes.LastCompletionResult, cancelToken),
                                          failure: TemporalFailure.FromMessage(eventAttributes.Failure),
                                          continuationRunId: eventAttributes.NewExecutionRunId,
                                          eventAttributes);
         }
 
-        private async Task<Payloads> DecodePayloadsIfDefaultConverter(Payloads encodedPayloads, CancellationToken cancelToken)
+        private Task<Payloads> DecodePayloads(Payloads encodedPayloads, CancellationToken cancelToken)
         {
-            // If the DC is the default converter, apply an optimization to decode the payloads so that we do not need to 
-            // run the async (potentially remote) decoder later.
-
-            if (encodedPayloads != null && _dataConverter is DefaultDataConverter defaultDataConverter)
-            {
-                Payloads decodedPayloads = await ((IPayloadCodec) defaultDataConverter).DecodeAsync(encodedPayloads, cancelToken);
-                return decodedPayloads;
-            }
-
-            return encodedPayloads;
+            return (_payloadCodec != null && encodedPayloads != null)
+                            ? _payloadCodec.DecodeAsync(encodedPayloads, cancelToken)
+                            : Task.FromResult(encodedPayloads);
         }
     }
 }
