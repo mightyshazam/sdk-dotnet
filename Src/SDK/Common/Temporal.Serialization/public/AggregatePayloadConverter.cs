@@ -8,7 +8,7 @@ using SerializedPayloads = Temporal.Api.Common.V1.Payloads;
 
 namespace Temporal.Serialization
 {
-    public sealed class AggregatePayloadConverter : IPayloadConverter, IEnumerable<IPayloadConverter>
+    public sealed class AggregatePayloadConverter : IPayloadConverter, IEnumerable<IPayloadConverter>, IDisposable
     {
         public static IList<IPayloadConverter> CreateDefaultConverters()
         {
@@ -77,6 +77,20 @@ namespace Temporal.Serialization
 
             deserializedItem = default(T);
             return false;
+        }
+
+        public void Dispose()
+        {
+            while (_converters.Count > 0)
+            {
+                IPayloadConverter converter = _converters[_converters.Count - 1];
+                _converters.RemoveAt(_converters.Count - 1);
+
+                if (converter != null && converter is IDisposable disposableConverter)
+                {
+                    disposableConverter.Dispose();
+                }
+            }
         }
 
         IEnumerator<IPayloadConverter> IEnumerable<IPayloadConverter>.GetEnumerator()

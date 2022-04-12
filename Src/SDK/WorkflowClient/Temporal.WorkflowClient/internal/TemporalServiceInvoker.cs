@@ -40,13 +40,36 @@ namespace Temporal.WorkflowClient
             _payloadCodec = payloadCodec;
         }
 
+        public void Init(ITemporalClientInterceptor _)
+        {
+        }
+
         public void Dispose()
         {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
 
-        public void Init(ITemporalClientInterceptor _)
+        // Uncomment finalizer IFF `Dispose(bool disposing)` has code for freeing unmanaged resources.
+        // ~TemporalServiceInvoker()
+        // {
+        //     Dispose(disposing: false);
+        // }
+
+        protected virtual void Dispose(bool disposing)
         {
+            if (_payloadConverter is IDisposable disposablePayloadConverter)
+            {
+                disposablePayloadConverter.Dispose();
+            }
+
+            if (_payloadCodec != null && _payloadCodec is IDisposable disposablePayloadCodec)
+            {
+                disposablePayloadCodec.Dispose();
+            }
+
+            // @ToDo: handle _grpcServiceClient.
         }
 
         public async Task<StartWorkflowResult> StartWorkflowAsync<TWfArg>(string @namespace,
