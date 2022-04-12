@@ -56,7 +56,7 @@ namespace Temporal.WorkflowClient
         /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
         Task<StartWorkflowResult> StartAsync<TWfArg>(string workflowTypeName,
                                                      string taskQueue,
-                                                     TWfArg wokflowArg,
+                                                     TWfArg workflowArg,
                                                      StartWorkflowChainConfiguration workflowConfig = null,
                                                      bool throwIfWorkflowChainAlreadyExists = true,
                                                      CancellationToken cancelToken = default);
@@ -66,7 +66,7 @@ namespace Temporal.WorkflowClient
         /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
         Task<StartWorkflowResult> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
                                                                         string taskQueue,
-                                                                        TWfArg wokflowArg,
+                                                                        TWfArg workflowArg,
                                                                         string signalName,
                                                                         TSigArg signalArg,
                                                                         StartWorkflowChainConfiguration workflowConfig = null,

@@ -53,7 +53,7 @@ namespace Temporal.WorkflowClient
                                                                           string workflowId,
                                                                           string workflowTypeName,
                                                                           string taskQueue,
-                                                                          TWfArg wokflowArg,
+                                                                          TWfArg workflowArg,
                                                                           StartWorkflowChainConfiguration workflowConfig,
                                                                           bool throwOnAlreadyExists,
                                                                           CancellationToken cancelToken)
@@ -79,7 +79,7 @@ namespace Temporal.WorkflowClient
             };
 
             Payloads serializedWfArg = new();
-            PayloadConverter.Serialize(_payloadConverter, wokflowArg, serializedWfArg);
+            PayloadConverter.Serialize(_payloadConverter, workflowArg, serializedWfArg);
 
             if (_payloadCodec != null)
             {

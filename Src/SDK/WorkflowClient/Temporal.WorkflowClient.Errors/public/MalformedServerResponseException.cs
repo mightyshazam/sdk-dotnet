@@ -4,9 +4,9 @@ using System.Text;
 namespace Temporal.WorkflowClient
 {
     /// <summary>
-    /// Indicated that the SDK did not expect to find something particular in a payload from the server.
+    /// Indicates that the SDK did not expect to find something particular in a payload from the server.
     /// Typically, this indicates an SDK bug. These are thrown as a form of defensive programming.
-    /// Please repoirt if you encounter is on a production release:
+    /// Please repoirt if you encounter this in a production release:
     /// https://github.com/temporalio/sdk-dotnet/issues
     /// </summary>
     public class MalformedServerResponseException : Exception

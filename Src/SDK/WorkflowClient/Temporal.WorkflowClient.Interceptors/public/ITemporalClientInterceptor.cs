@@ -12,7 +12,7 @@ namespace Temporal.WorkflowClient.Interceptors
                                                              string workflowId,
                                                              string workflowTypeName,
                                                              string taskQueue,
-                                                             TWfArg wokflowArg,
+                                                             TWfArg workflowArg,
                                                              StartWorkflowChainConfiguration workflowConfig,
                                                              bool throwOnAlreadyExists,
                                                              CancellationToken cancelToken);
@@ -22,7 +22,7 @@ namespace Temporal.WorkflowClient.Interceptors
                                                       string workflowChainId,
                                                       string workflowRunId,
                                                       bool followChain,
-                                                      CancellationToken cancelToke);
+                                                      CancellationToken cancelToken);
 
         Task<string> GetLatestWorkflowChainId(string @namespace,
                                               string workflowId,
