@@ -25,9 +25,9 @@ namespace Temporal.Serialization
         {
             Validate.NotNull(delegateConverters);
 
-            _delegateConverters = (delegateConverters is IPayloadConverter aggregateConverter)
-                                        ? aggregateConverter
-                                        : new AggregatePayloadConverter(delegateConverters);
+            _delegateConverters = (delegateConverters is IPayloadConverter compositeConverter)
+                                        ? compositeConverter
+                                        : new CompositePayloadConverter(delegateConverters);
         }
     }
 }

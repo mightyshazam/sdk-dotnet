@@ -87,10 +87,10 @@ namespace Temporal.Serialization
                 return deserializedItem;  // success
             }
 
-            string message = (converter is AggregatePayloadConverter aggregateConverter)
+            string message = (converter is CompositePayloadConverter compositeConverter)
                         ? $"Cannot {nameof(Deserialize)} the specified {nameof(serializedData)}"
-                            + $" because none of the {aggregateConverter.Converters.Count} {nameof(IPayloadConverter)}"
-                            + $"-instances wrapped within the specified {nameof(AggregatePayloadConverter)} can convert that data"
+                            + $" because none of the {compositeConverter.Converters.Count} {nameof(IPayloadConverter)}"
+                            + $"-instances wrapped within the specified {nameof(CompositePayloadConverter)} can convert that data"
                             + $" to the required target type."
                         : $"Cannot {nameof(Deserialize)} the specified {nameof(serializedData)}"
                             + $" because the specified {nameof(IPayloadConverter)} of cannot convert that data"
@@ -118,10 +118,10 @@ namespace Temporal.Serialization
                 return;  // success
             }
 
-            string message = (converter is AggregatePayloadConverter aggregateConverter)
+            string message = (converter is CompositePayloadConverter compositeConverter)
                         ? $"Cannot {nameof(Serialize)} the specified {nameof(item)}"
-                            + $" because none of the {aggregateConverter.Converters.Count} {nameof(IPayloadConverter)}"
-                            + $"-instances wrapped within the specified {nameof(AggregatePayloadConverter)} can convert that {nameof(item)}."
+                            + $" because none of the {compositeConverter.Converters.Count} {nameof(IPayloadConverter)}"
+                            + $"-instances wrapped within the specified {nameof(CompositePayloadConverter)} can convert that {nameof(item)}."
                         : $"Cannot {nameof(Serialize)} the specified {nameof(item)}"
                             + $" because the specified {nameof(IPayloadConverter)} of cannot convert that {nameof(item)}.";
 

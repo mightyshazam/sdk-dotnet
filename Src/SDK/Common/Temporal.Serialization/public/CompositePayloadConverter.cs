@@ -2,13 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using Candidly.Util;
-using Temporal.Common.Payloads;
 
 using SerializedPayloads = Temporal.Api.Common.V1.Payloads;
 
 namespace Temporal.Serialization
 {
-    public sealed class AggregatePayloadConverter : IPayloadConverter, IEnumerable<IPayloadConverter>, IDisposable
+    public sealed class CompositePayloadConverter : IPayloadConverter, IEnumerable<IPayloadConverter>, IDisposable
     {
         public static IList<IPayloadConverter> CreateDefaultConverters()
         {
@@ -26,12 +25,12 @@ namespace Temporal.Serialization
 
         private readonly List<IPayloadConverter> _converters;
 
-        public AggregatePayloadConverter()
+        public CompositePayloadConverter()
             : this(CreateDefaultConverters())
         {
         }
 
-        public AggregatePayloadConverter(IEnumerable<IPayloadConverter> converters)
+        public CompositePayloadConverter(IEnumerable<IPayloadConverter> converters)
         {
             _converters = SerializationUtil.EnsureIsList(converters);
 

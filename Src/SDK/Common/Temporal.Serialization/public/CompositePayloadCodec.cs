@@ -4,13 +4,11 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Candidly.Util;
 
-using Temporal.Common.Payloads;
-
 using SerializedPayloads = Temporal.Api.Common.V1.Payloads;
 
 namespace Temporal.Serialization
 {
-    public sealed class AggregatePayloadCodec : IPayloadCodec, IDisposable
+    public sealed class CompositePayloadCodec : IPayloadCodec, IDisposable
     {
         public static IList<IPayloadCodec> CreateDefaultCodecs()
         {
@@ -24,12 +22,12 @@ namespace Temporal.Serialization
 
         private readonly List<IPayloadCodec> _codecs;
 
-        public AggregatePayloadCodec()
+        public CompositePayloadCodec()
             : this(CreateDefaultCodecs())
         {
         }
 
-        public AggregatePayloadCodec(IEnumerable<IPayloadCodec> codecs)
+        public CompositePayloadCodec(IEnumerable<IPayloadCodec> codecs)
         {
             _codecs = SerializationUtil.EnsureIsList(codecs);
         }
@@ -72,7 +70,7 @@ namespace Temporal.Serialization
 
         public void Dispose()
         {
-            while(_codecs.Count > 0)
+            while (_codecs.Count > 0)
             {
                 IPayloadCodec codec = _codecs[_codecs.Count - 1];
                 _codecs.RemoveAt(_codecs.Count - 1);

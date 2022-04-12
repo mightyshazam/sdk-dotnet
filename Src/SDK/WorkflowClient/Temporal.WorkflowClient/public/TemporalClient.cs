@@ -310,7 +310,7 @@ namespace Temporal.WorkflowClient
 
             if (payloadConverter == null)
             {
-                payloadConverter = new AggregatePayloadConverter();
+                payloadConverter = new CompositePayloadConverter();
             }
 
             // Create the payload codec for the sink:
