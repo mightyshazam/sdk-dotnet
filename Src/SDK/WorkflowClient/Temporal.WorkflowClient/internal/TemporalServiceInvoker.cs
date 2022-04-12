@@ -154,45 +154,44 @@ namespace Temporal.WorkflowClient
                 throw new NotImplementedException("@ToDo");
             }
 
-            // Retry loop until exit condition met:
-            while (true)
-            {
-                cancelToken.ThrowIfCancellationRequested();
+            StatusCode rpcStatusCode = StatusCode.OK;
 
-                bool isAlreadyExists = false;
-
-                StartWorkflowExecutionResponse resStartWf = await InvokeRemoteCallAndProcessErrors(
-                        @namespace,
-                        workflowId,
-                        workflowRunId: null,
-                        cancelToken,
-                        async (cancelCallToken) =>
+            StartWorkflowExecutionResponse resStartWf = await InvokeRemoteCallAndProcessErrors(
+                    @namespace,
+                    workflowId,
+                    workflowRunId: null,
+                    cancelToken,
+                    async (cancelCallToken) =>
+                    {
+                        try
                         {
-                            try
-                            {
-                                return await _grpcServiceClient.StartWorkflowExecutionAsync(reqStartWf,
-                                                                                            headers: null,
-                                                                                            deadline: null,
-                                                                                            cancelCallToken);
-                            }
-                            catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.AlreadyExists && !throwOnAlreadyExists)
-                            {
-                                // Workflow already exists, but user specified not to throw in such cases => make a note and swallow exception.
-                                // Other errors will be processed by invoker-wrapper.
-                                isAlreadyExists = true;
-                                return null;
-                            }
-                        });
+                            return await _grpcServiceClient.StartWorkflowExecutionAsync(reqStartWf,
+                                                                                        headers: null,
+                                                                                        deadline: null,
+                                                                                        cancelCallToken);
+                        }
+                        catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.AlreadyExists && !throwOnAlreadyExists)
+                        {
+                            // Workflow already exists, but user specified not to throw in such cases => make a note and swallow exception.
+                            // Other errors will be processed by invoker-wrapper.
+                            rpcStatusCode = rpcEx.StatusCode;
+                            return null;
+                        }
+                    });
 
-                if (isAlreadyExists)
-                {
-                    return new StartWorkflowResult(null, StartWorkflowResult.Status.AlreadyExists);
-                }
-
-                if (resStartWf != null)
-                {
-                    return new StartWorkflowResult(resStartWf.RunId, StartWorkflowResult.Status.OK);
-                }
+            if (rpcStatusCode == StatusCode.OK)
+            {
+                return new StartWorkflowResult(resStartWf.RunId, StartWorkflowResult.Status.OK);
+            }
+            else if (rpcStatusCode == StatusCode.AlreadyExists)
+            {
+                return new StartWorkflowResult(null, StartWorkflowResult.Status.AlreadyExists);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unexpected {nameof(rpcStatusCode)}"
+                                                  + $" ({rpcStatusCode.ToString()} = {((int) rpcStatusCode)})."
+                                                  + $" Possible SDK bug. Please report.");
             }
         }
 

@@ -239,7 +239,7 @@ namespace Temporal.WorkflowClient
         #region --- GetXxxRunAsync(..) APIs to access a specific run ---
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.Namespace"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowChain.TryGetRunAsync(String, CancellationToken)"/>) for a detailed description.
         /// </summary>
         public Task<TryResult<IWorkflowRun>> TryGetRunAsync(string workflowRunId,
                                                             CancellationToken cancelToken = default)
@@ -248,7 +248,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.Namespace"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowChain.GetFirstRunAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
         public Task<IWorkflowRun> GetFirstRunAsync(CancellationToken cancelToken = default)
         {
@@ -256,7 +256,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.Namespace"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowChain.GetLatestRunAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
         public Task<IWorkflowRun> GetLatestRunAsync(CancellationToken cancelToken = default)
         {
@@ -264,7 +264,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.Namespace"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowChain.TryGetFinalRunAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
         public Task<TryResult<IWorkflowRun>> TryGetFinalRunAsync(CancellationToken cancelToken = default)
         {

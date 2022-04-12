@@ -31,7 +31,7 @@ namespace Temporal.Serialization
         /// <summary>
         /// Convenience wrapper method for the corresponding <see cref="IPayloadConverter" />-API.
         /// (See <see cref="IPayloadConverter.TryDeserialize{T}(Payloads, out T)" />.)
-        /// Calls the respective <c>IPayloadConverter</c>-method, and if case of a failure (<c>false</c> return value),
+        /// Calls the respective <c>IPayloadConverter</c>-method, and in case of a failure (<c>false</c> return value),
         /// generates exceptions with detailed diagnostic messages.
         /// </summary>
         public static T Deserialize<T>(this IPayloadConverter converter, Payloads serializedData)
@@ -57,7 +57,7 @@ namespace Temporal.Serialization
         /// <summary>
         /// Convenience wrapper method for the corresponding <see cref="IPayloadConverter" />-API.
         /// (See <see cref="IPayloadConverter.TrySerialize{T}(T, Payloads)" />.)
-        /// Calls the respective <c>IPayloadConverter</c>-method, and if case of a failure (<c>false</c> return value),
+        /// Calls the respective <c>IPayloadConverter</c>-method, and in case of a failure (<c>false</c> return value),
         /// generates exceptions with detailed diagnostic messages.
         /// </summary>
         public static void Serialize<T>(this IPayloadConverter converter, T item, Payloads serializedDataAccumulator)

@@ -6,7 +6,7 @@ namespace Temporal.WorkflowClient
     /// <summary>
     /// Indicates that the SDK did not expect to find something particular in a payload from the server.
     /// Typically, this indicates an SDK bug. These are thrown as a form of defensive programming.
-    /// Please repoirt if you encounter this in a production release:
+    /// Please report if you encounter this in a production release:
     /// https://github.com/temporalio/sdk-dotnet/issues
     /// </summary>
     public class MalformedServerResponseException : Exception

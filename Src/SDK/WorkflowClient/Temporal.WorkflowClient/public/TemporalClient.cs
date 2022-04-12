@@ -329,7 +329,7 @@ namespace Temporal.WorkflowClient
                                                                                payloadConverter,
                                                                                payloadCodec);
 
-            // Build the pipeline by creating the chain of int3erceptors ending with the sink:
+            // Build the pipeline by creating the chain of interceptors ending with the sink:
 
             downstream.Init(nextInterceptor: null);
 
