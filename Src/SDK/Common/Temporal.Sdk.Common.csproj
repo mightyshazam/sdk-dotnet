@@ -1,7 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>    
     <RootNamespace></RootNamespace>
-  </PropertyGroup>  
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Api.Client.ManagedGrpc\Temporal.Api.Client.ManagedGrpc.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>    
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Validate.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Converter.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Format.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+  </ItemGroup>
   
 </Project>

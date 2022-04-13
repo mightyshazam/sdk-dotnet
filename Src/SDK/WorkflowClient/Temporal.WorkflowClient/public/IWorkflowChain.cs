@@ -1,0 +1,138 @@
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Temporal.Api.Enums.V1;
+using Temporal.Api.WorkflowService.V1;
+using Temporal.Common;
+using Temporal.WorkflowClient.Interceptors;
+
+namespace Temporal.WorkflowClient
+{
+    public interface IWorkflowChain : IDisposable
+    {
+        string Namespace { get; }
+        string WorkflowId { get; }
+        bool IsBound { get; }
+
+        /// <summary>
+        /// Id of the first run in the chain..
+        /// Throws invalid operation is not bound.
+        /// </summary>
+        string WorkflowChainId { get; }
+
+        Task<string> GetWorkflowTypeNameAsync(CancellationToken cancelToken = default);
+
+        Task<WorkflowExecutionStatus> GetStatusAsync(CancellationToken cancelToken = default);
+
+        /// <summary>Should this be called TryDescribeAsync?</summary>        
+        Task<TryResult<DescribeWorkflowExecutionResponse>> CheckExistsAsync(CancellationToken cancelToken = default);
+
+        Task<DescribeWorkflowExecutionResponse> DescribeAsync(CancellationToken cancelToken = default);
+
+        /// <summary>
+        /// <para>Ensure that this <c>IWorkflowChain</c> instance is "bound" to a particular workflow chain on the server.</para>       
+        /// <para>If this <c>IWorkflowChain</c> instance is already bound - this API completes immediately
+        /// (before even checking cancelToken).<br/>
+        /// Otherwise this API will comminucate with the Temporal server to determine the currently latest (aka most recent) workflow
+        /// run with the with the <c>WorkflowId</c> associated with this <c>IWorkflowChain</c> instance (and, therefore, the workflow
+        /// chain that contains that run). Then, this <c>IWorkflowChain</c> instance is bound to that chain. From then on, the
+        /// <c>IWorkflowChain</c> instance always refers to that particular workflow chain, even if more recent chains are started
+        /// later.</para>
+        /// (Design note: If not bound AND the WorkflowChainBindingPolicy REQUIRES starting new chain - fail telling to use the other overload.)
+        /// </summary>
+        /// <remarks>
+        /// <strong><em>Bound</em> and <em>unbound</em> <c>IWorkflowChain</c> instances:</strong>
+        /// An "unbound" <c>IWorkflowChain</c> represents the last (aka most recent) workflow chain with the given <c>WorkflowId</c>.
+        /// An <c>IWorkflowChain</c> gets bound when any API is invoked that requires an interaction with an actual workflow
+        /// run on the server. At that time, the most recent workflow run (and, therefore, the workflow chain that contains it)
+        /// is determined, and the <c>IWorkflowChain</c> instance is bound to that chain. From then on the <c>IWorkflowChain</c>
+        /// instance always refers to that particular workflow chain, even if more recent chains are started later.
+        /// This mechanism ensures that a given <c>IWorkflowChain</c> instance is not mistakenly used to interact with different 
+        /// workflow chains, and thus with different logical workflows on the server.
+        /// </remarks>
+        Task EnsureBoundAsync(CancellationToken cancelToken);
+
+        #region StartAsync(..)
+        /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
+        Task<StartWorkflowResult> StartAsync<TWfArg>(string workflowTypeName,
+                                                     string taskQueue,
+                                                     TWfArg workflowArg,
+                                                     StartWorkflowChainConfiguration workflowConfig = null,
+                                                     bool throwIfWorkflowChainAlreadyExists = true,
+                                                     CancellationToken cancelToken = default);
+        #endregion StartAsync(..)
+
+        #region StartWithSignalAsync(..)
+        /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
+        Task<StartWorkflowResult> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
+                                                                        string taskQueue,
+                                                                        TWfArg workflowArg,
+                                                                        string signalName,
+                                                                        TSigArg signalArg,
+                                                                        StartWorkflowChainConfiguration workflowConfig = null,
+                                                                        CancellationToken cancelToken = default);
+        #endregion StartWithSignalAsync(..)
+
+        #region --- GetXxxRunAsync(..) APIs to access a specific run ---
+
+        /// <summary>Get the run with the specified run-id, if such run exists within THIS workflow chain.
+        /// Return false if not found.</summary>
+        Task<TryResult<IWorkflowRun>> TryGetRunAsync(string workflowRunId,
+                                                     CancellationToken cancelToken = default);
+
+        /// <summary>Get the first / initial run in this chain.</summary>
+        Task<IWorkflowRun> GetFirstRunAsync(CancellationToken cancelToken = default);
+
+        /// <summary>Get the most recent run in this chain.</summary>
+        Task<IWorkflowRun> GetLatestRunAsync(CancellationToken cancelToken = default);
+
+        /// <summary>
+        /// Get the very last run IF it is already known to be final (no further runs can/will follow).<br />
+        /// If it is not yet known whether the latest run is final, this API will not fail, but it will return False.
+        /// There is no long poll. This can be used to get result of the chain IF chain has finished (grab result of final run).</summary>
+        /// </summary>
+        Task<TryResult<IWorkflowRun>> TryGetFinalRunAsync(CancellationToken cancelToken = default);
+
+        #endregion --- GetXxxRunAsync(..) APIs to access a specific run ---
+
+        // <summary>Lists runs of this chain only. Needs overloads with filters? Not in V-Alpha.</summary>
+        //Task<IPaginatedReadOnlyCollectionPage<IWorkflowRun>> ListRunsAsync(NeedsDesign oneOrMoreArgs);
+
+        #region --- APIs to interact with the chain ---
+
+        // Invoking these APIs will interact with the currently active (aka latest, aka running) Run in this chain.
+        // In all common scenarios this is what you want.
+        // In some rare scenarios when you need to interact with a specific Run, obrain the corresponding IWorkflowRun instance
+        // and invoke the corresponding API on that instance.
+
+        /// <summary>The returned task completes when this chain finishes (incl. any runs not yet started). Performs long poll.</summary>
+        Task<TResult> GetResultAsync<TResult>(CancellationToken cancelToken = default);
+
+        Task<IWorkflowRunResult> AwaitConclusionAsync(CancellationToken cancelToken = default);
+
+        Task SignalAsync(string signalName,
+                         CancellationToken cancelToken = default);
+
+        Task SignalAsync<TSigArg>(string signalName,
+                                  TSigArg signalArg,
+                                  CancellationToken cancelToken = default);
+
+        Task<TResult> QueryAsync<TResult>(string queryName,
+                                          CancellationToken cancelToken = default);
+
+        Task<TResult> QueryAsync<TQryArg, TResult>(string queryName,
+                                                   TQryArg queryArg,
+                                                   CancellationToken cancelToken = default);
+
+        Task RequestCancellationAsync(CancellationToken cancelToken = default);
+
+        Task TerminateAsync(string reason = null,
+                            CancellationToken cancelToken = default);
+
+        Task TerminateAsync<TTermArg>(string reason,
+                                      TTermArg details,
+                                      CancellationToken cancelToken = default);
+
+        #endregion --- APIs to interact with the chain ---
+    }
+}

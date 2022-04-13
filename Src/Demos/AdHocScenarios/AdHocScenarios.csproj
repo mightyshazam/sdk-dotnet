@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\SDK\Api.Client.ManagedGrpc\Temporal.Api.Client.ManagedGrpc.csproj" />
+    <ProjectReference Include="..\..\SDK\WorkflowClient\Temporal.Sdk.WorkflowClient.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4')) == false">   
@@ -25,6 +26,9 @@
              Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
     
     <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Validate.cs"
+             Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
+    
+    <Compile Include="$(SharedSrcBaseDir)\Candidly.Util\internal\Format.cs"
              Link="$(SharedSrcBaseLabel)\Candidly.Util\internal\%(Filename)%(Extension)" />
   </ItemGroup>
 

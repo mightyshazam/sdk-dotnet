@@ -3,10 +3,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
-using Temporal.Async;
 using Temporal.Common.DataModel;
 using Temporal.Common.Exceptions;
-using Temporal.Common.WorkflowConfiguration;
 using Temporal.Serialization;
 using Temporal.WorkflowClient;
 
