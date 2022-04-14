@@ -40,11 +40,6 @@ namespace Temporal.Common.Payloads
                 }
             }
 
-            public object ValueObject
-            {
-                get { return Container.GetValue<object>(_index); }
-            }
-
             public TVal GetValue<TVal>()
             {
                 return Container.GetValue<TVal>(_index);

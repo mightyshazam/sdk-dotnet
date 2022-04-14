@@ -9,8 +9,29 @@ namespace Temporal.Serialization
     {
         public override bool TrySerialize<T>(T item, Payloads serializedDataAccumulator)
         {
-            // If item is an PayloadContainers.IUnnamed => delegate each contained unnamed value separately to the downstream converters.
-            // Otherwise => This converter cannot handle it.
+            if (item == null)
+            {
+                return false;
+            }
+
+            // If `item` is a paylload container backed by serialized data AND its converter is the hame used here
+            //  => use the serialized data directly, whtout round-triping it.
+
+            if (item is PayloadContainers.Unnamed.SerializedDataBacked serializedDataBackedItemsContainer
+                    && serializedDataBackedItemsContainer.PayloadConverter.Equals(DelegateConvertersContainer))
+            {
+                Validate.NotNull(serializedDataAccumulator);
+
+                if (serializedDataBackedItemsContainer.SerializedData?.Payloads_ != null)
+                {
+                    serializedDataAccumulator.Payloads_.AddRange(serializedDataBackedItemsContainer.SerializedData.Payloads_);
+                }
+
+                return true;
+            }
+
+            // If `item` is another kind of `PayloadContainers.IUnnamed`
+            //  => delegate each contained unnamed value separately to the downstream converters.
 
             if (item != null && item is PayloadContainers.IUnnamed itemsContainer)
             {
@@ -32,6 +53,9 @@ namespace Temporal.Serialization
 
                 return true;
             }
+
+            // Otherwise
+            //  => This converter cannot handle `item`.
 
             return false;
         }

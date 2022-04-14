@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Candidly.Util;
 using Temporal.Api.Common.V1;
 
@@ -28,6 +29,30 @@ namespace Temporal.Serialization
             _delegateConverters = (delegateConverters is IPayloadConverter compositeConverter)
                                         ? compositeConverter
                                         : new CompositePayloadConverter(delegateConverters);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return (obj != null)
+                        && (obj is DelegatingPayloadConverterBase delegatingPayloadConverter)
+                        && Equals(delegatingPayloadConverter);
+        }
+
+        public virtual bool Equals(DelegatingPayloadConverterBase obj)
+        {
+            if (Object.ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return (obj != null)
+                        && this.GetType().Equals(obj.GetType())
+                        && DelegateConvertersContainer.Equals(DelegateConvertersContainer);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 }

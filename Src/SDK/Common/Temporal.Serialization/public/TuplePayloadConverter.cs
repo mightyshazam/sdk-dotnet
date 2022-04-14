@@ -85,5 +85,15 @@ namespace Temporal.Serialization
             wrapper.Payloads_.Add(serializedData.Payloads_[index]);
             return wrapper;
         }
+
+        public override bool Equals(object obj)
+        {
+            return Object.ReferenceEquals(this, obj) || ((obj != null) && this.GetType().Equals(obj.GetType()));
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }

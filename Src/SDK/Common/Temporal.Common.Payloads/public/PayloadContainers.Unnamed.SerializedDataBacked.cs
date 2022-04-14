@@ -41,6 +41,16 @@ namespace Temporal.Common.Payloads
                     }
                 }
 
+                public SerializedPayloads SerializedData
+                {
+                    get { return _serializedData; }
+                }
+
+                public IPayloadConverter PayloadConverter
+                {
+                    get { return _payloadConverter; }
+                }
+
                 public int Count
                 {
                     get { return _countPayloadEntries; }

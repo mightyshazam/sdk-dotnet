@@ -101,5 +101,49 @@ namespace Temporal.Serialization
         {
             return ((IEnumerable<IPayloadConverter>) this).GetEnumerator();
         }
+
+        public override bool Equals(object obj)
+        {
+            return (obj != null)
+                        && (obj is CompositePayloadConverter compositePayloadConverter)
+                        && Equals(compositePayloadConverter);
+        }
+
+        public bool Equals(CompositePayloadConverter other)
+        {
+            if (Object.ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            if ((other == null) || !this.GetType().Equals(other.GetType()))
+            {
+                return false;
+            }
+
+            int countConverters = Converters.Count;
+            if (countConverters != other.Converters.Count)
+            {
+                return false;
+            }
+
+            for (int c = 0; c < countConverters; c++)
+            {
+                IPayloadConverter c1 = Converters[c];
+                IPayloadConverter c2 = other.Converters[c];
+
+                if (!(Object.ReferenceEquals(c1, c2) || c1.Equals(c2)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }

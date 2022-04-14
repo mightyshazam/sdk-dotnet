@@ -49,5 +49,15 @@ namespace Temporal.Serialization
 
             return false;
         }
+
+        public override bool Equals(object obj)
+        {
+            return Object.ReferenceEquals(this, obj) || ((obj != null) && this.GetType().Equals(obj.GetType()));
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }
