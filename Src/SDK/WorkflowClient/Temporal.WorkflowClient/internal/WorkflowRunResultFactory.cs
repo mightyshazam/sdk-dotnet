@@ -47,37 +47,42 @@ namespace Temporal.WorkflowClient
                                                 ? null
                                                 : eventAttributes.NewExecutionRunId;
 
+            Payloads decodedSerializedPayloads = await DecodePayloads(eventAttributes.Result, cancelToken);
+
             return new WorkflowRunResult(_payloadConverter,
                                          _namespace,
                                          _workflowId,
                                          _workflowChainId,
                                          workflowRunId,
                                          WorkflowExecutionStatus.Completed,
-                                         await DecodePayloads(eventAttributes.Result, cancelToken),
+                                         decodedSerializedPayloads,
                                          failure: null,
                                          continuationRunId,
                                          eventAttributes);
         }
 
-        public Task<WorkflowRunResult> ForFailedAsync(string workflowRunId,
+        public async Task<WorkflowRunResult> ForFailedAsync(string workflowRunId,
                                                       WorkflowExecutionFailedEventAttributes eventAttributes,
-                                                      CancellationToken _)
+                                                      CancellationToken cancelToken)
         {
             Validate.NotNull(eventAttributes);
             string continuationRunId = String.IsNullOrWhiteSpace(eventAttributes.NewExecutionRunId)
                                                 ? null
                                                 : eventAttributes.NewExecutionRunId;
 
-            return Task.FromResult(new WorkflowRunResult(_payloadConverter,
-                                                         _namespace,
-                                                         _workflowId,
-                                                         _workflowChainId,
-                                                         workflowRunId,
-                                                         WorkflowExecutionStatus.Failed,
-                                                         serializedPayloads: null,
-                                                         failure: TemporalFailure.FromMessage(eventAttributes.Failure),
-                                                         continuationRunId,
-                                                         eventAttributes));
+            Payloads decodedSerializedPayloads = null;
+            Exception failure = await TemporalFailure.FromMessageAsync(eventAttributes.Failure, _payloadConverter, _payloadCodec, cancelToken);
+
+            return new WorkflowRunResult(_payloadConverter,
+                                         _namespace,
+                                         _workflowId,
+                                         _workflowChainId,
+                                         workflowRunId,
+                                         WorkflowExecutionStatus.Failed,
+                                         decodedSerializedPayloads,
+                                         failure,
+                                         continuationRunId,
+                                         eventAttributes);
         }
 
         public Task<WorkflowRunResult> ForTimedOutAsync(string workflowRunId,
@@ -89,14 +94,17 @@ namespace Temporal.WorkflowClient
                                                 ? null
                                                 : eventAttributes.NewExecutionRunId;
 
+            Payloads decodedSerializedPayloads = null;
+            Exception failure = null;
+
             return Task.FromResult(new WorkflowRunResult(_payloadConverter,
                                                          _namespace,
                                                          _workflowId,
                                                          _workflowChainId,
                                                          workflowRunId,
                                                          WorkflowExecutionStatus.TimedOut,
-                                                         serializedPayloads: null,
-                                                         failure: null,
+                                                         decodedSerializedPayloads,
+                                                         failure,
                                                          continuationRunId,
                                                          eventAttributes));
         }
@@ -107,14 +115,18 @@ namespace Temporal.WorkflowClient
         {
             Validate.NotNull(eventAttributes);
             Validate.NotNull(eventAttributes.Details);
+
+            Payloads decodedSerializedPayloads = await DecodePayloads(eventAttributes.Details, cancelToken);
+            Exception failure = null;
+
             return new WorkflowRunResult(_payloadConverter,
                                          _namespace,
                                          _workflowId,
                                          _workflowChainId,
                                          workflowRunId,
                                          WorkflowExecutionStatus.Canceled,
-                                         await DecodePayloads(eventAttributes.Details, cancelToken),
-                                         failure: null,
+                                         decodedSerializedPayloads,
+                                         failure,
                                          continuationRunId: null,
                                          eventAttributes);
         }
@@ -124,14 +136,19 @@ namespace Temporal.WorkflowClient
                                                                 CancellationToken cancelToken)
         {
             Validate.NotNull(eventAttributes);
+            // eventAttributes.Details may be null!
+
+            Payloads decodedSerializedPayloads = await DecodePayloads(eventAttributes.Details, cancelToken);
+            Exception failure = null;
+
             return new WorkflowRunResult(_payloadConverter,
                                          _namespace,
                                          _workflowId,
                                          _workflowChainId,
                                          workflowRunId,
                                          WorkflowExecutionStatus.Terminated,
-                                         await DecodePayloads(eventAttributes.Details, cancelToken),  // Details may be null!
-                                         failure: null,
+                                         decodedSerializedPayloads,
+                                         failure,
                                          continuationRunId: null,
                                          eventAttributes);
         }
@@ -142,14 +159,18 @@ namespace Temporal.WorkflowClient
         {
             Validate.NotNull(eventAttributes);
             Validate.NotNull(eventAttributes.LastCompletionResult);
+
+            Payloads decodedSerializedPayloads = await DecodePayloads(eventAttributes.LastCompletionResult, cancelToken);
+            Exception failure = await TemporalFailure.FromMessageAsync(eventAttributes.Failure, _payloadConverter, _payloadCodec, cancelToken);
+
             return new WorkflowRunResult(_payloadConverter,
                                          _namespace,
                                          _workflowId,
                                          _workflowChainId,
                                          workflowRunId,
                                          WorkflowExecutionStatus.ContinuedAsNew,
-                                         await DecodePayloads(eventAttributes.LastCompletionResult, cancelToken),
-                                         failure: TemporalFailure.FromMessage(eventAttributes.Failure),
+                                         decodedSerializedPayloads,
+                                         failure,
                                          continuationRunId: eventAttributes.NewExecutionRunId,
                                          eventAttributes);
         }

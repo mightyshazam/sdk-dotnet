@@ -194,15 +194,15 @@ namespace Temporal.Common.Payloads
                 {
                     if (index < 0)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(index), $"The value of {nameof(index)} may not be negative,"
-                                                                           + $" but `{index}` was specified.");
+                        return new ArgumentOutOfRangeException(nameof(index), $"The value of {nameof(index)} may not be negative,"
+                                                                            + $" but `{index}` was specified.");
                     }
 
                     if (index >= containerItemCount)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(index),
-                                                              $"This {nameof(IUnnamedValuesContainer)} includes"
-                                                            + $" {containerItemCount} items, but the {nameof(index)}=`{index}` was specified.");
+                        return new ArgumentOutOfRangeException(nameof(index),
+                                                               $"This {nameof(IUnnamedValuesContainer)} includes"
+                                                             + $" {containerItemCount} items, but the {nameof(index)}=`{index}` was specified.");
                     }
 
                     return new ArgumentException(message: $"Invalid value of {nameof(index)}: {index}.", paramName: nameof(index));
