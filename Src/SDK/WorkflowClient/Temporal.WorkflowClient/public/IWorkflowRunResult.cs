@@ -1,6 +1,5 @@
 ﻿using System;
 using Temporal.Api.Enums.V1;
-using Temporal.Common;
 using Temporal.Common.Payloads;
 using Temporal.WorkflowClient.Interceptors;
 
@@ -27,15 +26,15 @@ namespace Temporal.WorkflowClient
         /// Throws for any Status except OK. This method backs GetResult(..) on WorkflowChain.
         /// </summary>
         TVal GetValue<TVal>();
-        IUnnamedValuesContainer GetValue();
+        PayloadContainers.IUnnamed GetValue();
 
         /// <summary>
         /// Doesn't throw on non-OK Status. Can be used to retrieve payloads that came with non-OK (aka non-Completed) terminal events.
         /// </summary>
         TVal GetPayload<TVal>();
-        IUnnamedValuesContainer GetPayload();
+        PayloadContainers.IUnnamed GetPayload();
 
         bool TryGetPayload<TVal>(out TVal deserializedPayload);
-        bool TryGetPayload(out IUnnamedValuesContainer deserializedPayload);
+        bool TryGetPayload(out PayloadContainers.IUnnamed deserializedPayload);
     }
 }

@@ -8,11 +8,11 @@ namespace Temporal.Common.Payloads
     public static partial class PayloadContainers
     {
         /// <summary>
-        /// <c>IUnnamedValuesContainer</c> implementation backed by actual values (rather than a raw payload).
+        /// <c>PayloadContainers.IUnnamed</c> implementation backed by actual values (rather than a raw payload).
         /// </summary>
-        public static partial class ForUnnamedValues
+        public static partial class Unnamed
         {
-            public struct InstanceBacked<T> : IUnnamedValuesContainer, IPayload
+            public struct InstanceBacked<T> : PayloadContainers.IUnnamed, IPayload
             {
                 private readonly IReadOnlyList<T> _values;
 
@@ -58,21 +58,21 @@ namespace Temporal.Common.Payloads
                     throw CreateNoSuchIndexException(index, Count);
                 }
 
-                public IEnumerable<UnnamedValuesContainerEntry> Values
+                public IEnumerable<PayloadContainers.UnnamedEntry> Values
                 {
                     get
                     {
                         int i = 0;
                         foreach (T value in _values)
                         {
-                            yield return new UnnamedValuesContainerEntry(i++, this);
+                            yield return new PayloadContainers.UnnamedEntry(i++, this);
                         }
                     }
                 }
 
-                public IEnumerator<UnnamedValuesContainerEntry> GetEnumerator()
+                public IEnumerator<PayloadContainers.UnnamedEntry> GetEnumerator()
                 {
-                    return new UnnamedValuesContainerEnumerator(this);
+                    return new PayloadContainers.UnnamedEnumerator(this);
                 }
 
                 IEnumerator IEnumerable.GetEnumerator()
@@ -80,13 +80,13 @@ namespace Temporal.Common.Payloads
                     return this.GetEnumerator();
                 }
 
-                public UnnamedValuesContainerEntry this[int index]
+                public PayloadContainers.UnnamedEntry this[int index]
                 {
                     get
                     {
                         if (index >= 0 && index < Count)
                         {
-                            return new UnnamedValuesContainerEntry(index, this);
+                            return new PayloadContainers.UnnamedEntry(index, this);
                         }
 
                         throw CreateNoSuchIndexException(index, Count);
@@ -104,7 +104,7 @@ namespace Temporal.Common.Payloads
                     if (index >= containerItemCount)
                     {
                         return new ArgumentOutOfRangeException(nameof(index),
-                                                               $"This {nameof(IUnnamedValuesContainer)} includes"
+                                                               $"This {nameof(PayloadContainers.IUnnamed)} includes"
                                                              + $" {containerItemCount} items, but the {nameof(index)}=`{index}` was specified.");
                     }
 

@@ -1,22 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Candidly.Util;
-using Temporal.Serialization;
-
-using SerializedPayload = Temporal.Api.Common.V1.Payload;
-using SerializedPayloads = Temporal.Api.Common.V1.Payloads;
 
 namespace Temporal.Common.Payloads
 {
     public static partial class PayloadContainers
     {
-        /// <summary>
-        /// <c>IUnnamedValuesContainer</c> implementation that contains no items.
-        /// </summary>
-        public static partial class ForUnnamedValues
+        public static partial class Unnamed
         {
-            public class Empty : IUnnamedValuesContainer, IPayload
+            /// <summary>
+            /// <c>PayloadContainers.IUnnamed</c> implementation that contains no items.
+            /// </summary>
+            public class Empty : PayloadContainers.IUnnamed, IPayload
             {
                 public Empty()
                 {
@@ -37,7 +32,7 @@ namespace Temporal.Common.Payloads
                     throw CreateNoSuchIndexException(index);
                 }
 
-                public IEnumerable<UnnamedValuesContainerEntry> Values
+                public IEnumerable<PayloadContainers.UnnamedEntry> Values
                 {
                     get
                     {
@@ -45,9 +40,9 @@ namespace Temporal.Common.Payloads
                     }
                 }
 
-                public IEnumerator<UnnamedValuesContainerEntry> GetEnumerator()
+                public IEnumerator<PayloadContainers.UnnamedEntry> GetEnumerator()
                 {
-                    return new UnnamedValuesContainerEnumerator(this);
+                    return new PayloadContainers.UnnamedEnumerator(this);
                 }
 
                 IEnumerator IEnumerable.GetEnumerator()
@@ -55,7 +50,7 @@ namespace Temporal.Common.Payloads
                     return this.GetEnumerator();
                 }
 
-                public UnnamedValuesContainerEntry this[int index]
+                public PayloadContainers.UnnamedEntry this[int index]
                 {
                     get
                     {

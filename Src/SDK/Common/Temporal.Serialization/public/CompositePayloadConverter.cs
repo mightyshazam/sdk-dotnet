@@ -15,7 +15,7 @@ namespace Temporal.Serialization
             {
                 new VoidPayloadConverter(),
                 new NullPayloadConverter(),
-                new UnnamedValuesContainerPayloadConverter(),
+                new UnnamedContainerPayloadConverter(),
                 new CatchAllPayloadConverter(),
                 //@ToDo
             };

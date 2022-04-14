@@ -5,14 +5,14 @@ using Temporal.Common.Payloads;
 
 namespace Temporal.Serialization
 {
-    public sealed class UnnamedValuesContainerPayloadConverter : DelegatingPayloadConverterBase
+    public sealed class UnnamedContainerPayloadConverter : DelegatingPayloadConverterBase
     {
         public override bool TrySerialize<T>(T item, Payloads serializedDataAccumulator)
         {
-            // If item is an IUnnamedValuesContainer => delegate each contained unnamed value separately to the downstream converters.
+            // If item is an PayloadContainers.IUnnamed => delegate each contained unnamed value separately to the downstream converters.
             // Otherwise => This converter cannot handle it.
 
-            if (item != null && item is IUnnamedValuesContainer itemsContainer)
+            if (item != null && item is PayloadContainers.IUnnamed itemsContainer)
             {
                 Validate.NotNull(serializedDataAccumulator);
 
@@ -40,20 +40,20 @@ namespace Temporal.Serialization
         {
             Validate.NotNull(serializedData);
 
-            // `PayloadContainers.ForUnnamedValues.SerializedDataBacked` is a container that supports strictly typed
+            // `PayloadContainers.Unnamed.SerializedDataBacked` is a container that supports strictly typed
             // lazy deserialization of data when the value is actually requested.
             // It supports multiple `Payload`-entries within the `Payloads`-collection.
             // That container is be used by SDK to offer APIs that access data when needed.
 
             // We can handle the conversion
-            // if the user asked for any type `T` that can be assigned to `PayloadContainers.ForUnnamedValues.SerializedDataBacked`
-            // OR if the user asked for any `IUnnamedValuesContainer`.
+            // if the user asked for any type `T` that can be assigned to `PayloadContainers.Unnamed.SerializedDataBacked`
+            // OR if the user asked for any `PayloadContainers.IUnnamed`.
 
-            if (typeof(PayloadContainers.ForUnnamedValues.SerializedDataBacked).IsAssignableFrom(typeof(T))
-                    || typeof(IUnnamedValuesContainer) == typeof(T))
+            if (typeof(PayloadContainers.Unnamed.SerializedDataBacked).IsAssignableFrom(typeof(T))
+                    || typeof(PayloadContainers.IUnnamed) == typeof(T))
             {
-                PayloadContainers.ForUnnamedValues.SerializedDataBacked container = new(serializedData, DelegateConvertersContainer);
-                deserializedItem = container.Cast<PayloadContainers.ForUnnamedValues.SerializedDataBacked, T>();
+                PayloadContainers.Unnamed.SerializedDataBacked container = new(serializedData, DelegateConvertersContainer);
+                deserializedItem = container.Cast<PayloadContainers.Unnamed.SerializedDataBacked, T>();
                 return true;
             }
 

@@ -137,13 +137,13 @@ namespace Temporal.WorkflowClient.Errors
                     exceptionType = typeof(TimeoutException);
                     exceptionFactory = async (failure, info, payloadConverter, payloadCodec, cancelToken) =>
                     {
-                        IUnnamedValuesContainer details = await DeserializeAsync(failure.TimeoutFailureInfo.LastHeartbeatDetails,
-                                                                                 payloadConverter,
-                                                                                 payloadCodec,
-                                                                                 cancelToken);
+                        PayloadContainers.IUnnamed details = await DeserializeAsync(failure.TimeoutFailureInfo.LastHeartbeatDetails,
+                                                                                    payloadConverter,
+                                                                                    payloadCodec,
+                                                                                    cancelToken);
 
                         info.AddValue(nameof(TimeoutException.TimeoutType), (int) failure.TimeoutFailureInfo.TimeoutType);
-                        info.AddValue(nameof(TimeoutException.LastHeartbeatDetails), details, typeof(IUnnamedValuesContainer));
+                        info.AddValue(nameof(TimeoutException.LastHeartbeatDetails), details, typeof(PayloadContainers.IUnnamed));
 
                         return new TimeoutException(info, new StreamingContext(StreamingContextStates.CrossMachine));
                     };
@@ -154,12 +154,12 @@ namespace Temporal.WorkflowClient.Errors
                     exceptionType = typeof(CancellationException);
                     exceptionFactory = async (failure, info, payloadConverter, payloadCodec, cancelToken) =>
                     {
-                        IUnnamedValuesContainer details = await DeserializeAsync(failure.CanceledFailureInfo.Details,
-                                                                                 payloadConverter,
-                                                                                 payloadCodec,
-                                                                                 cancelToken);
+                        PayloadContainers.IUnnamed details = await DeserializeAsync(failure.CanceledFailureInfo.Details,
+                                                                                    payloadConverter,
+                                                                                    payloadCodec,
+                                                                                    cancelToken);
 
-                        info.AddValue(nameof(CancellationException.Details), details, typeof(IUnnamedValuesContainer));
+                        info.AddValue(nameof(CancellationException.Details), details, typeof(PayloadContainers.IUnnamed));
 
                         return new CancellationException(info, new StreamingContext(StreamingContextStates.CrossMachine));
                     };
@@ -190,12 +190,12 @@ namespace Temporal.WorkflowClient.Errors
                     exceptionType = typeof(ResetWorkflowException);
                     exceptionFactory = async (failure, info, payloadConverter, payloadCodec, cancelToken) =>
                     {
-                        IUnnamedValuesContainer details = await DeserializeAsync(failure.ResetWorkflowFailureInfo.LastHeartbeatDetails,
-                                                                                 payloadConverter,
-                                                                                 payloadCodec,
-                                                                                 cancelToken);
+                        PayloadContainers.IUnnamed details = await DeserializeAsync(failure.ResetWorkflowFailureInfo.LastHeartbeatDetails,
+                                                                                    payloadConverter,
+                                                                                    payloadCodec,
+                                                                                    cancelToken);
 
-                        info.AddValue(nameof(ResetWorkflowException.LastHeartbeatDetails), details, typeof(IUnnamedValuesContainer));
+                        info.AddValue(nameof(ResetWorkflowException.LastHeartbeatDetails), details, typeof(PayloadContainers.IUnnamed));
 
                         return new ResetWorkflowException(info, new StreamingContext(StreamingContextStates.CrossMachine));
                     };
@@ -239,14 +239,14 @@ namespace Temporal.WorkflowClient.Errors
                     exceptionType = typeof(ApplicationException);
                     exceptionFactory = async (failure, info, payloadConverter, payloadCodec, cancelToken) =>
                     {
-                        IUnnamedValuesContainer details = await DeserializeAsync(failure.ApplicationFailureInfo.Details,
-                                                                                 payloadConverter,
-                                                                                 payloadCodec,
-                                                                                 cancelToken);
+                        PayloadContainers.IUnnamed details = await DeserializeAsync(failure.ApplicationFailureInfo.Details,
+                                                                                    payloadConverter,
+                                                                                    payloadCodec,
+                                                                                    cancelToken);
 
                         info.AddValue(nameof(ApplicationException.Type), failure.ApplicationFailureInfo.Type, typeof(string));
                         info.AddValue(nameof(ApplicationException.IsNonRetryable), failure.ApplicationFailureInfo.NonRetryable);
-                        info.AddValue(nameof(ApplicationException.Details), details, typeof(IUnnamedValuesContainer));
+                        info.AddValue(nameof(ApplicationException.Details), details, typeof(PayloadContainers.IUnnamed));
 
                         return new ApplicationException(info, new StreamingContext(StreamingContextStates.CrossMachine));
                     };
@@ -265,10 +265,10 @@ namespace Temporal.WorkflowClient.Errors
             }
         }
 
-        private static async Task<IUnnamedValuesContainer> DeserializeAsync(Payloads payloads,
-                                                                            IPayloadConverter payloadConverter,
-                                                                            IPayloadCodec payloadCodec,
-                                                                            CancellationToken cancelToken)
+        private static async Task<PayloadContainers.IUnnamed> DeserializeAsync(Payloads payloads,
+                                                                               IPayloadConverter payloadConverter,
+                                                                               IPayloadCodec payloadCodec,
+                                                                               CancellationToken cancelToken)
         {
             if (payloads == null)
             {
@@ -280,7 +280,7 @@ namespace Temporal.WorkflowClient.Errors
                 payloads = await payloadCodec.DecodeAsync(payloads, cancelToken);
             }
 
-            return payloadConverter.Deserialize<IUnnamedValuesContainer>(payloads);
+            return payloadConverter.Deserialize<PayloadContainers.IUnnamed>(payloads);
         }
 
         public static ITemporalFailure GetInnerTemporalFailure(this WorkflowConcludedAbnormallyException rtEx)

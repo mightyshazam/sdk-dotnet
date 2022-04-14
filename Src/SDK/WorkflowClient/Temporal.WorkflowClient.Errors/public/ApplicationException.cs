@@ -9,19 +9,19 @@ namespace Temporal.WorkflowClient.Errors
     {
         public string Type { get; }
         public bool IsNonRetryable { get; }
-        public IUnnamedValuesContainer Details { get; }
+        public PayloadContainers.IUnnamed Details { get; }
 
         public ApplicationException(string message, bool isNonRetryable)
             : this(message, type: null, isNonRetryable, details: null, innerException: null)
         {
         }
 
-        public ApplicationException(string message, string type, bool isNonRetryable, IUnnamedValuesContainer details, Exception innerException)
+        public ApplicationException(string message, string type, bool isNonRetryable, PayloadContainers.IUnnamed details, Exception innerException)
             : base(Format.TrimSafe(message), innerException)
         {
             Type = Format.TrimSafe(type);
             IsNonRetryable = isNonRetryable;
-            Details = details ?? new PayloadContainers.ForUnnamedValues.Empty();
+            Details = details ?? new PayloadContainers.Unnamed.Empty();
         }
 
         internal ApplicationException(SerializationInfo info, StreamingContext context)
@@ -51,12 +51,12 @@ namespace Temporal.WorkflowClient.Errors
 
             try
             {
-                Details = (IUnnamedValuesContainer) info.GetValue(nameof(Details), typeof(IUnnamedValuesContainer))
-                                        ?? new PayloadContainers.ForUnnamedValues.Empty();
+                Details = (PayloadContainers.IUnnamed) info.GetValue(nameof(Details), typeof(PayloadContainers.IUnnamed))
+                                        ?? new PayloadContainers.Unnamed.Empty();
             }
             catch (SerializationException)
             {
-                Details = new PayloadContainers.ForUnnamedValues.Empty();
+                Details = new PayloadContainers.Unnamed.Empty();
             }
         }
     }
