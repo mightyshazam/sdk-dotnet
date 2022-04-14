@@ -112,18 +112,18 @@ namespace Temporal.Common.Payloads
                     throw CreateNoSuchIndexException(index, Count);
                 }
 
-                public IEnumerable<IUnnamedValuesContainerEntry> Values
+                public IEnumerable<UnnamedValuesContainerEntry> Values
                 {
                     get
                     {
                         for (int v = 0; v < Count; v++)
                         {
-                            yield return new UnnamedValuesContainerEntry<object>(v, this);
+                            yield return new UnnamedValuesContainerEntry(v, this);
                         }
                     }
                 }
 
-                public IEnumerator<IUnnamedValuesContainerEntry> GetEnumerator()
+                public IEnumerator<UnnamedValuesContainerEntry> GetEnumerator()
                 {
                     return new UnnamedValuesContainerEnumerator(this);
                 }
@@ -133,13 +133,13 @@ namespace Temporal.Common.Payloads
                     return this.GetEnumerator();
                 }
 
-                public IUnnamedValuesContainerEntry this[int index]
+                public UnnamedValuesContainerEntry this[int index]
                 {
                     get
                     {
                         if (index >= 0 && index < Count)
                         {
-                            return new UnnamedValuesContainerEntry<object>(index, this);
+                            return new UnnamedValuesContainerEntry(index, this);
                         }
 
                         throw CreateNoSuchIndexException(index, Count);

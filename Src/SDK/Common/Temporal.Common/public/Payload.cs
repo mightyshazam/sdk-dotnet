@@ -16,6 +16,8 @@ namespace Temporal.Common
 
         public static object Named<T>(params object[] namedValues)
         {
+            // This method is currently used in nameof(..) clauses when generating descriptive messages.
+            // @ToDo: A full implementation will be added in later iterations.
             throw new NotImplementedException("@ToDo");
         }
 

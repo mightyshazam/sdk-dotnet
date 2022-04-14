@@ -3,7 +3,7 @@ using Candidly.Util;
 
 namespace Temporal.Common.Payloads
 {
-    internal struct UnnamedValuesContainerEntry<T> : IUnnamedValuesContainerEntry
+    public struct UnnamedValuesContainerEntry
     {
         private readonly int _index;
         private readonly IUnnamedValuesContainer _container;
@@ -23,19 +23,34 @@ namespace Temporal.Common.Payloads
 
         public int Index { get { return _index; } }
 
+        private IUnnamedValuesContainer Container
+        {
+            get
+            {
+                if (_container == null)
+                {
+                    throw new InvalidOperationException($"The {nameof(_container)} of this {nameof(UnnamedValuesContainerEntry)} is null;"
+                                                      + $" make sure to always use the ctor that takes a valid"
+                                                      + $" {nameof(IUnnamedValuesContainer)} container parameter.");
+                }
+
+                return _container;
+            }
+        }
+
         public object ValueObject
         {
-            get { return _container.GetValue<object>(_index); }
+            get { return Container.GetValue<object>(_index); }
         }
 
         public TVal GetValue<TVal>()
         {
-            return _container.GetValue<TVal>(_index);
+            return Container.GetValue<TVal>(_index);
         }
 
         public bool TryGetValue<TVal>(out TVal value)
         {
-            return _container.TryGetValue<TVal>(_index, out value);
+            return Container.TryGetValue<TVal>(_index, out value);
         }
     }
 }

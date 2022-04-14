@@ -37,7 +37,7 @@ namespace Temporal.Common.Payloads
                     throw CreateNoSuchIndexException(index);
                 }
 
-                public IEnumerable<IUnnamedValuesContainerEntry> Values
+                public IEnumerable<UnnamedValuesContainerEntry> Values
                 {
                     get
                     {
@@ -45,7 +45,7 @@ namespace Temporal.Common.Payloads
                     }
                 }
 
-                public IEnumerator<IUnnamedValuesContainerEntry> GetEnumerator()
+                public IEnumerator<UnnamedValuesContainerEntry> GetEnumerator()
                 {
                     return new UnnamedValuesContainerEnumerator(this);
                 }
@@ -55,14 +55,14 @@ namespace Temporal.Common.Payloads
                     return this.GetEnumerator();
                 }
 
-                public IUnnamedValuesContainerEntry this[int index]
+                public UnnamedValuesContainerEntry this[int index]
                 {
                     get
                     {
                         throw CreateNoSuchIndexException(index);
                     }
                 }
-    
+
                 private static ArgumentOutOfRangeException CreateNoSuchIndexException(int index)
                 {
                     return new ArgumentOutOfRangeException(nameof(index), $"This container is empty, but `{nameof(index)}={index}` was specified.");

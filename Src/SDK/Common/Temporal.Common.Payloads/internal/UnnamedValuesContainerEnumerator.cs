@@ -5,21 +5,21 @@ using Candidly.Util;
 
 namespace Temporal.Common.Payloads
 {
-    internal class UnnamedValuesContainerEnumerator : IEnumerator<IUnnamedValuesContainerEntry>
+    internal class UnnamedValuesContainerEnumerator : IEnumerator<UnnamedValuesContainerEntry>
     {
-        private readonly IEnumerator<IUnnamedValuesContainerEntry> _payloadsEnumerator;
+        private readonly IEnumerator<UnnamedValuesContainerEntry> _payloadsEnumerator;
 
         public UnnamedValuesContainerEnumerator(IUnnamedValuesContainer container)
         {
             Validate.NotNull(container);
 
-            IEnumerator<IUnnamedValuesContainerEntry> payloadsEnumerator = container.Values?.GetEnumerator();
+            IEnumerator<UnnamedValuesContainerEntry> payloadsEnumerator = container.Values?.GetEnumerator();
             Validate.NotNull(payloadsEnumerator);
 
             _payloadsEnumerator = payloadsEnumerator;
         }
 
-        public IUnnamedValuesContainerEntry Current
+        public UnnamedValuesContainerEntry Current
         {
             get { return _payloadsEnumerator.Current; }
         }
