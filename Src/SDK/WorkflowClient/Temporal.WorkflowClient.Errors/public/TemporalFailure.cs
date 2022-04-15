@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -16,11 +17,13 @@ namespace Temporal.WorkflowClient.Errors
     {
         private static class StackTraceMarkers
         {
-            public const string StartRemoteTracePrefix = "--- -------- Start of remote stack trace";
-            public const string StartRemoteTraceTemplate = StartRemoteTracePrefix + " ({0})-------- ---";
+            public const string StartRemoteTracePrefix = "----------- Start of remote stack trace";
+            public const string StartRemoteTraceTemplate = StartRemoteTracePrefix + " ('{0}' based on '{1}' from '{2}') -----------";
 
-            public const string EndRemoteTracePrefix = "--- -------- End of remote stack trace";
-            public const string EndRemoteTraceTemplate = EndRemoteTracePrefix + " ({0})-------- ---";
+            public const string EndRemoteTracePrefix = "----------- End of remote stack trace";
+            public const string EndRemoteTraceTemplate = EndRemoteTracePrefix + " ('{0}' based on '{1}' from '{2}') -----------";
+
+            public const string UnknownSourceMoniker = "unknown source";
         }
 
         public static async Task<Exception> FromMessageAsync(Failure failure,
@@ -35,7 +38,7 @@ namespace Temporal.WorkflowClient.Errors
                 return await FromMessageWithCauseAsync(failure, cause: null, causeChainDepth: 0, payloadConverter, payloadCodec, cancelToken);
             }
 
-            // Don't joke with how deeeply nested this can be.
+            // Don't joke with how deeply nested this can be.
             // Unwind the cause chain so that we can rehydrate them in a non-recursive way.
 
             List<Failure> failures = new();
@@ -80,6 +83,8 @@ namespace Temporal.WorkflowClient.Errors
 
             // Populate the basics:
 
+            string failureSource = failure.Source?.Trim();
+
             info.AddValue("ClassName", exceptionType.ToString(), typeof(string));
             info.AddValue("Message", failure.Message?.Trim() ?? String.Empty, typeof(string));
             info.AddValue("Data", null, typeof(System.Collections.IDictionary));
@@ -88,8 +93,8 @@ namespace Temporal.WorkflowClient.Errors
             info.AddValue("StackTraceString", null, typeof(string));
             info.AddValue("RemoteStackIndex", causeChainDepth, typeof(int));
             info.AddValue("ExceptionMethod", String.Empty, typeof(string));  // Future: attempt to populate this
-            info.AddValue("HResult", HResult.COR_E_EXCEPTION);  // Future: can we be more specific?
-            info.AddValue("Source", failure.Source?.Trim() ?? String.Empty, typeof(string));
+            info.AddValue("HResult", unchecked((int) HResult.COR_E_EXCEPTION));  // Future: can we be more specific?
+            info.AddValue("Source", failureSource ?? String.Empty, typeof(string));
             info.AddValue("WatsonBuckets", null, typeof(byte[]));
 
             // Populate the remote stack trace:
@@ -107,15 +112,25 @@ namespace Temporal.WorkflowClient.Errors
 
                 if (!alreadyMarkedUp)
                 {
-                    remoteTraceBuilder.AppendFormat(StackTraceMarkers.StartRemoteTraceTemplate, exceptionType.Name);
+                    remoteTraceBuilder.AppendFormat(StackTraceMarkers.StartRemoteTraceTemplate,
+                                                    exceptionType.Name,
+                                                    failure.FailureInfoCase.ToString(),
+                                                    String.IsNullOrWhiteSpace(failureSource) ? StackTraceMarkers.UnknownSourceMoniker : failureSource);
+                    remoteTraceBuilder.AppendLine();
                 }
 
                 remoteTraceBuilder.AppendLine(failure.StackTrace.Trim());
 
                 if (!alreadyMarkedUp)
                 {
-                    remoteTraceBuilder.AppendFormat(StackTraceMarkers.EndRemoteTraceTemplate, exceptionType.Name);
+                    remoteTraceBuilder.AppendFormat(StackTraceMarkers.EndRemoteTraceTemplate,
+                                                    exceptionType.Name,
+                                                    failure.FailureInfoCase.ToString(),
+                                                    String.IsNullOrWhiteSpace(failureSource) ? StackTraceMarkers.UnknownSourceMoniker : failureSource);
+                    remoteTraceBuilder.AppendLine();
                 }
+
+                info.AddValue("RemoteStackTraceString", remoteTraceBuilder.ToString(), typeof(string));
             }
 
             Exception failureException = await exceptionFactory(failure, info, payloadConverter, payloadCodec, cancelToken);
