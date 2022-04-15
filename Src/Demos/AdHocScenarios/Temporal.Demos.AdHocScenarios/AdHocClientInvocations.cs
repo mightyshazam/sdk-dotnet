@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Candidly.Util;
 using Temporal.Api.Enums.V1;
@@ -67,7 +68,7 @@ namespace Temporal.Demos.AdHocScenarios
 
                 throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
             }
-            catch (WorkflowConcludedAbnormallyException wcaEx) when (wcaEx.ConclusionStatus == WorkflowExecutionStatus.Terminated)
+            catch (WorkflowConcludedAbnormallyException wcaEx) when (wcaEx.ConclusionStatus == WorkflowExecutionStatus.Failed)
             {
                 Console.WriteLine("Received expected exception.");
                 Console.WriteLine(wcaEx.TypeAndMessage());
@@ -78,6 +79,11 @@ namespace Temporal.Demos.AdHocScenarios
                     Console.WriteLine("\n  Inner --> " + innerEx.TypeAndMessage());
                     innerEx = innerEx.InnerException;
                 }
+
+                Console.WriteLine();
+                Console.WriteLine("Rethrowing the caught exception.");
+                Console.WriteLine();
+                ExceptionDispatchInfo.Capture(wcaEx).Throw();
             }
 
             Console.WriteLine();

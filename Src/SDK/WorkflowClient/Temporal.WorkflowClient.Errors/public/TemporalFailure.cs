@@ -26,23 +26,29 @@ namespace Temporal.WorkflowClient.Errors
             public const string UnknownSourceMoniker = "unknown source";
         }
 
-        public static async Task<Exception> FromMessageAsync(Failure failure,
+        public static ITemporalFailure GetInnerTemporalFailure(this WorkflowConcludedAbnormallyException rtEx)
+        {
+            Validate.NotNull(rtEx);
+            return rtEx.InnerException.Cast<Exception, ITemporalFailure>();
+        }
+
+        public static async Task<Exception> FromPayloadAsync(Failure failurePayload,
                                                              IPayloadConverter payloadConverter,
                                                              IPayloadCodec payloadCodec,
                                                              CancellationToken cancelToken)
         {
-            Validate.NotNull(failure);
+            Validate.NotNull(failurePayload);
 
-            if (failure.Cause == null)
+            if (failurePayload.Cause == null)
             {
-                return await FromMessageWithCauseAsync(failure, cause: null, causeChainDepth: 0, payloadConverter, payloadCodec, cancelToken);
+                return await FromPayloadWithCauseAsync(failurePayload, cause: null, causeChainDepth: 0, payloadConverter, payloadCodec, cancelToken);
             }
 
             // Don't joke with how deeply nested this can be.
             // Unwind the cause chain so that we can rehydrate them in a non-recursive way.
 
             List<Failure> failures = new();
-            Failure nextFailure = failure;
+            Failure nextFailure = failurePayload;
             while (nextFailure != null)
             {
                 failures.Add(nextFailure);
@@ -54,29 +60,59 @@ namespace Temporal.WorkflowClient.Errors
             Exception failureException = null;
             for (int f = failures.Count - 1; f >= 0; f--)
             {
-                failureException = await FromMessageWithCauseAsync(failures[f], failureException, f, payloadConverter, payloadCodec, cancelToken);
+                failureException = await FromPayloadWithCauseAsync(failures[f], failureException, f, payloadConverter, payloadCodec, cancelToken);
             }
 
             return failureException;
         }
 
-        private static async Task<Exception> FromMessageWithCauseAsync(Failure failure,
+        private static async Task<Exception> FromPayloadWithCauseAsync(Failure failure,
                                                                        Exception cause,
                                                                        int causeChainDepth,
                                                                        IPayloadConverter payloadConverter,
                                                                        IPayloadCodec payloadCodec,
                                                                        CancellationToken cancelToken)
         {
-            GetNetExceptionTypeInfo(failure,
-                                    out Type exceptionType,
-                                    out Func<Failure,
-                                             SerializationInfo,
-                                             IPayloadConverter,
-                                             IPayloadCodec,
-                                             CancellationToken,
-                                             Task<Exception>> exceptionFactory);
+            switch (failure.FailureInfoCase)
+            {
+                case Failure.FailureInfoOneofCase.TimeoutFailureInfo:
+                    return await TimeoutException.CreateFromPayloadAsync(failure, cause, causeChainDepth, payloadConverter, payloadCodec, cancelToken);
 
-            SerializationInfo info = new(exceptionType, new FormatterConverter());
+                case Failure.FailureInfoOneofCase.CanceledFailureInfo:
+                    return await CancellationException.CreateFromPayloadAsync(failure, cause, causeChainDepth, payloadConverter, payloadCodec, cancelToken);
+
+                case Failure.FailureInfoOneofCase.TerminatedFailureInfo:
+                    return TerminationException.CreateFromPayload(failure, cause, causeChainDepth);
+
+                case Failure.FailureInfoOneofCase.ServerFailureInfo:
+                    return OrchesrationServerException.CreateFromPayload(failure, cause, causeChainDepth);
+
+                case Failure.FailureInfoOneofCase.ResetWorkflowFailureInfo:
+                    return await ResetWorkflowException.CreateFromPayloadAsync(failure, cause, causeChainDepth, payloadConverter, payloadCodec, cancelToken);
+
+                case Failure.FailureInfoOneofCase.ActivityFailureInfo:
+                    return ActivityException.CreateFromPayload(failure, cause, causeChainDepth);
+
+                case Failure.FailureInfoOneofCase.ChildWorkflowExecutionFailureInfo:
+                    return ChildWorkflowException.CreateFromPayload(failure, cause, causeChainDepth);
+
+                case Failure.FailureInfoOneofCase.ApplicationFailureInfo:
+                    return await ApplicationException.CreateFromPayloadAsync(failure, cause, causeChainDepth, payloadConverter, payloadCodec, cancelToken);
+
+                case Failure.FailureInfoOneofCase.None:
+                default:
+                    return await ApplicationException.CreateFromPayloadAsync(failure, cause, causeChainDepth, payloadConverter, payloadCodec, cancelToken);
+            }
+        }
+
+        internal static SerializationInfo CreateSerializationInfoWithCommonData<TEx>(Failure failure,
+                                                                                     Exception innerException,
+                                                                                     int innerExceptionChainDepth)
+                                                                                where TEx : Exception
+        {
+            Type targetExceptionType = typeof(TEx);
+
+            SerializationInfo info = new(targetExceptionType, new FormatterConverter());
 
             // This is a joint set of values set by Net Fx 4.6.x and Net 6.
             // Values not needed in all versions (e.g. Net 6 does not use class name) should be ignired during rehydration.
@@ -85,13 +121,12 @@ namespace Temporal.WorkflowClient.Errors
 
             string failureSource = failure.Source?.Trim();
 
-            info.AddValue("ClassName", exceptionType.ToString(), typeof(string));
-            info.AddValue("Message", failure.Message?.Trim() ?? String.Empty, typeof(string));
+            info.AddValue("ClassName", targetExceptionType.ToString(), typeof(string));
             info.AddValue("Data", null, typeof(System.Collections.IDictionary));
-            info.AddValue("InnerException", cause, typeof(Exception));
+            info.AddValue("InnerException", innerException, typeof(Exception));
             info.AddValue("HelpURL", null, typeof(string));
             info.AddValue("StackTraceString", null, typeof(string));
-            info.AddValue("RemoteStackIndex", causeChainDepth, typeof(int));
+            info.AddValue("RemoteStackIndex", innerExceptionChainDepth, typeof(int));
             info.AddValue("ExceptionMethod", String.Empty, typeof(string));  // Future: attempt to populate this
             info.AddValue("HResult", unchecked((int) HResult.COR_E_EXCEPTION));  // Future: can we be more specific?
             info.AddValue("Source", failureSource ?? String.Empty, typeof(string));
@@ -113,7 +148,7 @@ namespace Temporal.WorkflowClient.Errors
                 if (!alreadyMarkedUp)
                 {
                     remoteTraceBuilder.AppendFormat(StackTraceMarkers.StartRemoteTraceTemplate,
-                                                    exceptionType.Name,
+                                                    targetExceptionType.Name,
                                                     failure.FailureInfoCase.ToString(),
                                                     String.IsNullOrWhiteSpace(failureSource) ? StackTraceMarkers.UnknownSourceMoniker : failureSource);
                     remoteTraceBuilder.AppendLine();
@@ -124,7 +159,7 @@ namespace Temporal.WorkflowClient.Errors
                 if (!alreadyMarkedUp)
                 {
                     remoteTraceBuilder.AppendFormat(StackTraceMarkers.EndRemoteTraceTemplate,
-                                                    exceptionType.Name,
+                                                    targetExceptionType.Name,
                                                     failure.FailureInfoCase.ToString(),
                                                     String.IsNullOrWhiteSpace(failureSource) ? StackTraceMarkers.UnknownSourceMoniker : failureSource);
                     remoteTraceBuilder.AppendLine();
@@ -133,157 +168,13 @@ namespace Temporal.WorkflowClient.Errors
                 info.AddValue("RemoteStackTraceString", remoteTraceBuilder.ToString(), typeof(string));
             }
 
-            Exception failureException = await exceptionFactory(failure, info, payloadConverter, payloadCodec, cancelToken);
-            return failureException;
+            return info;
         }
 
-        private static void GetNetExceptionTypeInfo(Failure failure,
-                                                    out Type exceptionType,
-                                                    out Func<Failure,
-                                                             SerializationInfo,
-                                                             IPayloadConverter,
-                                                             IPayloadCodec,
-                                                             CancellationToken,
-                                                             Task<Exception>> exceptionFactory)
-        {
-            switch (failure.FailureInfoCase)
-            {
-                case Failure.FailureInfoOneofCase.TimeoutFailureInfo:
-                    exceptionType = typeof(TimeoutException);
-                    exceptionFactory = async (failure, info, payloadConverter, payloadCodec, cancelToken) =>
-                    {
-                        PayloadContainers.IUnnamed details = await DeserializeAsync(failure.TimeoutFailureInfo.LastHeartbeatDetails,
-                                                                                    payloadConverter,
-                                                                                    payloadCodec,
-                                                                                    cancelToken);
-
-                        info.AddValue(nameof(TimeoutException.TimeoutType), (int) failure.TimeoutFailureInfo.TimeoutType);
-                        info.AddValue(nameof(TimeoutException.LastHeartbeatDetails), details, typeof(PayloadContainers.IUnnamed));
-
-                        return new TimeoutException(info, new StreamingContext(StreamingContextStates.CrossMachine));
-                    };
-
-                    return;
-
-                case Failure.FailureInfoOneofCase.CanceledFailureInfo:
-                    exceptionType = typeof(CancellationException);
-                    exceptionFactory = async (failure, info, payloadConverter, payloadCodec, cancelToken) =>
-                    {
-                        PayloadContainers.IUnnamed details = await DeserializeAsync(failure.CanceledFailureInfo.Details,
-                                                                                    payloadConverter,
-                                                                                    payloadCodec,
-                                                                                    cancelToken);
-
-                        info.AddValue(nameof(CancellationException.Details), details, typeof(PayloadContainers.IUnnamed));
-
-                        return new CancellationException(info, new StreamingContext(StreamingContextStates.CrossMachine));
-                    };
-
-                    return;
-
-                case Failure.FailureInfoOneofCase.TerminatedFailureInfo:
-                    exceptionType = typeof(TerminationException);
-                    exceptionFactory = (failure, info, payloadConverter, payloadCodec, cancelToken) =>
-                    {
-                        return Task.FromResult((Exception) new TerminationException(info, new StreamingContext(StreamingContextStates.CrossMachine)));
-                    };
-
-                    return;
-
-                case Failure.FailureInfoOneofCase.ServerFailureInfo:
-                    exceptionType = typeof(OrchesrationServerException);
-                    exceptionFactory = (failure, info, payloadConverter, payloadCodec, cancelToken) =>
-                    {
-                        info.AddValue(nameof(OrchesrationServerException.IsNonRetryable), failure.ServerFailureInfo.NonRetryable);
-
-                        return Task.FromResult((Exception) new OrchesrationServerException(info, new StreamingContext(StreamingContextStates.CrossMachine)));
-                    };
-
-                    return;
-
-                case Failure.FailureInfoOneofCase.ResetWorkflowFailureInfo:
-                    exceptionType = typeof(ResetWorkflowException);
-                    exceptionFactory = async (failure, info, payloadConverter, payloadCodec, cancelToken) =>
-                    {
-                        PayloadContainers.IUnnamed details = await DeserializeAsync(failure.ResetWorkflowFailureInfo.LastHeartbeatDetails,
-                                                                                    payloadConverter,
-                                                                                    payloadCodec,
-                                                                                    cancelToken);
-
-                        info.AddValue(nameof(ResetWorkflowException.LastHeartbeatDetails), details, typeof(PayloadContainers.IUnnamed));
-
-                        return new ResetWorkflowException(info, new StreamingContext(StreamingContextStates.CrossMachine));
-                    };
-
-                    return;
-
-                case Failure.FailureInfoOneofCase.ActivityFailureInfo:
-                    exceptionType = typeof(ActivityException);
-                    exceptionFactory = (failure, info, payloadConverter, payloadCodec, cancelToken) =>
-                    {
-                        info.AddValue(nameof(ActivityException.ScheduledEventId), failure.ActivityFailureInfo.ScheduledEventId);
-                        info.AddValue(nameof(ActivityException.StartedEventId), failure.ActivityFailureInfo.StartedEventId);
-                        info.AddValue(nameof(ActivityException.Identity), failure.ActivityFailureInfo.Identity, typeof(string));
-                        info.AddValue(nameof(ActivityException.ActivityTypeName), failure.ActivityFailureInfo.ActivityType.Name, typeof(string));
-                        info.AddValue(nameof(ActivityException.ActivityId), failure.ActivityFailureInfo.ActivityId, typeof(string));
-                        info.AddValue(nameof(ActivityException.RetryState), (int) failure.ActivityFailureInfo.RetryState);
-
-                        return Task.FromResult((Exception) new ActivityException(info, new StreamingContext(StreamingContextStates.CrossMachine)));
-                    };
-
-                    return;
-
-                case Failure.FailureInfoOneofCase.ChildWorkflowExecutionFailureInfo:
-                    exceptionType = typeof(ChildWorkflowException);
-                    exceptionFactory = (failure, info, payloadConverter, payloadCodec, cancelToken) =>
-                    {
-                        info.AddValue(nameof(ChildWorkflowException.Namespace), failure.ChildWorkflowExecutionFailureInfo.Namespace, typeof(string));
-                        info.AddValue(nameof(ChildWorkflowException.WorkflowId), failure.ChildWorkflowExecutionFailureInfo.WorkflowExecution.WorkflowId, typeof(string));
-                        info.AddValue(nameof(ChildWorkflowException.WorkflowRunId), failure.ChildWorkflowExecutionFailureInfo.WorkflowExecution.RunId, typeof(string));
-                        info.AddValue(nameof(ChildWorkflowException.WorkflowTypeName), failure.ChildWorkflowExecutionFailureInfo.WorkflowType.Name, typeof(string));
-                        info.AddValue(nameof(ChildWorkflowException.InitiatedEventId), failure.ChildWorkflowExecutionFailureInfo.InitiatedEventId);
-                        info.AddValue(nameof(ChildWorkflowException.StartedEventId), failure.ChildWorkflowExecutionFailureInfo.StartedEventId);
-                        info.AddValue(nameof(ChildWorkflowException.RetryState), (int) failure.ChildWorkflowExecutionFailureInfo.RetryState);
-
-                        return Task.FromResult((Exception) new ChildWorkflowException(info, new StreamingContext(StreamingContextStates.CrossMachine)));
-                    };
-
-                    return;
-
-                case Failure.FailureInfoOneofCase.ApplicationFailureInfo:
-                    exceptionType = typeof(ApplicationException);
-                    exceptionFactory = async (failure, info, payloadConverter, payloadCodec, cancelToken) =>
-                    {
-                        PayloadContainers.IUnnamed details = await DeserializeAsync(failure.ApplicationFailureInfo.Details,
-                                                                                    payloadConverter,
-                                                                                    payloadCodec,
-                                                                                    cancelToken);
-
-                        info.AddValue(nameof(ApplicationException.Type), failure.ApplicationFailureInfo.Type, typeof(string));
-                        info.AddValue(nameof(ApplicationException.IsNonRetryable), failure.ApplicationFailureInfo.NonRetryable);
-                        info.AddValue(nameof(ApplicationException.Details), details, typeof(PayloadContainers.IUnnamed));
-
-                        return new ApplicationException(info, new StreamingContext(StreamingContextStates.CrossMachine));
-                    };
-
-                    return;
-
-                case Failure.FailureInfoOneofCase.None:
-                default:
-                    exceptionType = typeof(ApplicationException);
-                    exceptionFactory = (failure, info, payloadConverter, payloadCodec, cancelToken) =>
-                    {
-                        return Task.FromResult((Exception) new ApplicationException(info, new StreamingContext(StreamingContextStates.CrossMachine)));
-                    };
-
-                    return;
-            }
-        }
-
-        private static async Task<PayloadContainers.IUnnamed> DeserializeAsync(Payloads payloads,
-                                                                               IPayloadConverter payloadConverter,
-                                                                               IPayloadCodec payloadCodec,
-                                                                               CancellationToken cancelToken)
+        internal static async Task<PayloadContainers.IUnnamed> DeserializeDetailsAsync(Payloads payloads,
+                                                                                       IPayloadConverter payloadConverter,
+                                                                                       IPayloadCodec payloadCodec,
+                                                                                       CancellationToken cancelToken)
         {
             if (payloads == null)
             {
@@ -298,10 +189,17 @@ namespace Temporal.WorkflowClient.Errors
             return payloadConverter.Deserialize<PayloadContainers.IUnnamed>(payloads);
         }
 
-        public static ITemporalFailure GetInnerTemporalFailure(this WorkflowConcludedAbnormallyException rtEx)
+        internal static void ValidateFailurePayloadKind(Failure failurePayload, Failure.FailureInfoOneofCase expectedPayloadKind)
         {
-            Validate.NotNull(rtEx);
-            return rtEx.InnerException.Cast<Exception, ITemporalFailure>();
+            Validate.NotNull(failurePayload);
+
+            if (failurePayload.FailureInfoCase != expectedPayloadKind)
+            {
+                throw new ArgumentException($"The {nameof(Failure.FailureInfoCase)} of the specified {failurePayload} is expected to be"
+                                          + $" '{expectedPayloadKind.ToString()}', however, the actual value is"
+                                          + $" '{failurePayload.FailureInfoCase.ToString()}' (={((int) failurePayload.FailureInfoCase)}).");
+            }
+
         }
     }
 }

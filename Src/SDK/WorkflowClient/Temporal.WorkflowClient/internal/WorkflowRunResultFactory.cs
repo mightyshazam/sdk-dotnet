@@ -71,7 +71,7 @@ namespace Temporal.WorkflowClient
                                                 : eventAttributes.NewExecutionRunId;
 
             Payloads decodedSerializedPayloads = null;
-            Exception failure = await TemporalFailure.FromMessageAsync(eventAttributes.Failure, _payloadConverter, _payloadCodec, cancelToken);
+            Exception failure = await TemporalFailure.FromPayloadAsync(eventAttributes.Failure, _payloadConverter, _payloadCodec, cancelToken);
 
             return new WorkflowRunResult(_payloadConverter,
                                          _namespace,
@@ -161,7 +161,7 @@ namespace Temporal.WorkflowClient
             Validate.NotNull(eventAttributes.LastCompletionResult);
 
             Payloads decodedSerializedPayloads = await DecodePayloads(eventAttributes.LastCompletionResult, cancelToken);
-            Exception failure = await TemporalFailure.FromMessageAsync(eventAttributes.Failure, _payloadConverter, _payloadCodec, cancelToken);
+            Exception failure = await TemporalFailure.FromPayloadAsync(eventAttributes.Failure, _payloadConverter, _payloadCodec, cancelToken);
 
             return new WorkflowRunResult(_payloadConverter,
                                          _namespace,

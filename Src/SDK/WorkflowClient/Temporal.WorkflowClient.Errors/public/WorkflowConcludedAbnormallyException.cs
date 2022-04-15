@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Candidly.Util;
 using Temporal.Api.Enums.V1;
 
@@ -50,23 +51,43 @@ namespace Temporal.WorkflowClient.Errors
                                             string workflowRunId,
                                             ITemporalFailure innerException)
         {
-            message = String.IsNullOrWhiteSpace(message) ? nameof(WorkflowConcludedAbnormallyException) : message.Trim();
+            StringBuilder msg = ExceptionMessage.GetBasis<WorkflowConcludedAbnormallyException>(message,
+                                                                                                AsException(innerException),
+                                                                                                out int basisMsgLength);
 
-            if (!message.EndsWith("."))
+            if (ExceptionMessage.StartNextInfoItemIfRequired(msg, message, nameof(Namespace), basisMsgLength))
             {
-                message = message + ".";
+                msg.Append(nameof(ConclusionStatus) + "='");
+                msg.Append(conclusionStatus.ToString());
+                msg.Append('\'');
             }
 
-            if (innerException != null)
+            if (ExceptionMessage.StartNextInfoItemIfRequired(msg, message, nameof(Namespace), basisMsgLength))
             {
-                message = message + " Inner Exception may have additional details.";
+                msg.Append(nameof(Namespace) + "=");
+                msg.Append(Format.QuoteOrNull(@namespace));
             }
 
-            message = $"{message} (ConclusionStatus='{conclusionStatus}'; Namespace={@namespace.QuoteOrNull()};"
-                    + $" WorkflowId={workflowId.QuoteOrNull()}; WorkflowChainId={workflowChainId.QuoteOrNull()};"
-                    + $" WorkflowRunId={workflowRunId.QuoteOrNull()})";
+            if (ExceptionMessage.StartNextInfoItemIfRequired(msg, message, nameof(WorkflowId), basisMsgLength))
+            {
+                msg.Append(nameof(WorkflowId) + "=");
+                msg.Append(Format.QuoteOrNull(workflowId));
+            }
 
-            return message;
+            if (ExceptionMessage.StartNextInfoItemIfRequired(msg, message, nameof(WorkflowChainId), basisMsgLength))
+            {
+                msg.Append(nameof(WorkflowChainId) + "=");
+                msg.Append(Format.QuoteOrNull(workflowChainId));
+            }
+
+            if (ExceptionMessage.StartNextInfoItemIfRequired(msg, message, nameof(WorkflowRunId), basisMsgLength))
+            {
+                msg.Append(nameof(WorkflowRunId) + "=");
+                msg.Append(Format.QuoteOrNull(workflowRunId));
+            }
+
+            ExceptionMessage.CompleteInfoItems(msg, basisMsgLength);
+            return msg.ToString();
         }
 
         public WorkflowConcludedAbnormallyException(string message,
