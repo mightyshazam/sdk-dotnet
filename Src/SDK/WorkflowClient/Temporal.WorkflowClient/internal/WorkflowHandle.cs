@@ -170,13 +170,13 @@ namespace Temporal.WorkflowClient
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowHandle.StartAsync{TWfArg}(String, String, TWfArg, StartWorkflowChainConfiguration, Boolean, CancellationToken)"/>
+        /// <see cref="IWorkflowHandle.StartAsync{TWfArg}(String, String, TWfArg, StartWorkflowConfiguration, Boolean, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
         public async Task<StartWorkflowResult> StartAsync<TWfArg>(string workflowTypeName,
                                                                   string taskQueue,
                                                                   TWfArg workflowArg,
-                                                                  StartWorkflowChainConfiguration workflowConfig = null,
+                                                                  StartWorkflowConfiguration workflowConfig = null,
                                                                   bool throwIfWorkflowChainAlreadyExists = true,
                                                                   CancellationToken cancelToken = default)
         {
@@ -189,7 +189,7 @@ namespace Temporal.WorkflowClient
             {
                 ValidateIsNotBound();
 
-                workflowConfig = workflowConfig ?? StartWorkflowChainConfiguration.Default;
+                workflowConfig = workflowConfig ?? StartWorkflowConfiguration.Default;
 
                 ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
                 StartWorkflowResult resStartWf = await invokerPipeline.StartWorkflowAsync(Namespace,
@@ -219,7 +219,7 @@ namespace Temporal.WorkflowClient
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowHandle.StartWithSignalAsync{TWfArg, TSigArg}(String, String, TWfArg, String, TSigArg, StartWorkflowChainConfiguration, CancellationToken)"/>
+        /// <see cref="IWorkflowHandle.StartWithSignalAsync{TWfArg, TSigArg}(String, String, TWfArg, String, TSigArg, StartWorkflowConfiguration, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
         public Task<StartWorkflowResult> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
@@ -227,7 +227,7 @@ namespace Temporal.WorkflowClient
                                                                                TWfArg workflowArg,
                                                                                string signalName,
                                                                                TSigArg signalArg,
-                                                                               StartWorkflowChainConfiguration workflowConfig = null,
+                                                                               StartWorkflowConfiguration workflowConfig = null,
                                                                                CancellationToken cancelToken = default)
         {
             throw new NotImplementedException("@ToDo");

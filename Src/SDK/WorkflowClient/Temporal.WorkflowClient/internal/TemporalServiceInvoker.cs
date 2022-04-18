@@ -77,7 +77,7 @@ namespace Temporal.WorkflowClient
                                                                           string workflowTypeName,
                                                                           string taskQueue,
                                                                           TWfArg workflowArg,
-                                                                          StartWorkflowChainConfiguration workflowConfig,
+                                                                          StartWorkflowConfiguration workflowConfig,
                                                                           bool throwOnAlreadyExists,
                                                                           CancellationToken cancelToken)
         {

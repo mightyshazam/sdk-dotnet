@@ -4,9 +4,9 @@ using Temporal.Api.Enums.V1;
 
 namespace Temporal.WorkflowClient
 {
-    public class StartWorkflowChainConfiguration
+    public class StartWorkflowConfiguration
     {
-        private static readonly StartWorkflowChainConfiguration s_default = new StartWorkflowChainConfiguration()
+        private static readonly StartWorkflowConfiguration s_default = new StartWorkflowConfiguration()
         {
             WorkflowExecutionTimeout = null,
             WorkflowRunTimeout = null,
@@ -20,7 +20,7 @@ namespace Temporal.WorkflowClient
             Header = null
         };
 
-        public static StartWorkflowChainConfiguration Default
+        public static StartWorkflowConfiguration Default
         {
             get { return s_default; }
         }

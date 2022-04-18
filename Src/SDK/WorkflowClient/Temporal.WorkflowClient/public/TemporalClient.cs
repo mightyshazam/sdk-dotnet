@@ -82,7 +82,7 @@ namespace Temporal.WorkflowClient
         public Task<IWorkflowHandle> StartWorkflowAsync(string workflowId,
                                                         string workflowTypeName,
                                                         string taskQueue,
-                                                        StartWorkflowChainConfiguration workflowConfig = null,
+                                                        StartWorkflowConfiguration workflowConfig = null,
                                                         CancellationToken cancelToken = default)
         {
             return StartWorkflowAsync<IPayload.Void>(workflowId, workflowTypeName, taskQueue, Payload.Void, workflowConfig, cancelToken);
@@ -92,7 +92,7 @@ namespace Temporal.WorkflowClient
                                                                       string workflowTypeName,
                                                                       string taskQueue,
                                                                       TWfArg workflowArg,
-                                                                      StartWorkflowChainConfiguration workflowConfig = null,
+                                                                      StartWorkflowConfiguration workflowConfig = null,
                                                                       CancellationToken cancelToken = default)
         {
             IWorkflowHandle workflow = CreateWorkflowHandle(workflowId);
@@ -114,7 +114,7 @@ namespace Temporal.WorkflowClient
                                                                  string workflowTypeName,
                                                                  string taskQueue,
                                                                  string signalName,
-                                                                 StartWorkflowChainConfiguration workflowConfig = null,
+                                                                 StartWorkflowConfiguration workflowConfig = null,
                                                                  CancellationToken cancelToken = default)
         {
             return StartWorkflowWithSignalAsync<IPayload.Void, IPayload.Void>(workflowId,
@@ -132,7 +132,7 @@ namespace Temporal.WorkflowClient
                                                                           string taskQueue,
                                                                           string signalName,
                                                                           TSigArg signalArg,
-                                                                          StartWorkflowChainConfiguration workflowConfig = null,
+                                                                          StartWorkflowConfiguration workflowConfig = null,
                                                                           CancellationToken cancelToken = default)
         {
             return StartWorkflowWithSignalAsync<IPayload.Void, TSigArg>(workflowId,
@@ -150,7 +150,7 @@ namespace Temporal.WorkflowClient
                                                                          string taskQueue,
                                                                          TWfArg workflowArg,
                                                                          string signalName,
-                                                                         StartWorkflowChainConfiguration workflowConfig = null,
+                                                                         StartWorkflowConfiguration workflowConfig = null,
                                                                          CancellationToken cancelToken = default)
         {
             return StartWorkflowWithSignalAsync<TWfArg, IPayload.Void>(workflowId,
@@ -169,7 +169,7 @@ namespace Temporal.WorkflowClient
                                                                                         TWfArg workflowArg,
                                                                                         string signalName,
                                                                                         TSigArg signalArg,
-                                                                                        StartWorkflowChainConfiguration workflowConfig = null,
+                                                                                        StartWorkflowConfiguration workflowConfig = null,
                                                                                         CancellationToken cancelToken = default)
         {
             IWorkflowHandle workflow = CreateWorkflowHandle(workflowId);
