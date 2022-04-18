@@ -30,7 +30,7 @@ namespace Temporal.Demos.AdHocScenarios
             string demoWfId = "Demo Workflow XYZ / " + Format.AsReadablePreciseLocal(DateTimeOffset.Now);
 
             Console.WriteLine("Starting a workflow...");
-            IWorkflowChain workflow = await client.StartWorkflowAsync(demoWfId,
+            IWorkflowHandle workflow = await client.StartWorkflowAsync(demoWfId,
                                                                       "DemoWorkflowTypeName",
                                                                       "DemoTaskQueue");
             Console.WriteLine("Started. Info:");
@@ -65,7 +65,7 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine();
             Console.WriteLine("Creating a handle to the existing workflow...");
 
-            IWorkflowChain workflow2 = client.CreateWorkflowHandle(demoWfId);
+            IWorkflowHandle workflow2 = client.CreateWorkflowHandle(demoWfId);
 
             Console.WriteLine("Created. Info:");
             Console.WriteLine($"    Namespace:       {workflow2.Namespace}");
@@ -119,7 +119,7 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine();
             Console.WriteLine("Creating a handle to a non-existing workflow...");
 
-            IWorkflowChain workflow3 = client.CreateWorkflowHandle("Non-Existing-Workflow-Id");
+            IWorkflowHandle workflow3 = client.CreateWorkflowHandle("Non-Existing-Workflow-Id");
 
             Console.WriteLine("Created. Info:");
             Console.WriteLine($"    Namespace:       {workflow3.Namespace}");

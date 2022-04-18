@@ -207,7 +207,7 @@ namespace Temporal.WorkflowClient
                                                        + "(..) with HistoryEventFilterType = CloseEvent";
             const string ScenarioDescriptionForDebug = nameof(AwaitConclusionAsync);
 
-            WorkflowRun.ValidateWorkflowRunId(workflowRunId);
+            WorkflowRunHandle.ValidateWorkflowRunId(workflowRunId);
 
             WorkflowRunResultFactory runResultFactory = new WorkflowRunResultFactory(_payloadConverter,
                                                                                      _payloadCodec,

@@ -19,54 +19,54 @@ namespace Temporal.WorkflowClient
 
         #region StartWorkflowAsync(..)
 
-        Task<IWorkflowChain> StartWorkflowAsync(string workflowId,
-                                                string workflowTypeName,
-                                                string taskQueue,
-                                                StartWorkflowChainConfiguration workflowConfig = null,
-                                                CancellationToken cancelToken = default);
+        Task<IWorkflowHandle> StartWorkflowAsync(string workflowId,
+                                                 string workflowTypeName,
+                                                 string taskQueue,
+                                                 StartWorkflowChainConfiguration workflowConfig = null,
+                                                 CancellationToken cancelToken = default);
 
-        Task<IWorkflowChain> StartWorkflowAsync<TWfArg>(string workflowId,
-                                                        string workflowTypeName,
-                                                        string taskQueue,
-                                                        TWfArg workflowArg,
-                                                        StartWorkflowChainConfiguration workflowConfig = null,
-                                                        CancellationToken cancelToken = default);
+        Task<IWorkflowHandle> StartWorkflowAsync<TWfArg>(string workflowId,
+                                                         string workflowTypeName,
+                                                         string taskQueue,
+                                                         TWfArg workflowArg,
+                                                         StartWorkflowChainConfiguration workflowConfig = null,
+                                                         CancellationToken cancelToken = default);
         #endregion StartWorkflowAsync(..)
 
 
         #region StartWorkflowWithSignalAsync(..)
 
-        Task<IWorkflowChain> StartWorkflowWithSignalAsync(string workflowId,
-                                                          string workflowTypeName,
-                                                          string taskQueue,
-                                                          string signalName,
-                                                          StartWorkflowChainConfiguration workflowConfig = null,
-                                                          CancellationToken cancelToken = default);
+        Task<IWorkflowHandle> StartWorkflowWithSignalAsync(string workflowId,
+                                                           string workflowTypeName,
+                                                           string taskQueue,
+                                                           string signalName,
+                                                           StartWorkflowChainConfiguration workflowConfig = null,
+                                                           CancellationToken cancelToken = default);
 
-        Task<IWorkflowChain> StartWorkflowWithSignalAsync<TSigArg>(string workflowId,
+        Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TSigArg>(string workflowId,
+                                                                    string workflowTypeName,
+                                                                    string taskQueue,
+                                                                    string signalName,
+                                                                    TSigArg signalArg,
+                                                                    StartWorkflowChainConfiguration workflowConfig = null,
+                                                                    CancellationToken cancelToken = default);
+
+        Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TWfArg>(string workflowId,
                                                                    string workflowTypeName,
                                                                    string taskQueue,
+                                                                   TWfArg workflowArg,
                                                                    string signalName,
-                                                                   TSigArg signalArg,
                                                                    StartWorkflowChainConfiguration workflowConfig = null,
                                                                    CancellationToken cancelToken = default);
 
-        Task<IWorkflowChain> StartWorkflowWithSignalAsync<TWfArg>(string workflowId,
-                                                                  string workflowTypeName,
-                                                                  string taskQueue,
-                                                                  TWfArg workflowArg,
-                                                                  string signalName,
-                                                                  StartWorkflowChainConfiguration workflowConfig = null,
-                                                                  CancellationToken cancelToken = default);
-
-        Task<IWorkflowChain> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
-                                                                           string workflowTypeName,
-                                                                           string taskQueue,
-                                                                           TWfArg workflowArg,
-                                                                           string signalName,
-                                                                           TSigArg signalArg,
-                                                                           StartWorkflowChainConfiguration workflowConfig = null,
-                                                                           CancellationToken cancelToken = default);
+        Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
+                                                                            string workflowTypeName,
+                                                                            string taskQueue,
+                                                                            TWfArg workflowArg,
+                                                                            string signalName,
+                                                                            TSigArg signalArg,
+                                                                            StartWorkflowChainConfiguration workflowConfig = null,
+                                                                            CancellationToken cancelToken = default);
 
         #endregion StartWorkflowWithSignalAsync(..)
 
@@ -78,7 +78,7 @@ namespace Temporal.WorkflowClient
         /// The handle will be bound to the most recent chain with the specified <c>workflowId</c> once the user invokes an API
         /// the end up interacting with some workflow run on the server.
         /// </summary>
-        IWorkflowChain CreateWorkflowHandle(string workflowId);
+        IWorkflowHandle CreateWorkflowHandle(string workflowId);
 
         /// <summary>
         /// Create an workflow chain handle that represents a workflow chain with the specified <c>workflowId</c> and <c>workflowChainId</c>.
@@ -86,8 +86,8 @@ namespace Temporal.WorkflowClient
         /// <param name="workflowId">The workflow-id of the workflow chain that will be represented by the newly created handle.</param>
         /// <param name="workflowChainId">The workflow-run-id of the <em>first workflow run</em> of the <em>workflow chain</em> represented
         /// by the newly created handle.</param>
-        IWorkflowChain CreateWorkflowHandle(string workflowId,
-                                            string workflowChainId);
+        IWorkflowHandle CreateWorkflowHandle(string workflowId,
+                                             string workflowChainId);
         #endregion CreateWorkflowHandle(..)
 
 
@@ -96,8 +96,8 @@ namespace Temporal.WorkflowClient
         /// <summary>
         /// Create an workflow run handle that represents a workflow run with the specified <c>workflowId</c> and <c>workflowRunId</c>.
         /// </summary>
-        IWorkflowRun CreateWorkflowRunHandle(string workflowId,
-                                             string workflowRunId);
+        IWorkflowRunHandle CreateWorkflowRunHandle(string workflowId,
+                                                   string workflowRunId);
         #endregion CreateWorkflowRunHandle(..)
 
         #endregion -- Workflow access and control APIs --

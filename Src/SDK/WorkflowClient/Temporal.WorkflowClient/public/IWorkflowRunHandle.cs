@@ -2,7 +2,7 @@
 
 namespace Temporal.WorkflowClient
 {
-    public interface IWorkflowRun
+    public interface IWorkflowRunHandle
     {
         string WorkflowRunId { get; }
     }

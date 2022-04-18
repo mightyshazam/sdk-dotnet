@@ -9,7 +9,7 @@ using Temporal.WorkflowClient.Interceptors;
 
 namespace Temporal.WorkflowClient
 {
-    internal class WorkflowChain : IWorkflowChain, IDisposable
+    internal class WorkflowHandle : IWorkflowHandle, IDisposable
     {
         public static void ValidateWorkflowChainId(string workflowChainId)
         {
@@ -28,12 +28,12 @@ namespace Temporal.WorkflowClient
 
         private ITemporalClientInterceptor _serviceInvocationPipeline = null;
 
-        internal WorkflowChain(TemporalClient temporalClient, string workflowId)
+        internal WorkflowHandle(TemporalClient temporalClient, string workflowId)
             : this(temporalClient, workflowId, workflowChainId: null)
         {
         }
 
-        internal WorkflowChain(TemporalClient temporalClient, string workflowId, string workflowChainId)
+        internal WorkflowHandle(TemporalClient temporalClient, string workflowId, string workflowChainId)
         {
             Validate.NotNull(temporalClient);
             Validate.NotNullOrWhitespace(temporalClient.Namespace);
@@ -49,7 +49,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.Namespace"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.Namespace"/>) for a detailed description.
         /// </summary>
         public string Namespace
         {
@@ -57,20 +57,20 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.WorkflowId"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.WorkflowId"/>) for a detailed description.
         /// </summary>
         public string WorkflowId { get; }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.IsBound"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.IsBound"/>) for a detailed description.
         /// </summary>
         public bool IsBound { get { return Volatile.Read(ref _isBound); } }
 
         /// <summary>
         /// The <c>WorkflowChainId</c> is the <c>WorkflowRunId</c> of the first run in the workflow chain.<br />
-        /// Calling the getter for this property will result in <c>InvalidOperationException</c> if this <c>WorkflowChain</c> is not bound.
+        /// Calling the getter for this property will result in <c>InvalidOperationException</c> if this <c>WorkflowHandle</c> is not bound.
         /// </summary>
-        /// <remarks>See the implemented iface API (<see cref="IWorkflowChain.WorkflowChainId"/>) for a detailed description.</remarks>
+        /// <remarks>See the implemented iface API (<see cref="IWorkflowHandle.WorkflowChainId"/>) for a detailed description.</remarks>
         public string WorkflowChainId
         {
             get
@@ -81,7 +81,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.GetWorkflowTypeNameAsync(CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.GetWorkflowTypeNameAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
         public async Task<string> GetWorkflowTypeNameAsync(CancellationToken cancelToken)
         {
@@ -90,7 +90,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.GetStatusAsync(CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.GetStatusAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
         public async Task<WorkflowExecutionStatus> GetStatusAsync(CancellationToken cancelToken)
         {
@@ -100,7 +100,7 @@ namespace Temporal.WorkflowClient
 
         /// <summary>
         /// Should this be called TryDescribeAsync?<br/>
-        /// See the implemented iface API (<see cref="IWorkflowChain.CheckExistsAsync(CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.CheckExistsAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>        
         public Task<TryResult<DescribeWorkflowExecutionResponse>> CheckExistsAsync(CancellationToken cancelToken)
         {
@@ -108,7 +108,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.DescribeAsync(CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.DescribeAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
         public async Task<DescribeWorkflowExecutionResponse> DescribeAsync(CancellationToken cancelToken)
         {
@@ -121,7 +121,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.EnsureBoundAsync(CancellationToken)"/>) for a
+        /// See the implemented iface API (<see cref="IWorkflowHandle.EnsureBoundAsync(CancellationToken)"/>) for a
         /// detailed description.
         /// (Design note/future: If not bound && the WorkflowChainBindingPolicy REQUIRES starting new chain - fail telling to use the other overload.)
         /// </summary>        
@@ -170,7 +170,7 @@ namespace Temporal.WorkflowClient
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartAsync{TWfArg}(String, String, TWfArg, StartWorkflowChainConfiguration, Boolean, CancellationToken)"/>
+        /// <see cref="IWorkflowHandle.StartAsync{TWfArg}(String, String, TWfArg, StartWorkflowChainConfiguration, Boolean, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
         public async Task<StartWorkflowResult> StartAsync<TWfArg>(string workflowTypeName,
@@ -219,7 +219,7 @@ namespace Temporal.WorkflowClient
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowChain.StartWithSignalAsync{TWfArg, TSigArg}(String, String, TWfArg, String, TSigArg, StartWorkflowChainConfiguration, CancellationToken)"/>
+        /// <see cref="IWorkflowHandle.StartWithSignalAsync{TWfArg, TSigArg}(String, String, TWfArg, String, TSigArg, StartWorkflowChainConfiguration, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
         public Task<StartWorkflowResult> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
@@ -239,34 +239,34 @@ namespace Temporal.WorkflowClient
         #region --- GetXxxRunAsync(..) APIs to access a specific run ---
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.TryGetRunAsync(String, CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.TryGetRunAsync(String, CancellationToken)"/>) for a detailed description.
         /// </summary>
-        public Task<TryResult<IWorkflowRun>> TryGetRunAsync(string workflowRunId,
+        public Task<TryResult<IWorkflowRunHandle>> TryGetRunAsync(string workflowRunId,
                                                             CancellationToken cancelToken = default)
         {
             throw new NotImplementedException("@ToDo");
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.GetFirstRunAsync(CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.GetFirstRunAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
-        public Task<IWorkflowRun> GetFirstRunAsync(CancellationToken cancelToken = default)
+        public Task<IWorkflowRunHandle> GetFirstRunAsync(CancellationToken cancelToken = default)
         {
             throw new NotImplementedException("@ToDo");
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.GetLatestRunAsync(CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.GetLatestRunAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
-        public Task<IWorkflowRun> GetLatestRunAsync(CancellationToken cancelToken = default)
+        public Task<IWorkflowRunHandle> GetLatestRunAsync(CancellationToken cancelToken = default)
         {
             throw new NotImplementedException("@ToDo");
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.TryGetFinalRunAsync(CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.TryGetFinalRunAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
-        public Task<TryResult<IWorkflowRun>> TryGetFinalRunAsync(CancellationToken cancelToken = default)
+        public Task<TryResult<IWorkflowRunHandle>> TryGetFinalRunAsync(CancellationToken cancelToken = default)
         {
             throw new NotImplementedException("@ToDo");
         }
@@ -275,12 +275,12 @@ namespace Temporal.WorkflowClient
 
         // <summary>Lists runs of this chain only. Needs overloads with filters? Not in V-Alpha.</summary>
         // @ToDo
-        //Task<IPaginatedReadOnlyCollectionPage<IWorkflowRun>> ListRunsAsync(NeedsDesign oneOrMoreArgs);
+        //Task<IPaginatedReadOnlyCollectionPage<IWorkflowRunHandle>> ListRunsAsync(NeedsDesign oneOrMoreArgs);
 
         #region --- APIs to interact with the chain ---
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.GetResultAsync{TResult}(CancellationToken)"/>)
+        /// See the implemented iface API (<see cref="IWorkflowHandle.GetResultAsync{TResult}(CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
         public async Task<TResult> GetResultAsync<TResult>(CancellationToken cancelToken = default)
@@ -290,7 +290,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.AwaitConclusionAync(CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.AwaitConclusionAync(CancellationToken)"/>) for a detailed description.
         /// </summary>
         public async Task<IWorkflowRunResult> AwaitConclusionAsync(CancellationToken cancelToken)
         {
@@ -325,7 +325,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.SignalAsync(String, CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.SignalAsync(String, CancellationToken)"/>) for a detailed description.
         /// </summary>
         public Task SignalAsync(string signalName,
                                 CancellationToken cancelToken = default)
@@ -334,7 +334,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.SignalAsync{TSigArg}(String, TSigArg, CancellationToken)"/>)
+        /// See the implemented iface API (<see cref="IWorkflowHandle.SignalAsync{TSigArg}(String, TSigArg, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
         public Task SignalAsync<TSigArg>(string signalName,
@@ -345,7 +345,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.QueryAsync{TResult}(String, CancellationToken)"/>)
+        /// See the implemented iface API (<see cref="IWorkflowHandle.QueryAsync{TResult}(String, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
         public Task<TResult> QueryAsync<TResult>(string queryName,
@@ -355,7 +355,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.QueryAsync{TQryArg, TResult}(String, TQryArg, CancellationToken)"/>)
+        /// See the implemented iface API (<see cref="IWorkflowHandle.QueryAsync{TQryArg, TResult}(String, TQryArg, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
         public Task<TResult> QueryAsync<TQryArg, TResult>(string queryName,
@@ -366,7 +366,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.RequestCancellationAsync(CancellationToken)"/>)
+        /// See the implemented iface API (<see cref="IWorkflowHandle.RequestCancellationAsync(CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
         public Task RequestCancellationAsync(CancellationToken cancelToken = default)
@@ -375,7 +375,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.TerminateAsync(String, CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.TerminateAsync(String, CancellationToken)"/>) for a detailed description.
         /// </summary>
         public Task TerminateAsync(string reason = null,
                                    CancellationToken cancelToken = default)
@@ -384,7 +384,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowChain.TerminateAsync{TTermArg}(String, TTermArg, CancellationToken)"/>)
+        /// See the implemented iface API (<see cref="IWorkflowHandle.TerminateAsync{TTermArg}(String, TTermArg, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
         public Task TerminateAsync<TTermArg>(string reason,
@@ -492,12 +492,12 @@ namespace Temporal.WorkflowClient
                 return;
             }
 
-            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowChain)} instance"
-                                              + $" is already bound to a particular workflow chain. A \"bound\" {nameof(IWorkflowChain)}"
+            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowHandle)} instance"
+                                              + $" is already bound to a particular workflow chain. A \"bound\" {nameof(IWorkflowHandle)}"
                                               + $" instance represents a particular workflow chain with a particular {nameof(WorkflowId)}"
-                                              + $" and a particular {nameof(WorkflowChainId)} (aka the {nameof(IWorkflowRun.WorkflowRunId)}"
+                                              + $" and a particular {nameof(WorkflowChainId)} (aka the {nameof(IWorkflowRunHandle.WorkflowRunId)}"
                                               + $" of the first workflow run in the chain). On contrary, an \"unbound\""
-                                              + $" {nameof(IWorkflowChain)} represents the last (aka most recent) workflow chain"
+                                              + $" {nameof(IWorkflowHandle)} represents the last (aka most recent) workflow chain"
                                               + $" with of all chains with a particular {nameof(WorkflowId)}.");
         }
 
@@ -508,15 +508,15 @@ namespace Temporal.WorkflowClient
                 return;
             }
 
-            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowChain)} instance"
+            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowHandle)} instance"
                                               + $" is not bound to a particular workflow chain. An \"unbound\""
-                                              + $" {nameof(IWorkflowChain)} represents the last (aka most recent) workflow chain"
-                                              + $" with the given {nameof(WorkflowId)}. An {nameof(IWorkflowChain)} gets bound"
+                                              + $" {nameof(IWorkflowHandle)} represents the last (aka most recent) workflow chain"
+                                              + $" with the given {nameof(WorkflowId)}. An {nameof(IWorkflowHandle)} gets bound"
                                               + $" when any API is invoked that requires an interaction with an actual workflow"
                                               + $" run on the server. At that time, the most recent workflow run (and, therefore,"
                                               + $" the workflow chain that contains it) is determined, and the"
-                                              + $" {nameof(IWorkflowChain)} instance is bound to that chain. From then on the"
-                                              + $" {nameof(IWorkflowChain)} instance always refers to that particular workflow"
+                                              + $" {nameof(IWorkflowHandle)} instance is bound to that chain. From then on the"
+                                              + $" {nameof(IWorkflowHandle)} instance always refers to that particular workflow"
                                               + $" chain, even if more recent chains are started later. To bind this instance,"
                                               + $" call `{nameof(EnsureBoundAsync)}(..)` or any other API that interacts with a"
                                               + $" particular workflow.");
@@ -542,7 +542,7 @@ namespace Temporal.WorkflowClient
         }
 
         // Uncomment finalizer IFF `Dispose(bool disposing)` has code for freeing unmanaged resources.
-        // ~WorkflowChain()
+        // ~WorkflowHandle()
         // {
         //     Dispose(disposing: false);
         // }

@@ -2,7 +2,7 @@
 
 namespace Temporal.WorkflowClient
 {
-    internal class WorkflowRun
+    internal class WorkflowRunHandle
     {
         public static void ValidateWorkflowRunId(string workflowRunId)
         {

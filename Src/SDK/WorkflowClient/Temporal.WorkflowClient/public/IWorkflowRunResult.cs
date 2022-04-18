@@ -18,12 +18,12 @@ namespace Temporal.WorkflowClient
         Exception Failure { get; }
 
         bool IsContinuedAsNew { get; }
-        bool TryGetContinuationRun(out IWorkflowRun continuationRunHandle);
+        bool TryGetContinuationRun(out IWorkflowRunHandle continuationRunHandle);
 
         object ConclusionEventAttributes { get; }
 
         /// <summary>
-        /// Throws for any Status except OK. This method backs GetResult(..) on WorkflowChain.
+        /// Throws for any Status except OK. This method backs GetResult(..) on WorkflowHandle.
         /// </summary>
         TVal GetValue<TVal>();
         PayloadContainers.IUnnamed GetValue();
