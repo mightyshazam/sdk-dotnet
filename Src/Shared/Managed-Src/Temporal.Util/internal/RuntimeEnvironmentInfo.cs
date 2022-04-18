@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 
 #endif
 
-namespace Candidly.Util
+namespace Temporal.Util
 {
     internal class RuntimeEnvironmentInfo
     {

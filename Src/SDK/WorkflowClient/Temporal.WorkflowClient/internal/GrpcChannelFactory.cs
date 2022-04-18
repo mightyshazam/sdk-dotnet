@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Candidly.Util;
+using Temporal.Util;
 using Grpc.Core;
 
 namespace Temporal.WorkflowClient

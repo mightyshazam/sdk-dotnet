@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Candidly.Util;
+using Temporal.Util;
 using Grpc.Core;
 using Temporal.Common;
 using Temporal.Serialization;

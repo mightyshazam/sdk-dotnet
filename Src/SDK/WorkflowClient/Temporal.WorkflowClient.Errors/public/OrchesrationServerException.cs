@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 using System.Text;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Failure.V1;
 
 namespace Temporal.WorkflowClient.Errors

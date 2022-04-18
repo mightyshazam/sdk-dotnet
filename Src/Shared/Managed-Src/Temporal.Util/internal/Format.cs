@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Candidly.Util
+namespace Temporal.Util
 {
     internal static class Format
     {

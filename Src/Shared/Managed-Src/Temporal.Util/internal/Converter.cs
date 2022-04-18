@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Candidly.Util
+namespace Temporal.Util
 {
     /// <summary>
     /// It would be great to call this type <c>Convert</c>, but that name is already taken by the framework. :)

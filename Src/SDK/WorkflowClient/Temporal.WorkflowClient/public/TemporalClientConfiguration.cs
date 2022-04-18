@@ -26,7 +26,7 @@ namespace Temporal.WorkflowClient
         /// <param name="namespace">The Temporal namespace to use by the clients based on the configuration being created.</param>
         public static TemporalClientConfiguration ForTemporalCloud(string @namespace)
         {
-            Candidly.Util.Validate.NotNull(@namespace);
+            Temporal.Util.Validate.NotNull(@namespace);
 
             return new TemporalClientConfiguration()
             {
@@ -39,9 +39,9 @@ namespace Temporal.WorkflowClient
 
         public static void Validate(TemporalClientConfiguration config)
         {
-            Candidly.Util.Validate.NotNull(config);
-            Candidly.Util.Validate.NotNullOrWhitespace(config.ServiceHost);
-            Candidly.Util.Validate.NotNullOrWhitespace(config.Namespace);
+            Temporal.Util.Validate.NotNull(config);
+            Temporal.Util.Validate.NotNullOrWhitespace(config.ServiceHost);
+            Temporal.Util.Validate.NotNullOrWhitespace(config.Namespace);
 
             if (config.ServicePort <= 0)
             {

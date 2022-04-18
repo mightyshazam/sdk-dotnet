@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Common.V1;
 using Temporal.Api.Enums.V1;
 using Temporal.Api.History.V1;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Enums.V1;
 using Temporal.Common;
 using Temporal.WorkflowClient;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Common.V1;
 using Temporal.Api.Enums.V1;
 using Temporal.Common;

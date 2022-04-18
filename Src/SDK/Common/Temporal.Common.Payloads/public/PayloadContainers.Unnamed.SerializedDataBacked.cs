@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Serialization;
 
 using SerializedPayload = Temporal.Api.Common.V1.Payload;

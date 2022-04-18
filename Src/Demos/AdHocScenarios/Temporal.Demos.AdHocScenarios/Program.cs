@@ -1,5 +1,5 @@
 ﻿using System;
-using Candidly.Util;
+using Temporal.Util;
 
 namespace Temporal.Demos.AdHocScenarios
 {

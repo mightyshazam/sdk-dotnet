@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Candidly.Util
+namespace Temporal.Util
 {
     internal static class Validate
     {

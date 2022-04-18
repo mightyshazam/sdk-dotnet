@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 
-namespace Candidly.Util
+namespace Temporal.Util
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0049:Simplify Names", Justification = "Uses Framework type names for correspondance with native types.")]
     public static class HResult
