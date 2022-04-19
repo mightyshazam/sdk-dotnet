@@ -7,6 +7,7 @@ using Grpc.Core;
 using Temporal.Common;
 using Temporal.Serialization;
 using Temporal.WorkflowClient.Interceptors;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {

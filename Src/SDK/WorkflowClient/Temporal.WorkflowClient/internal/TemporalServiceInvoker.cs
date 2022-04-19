@@ -14,6 +14,7 @@ using Temporal.Api.WorkflowService.V1;
 using Temporal.Serialization;
 using Temporal.WorkflowClient.Errors;
 using Temporal.WorkflowClient.Interceptors;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {

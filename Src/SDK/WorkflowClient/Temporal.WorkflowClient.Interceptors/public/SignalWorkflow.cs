@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient.Interceptors
 {
@@ -10,6 +11,7 @@ namespace Temporal.WorkflowClient.Interceptors
                                          string WorkflowRunId,
                                          string SignalName,
                                          TSigArg SignalArg,
+                                         SignalWorkflowConfiguration SignalConfig,
                                          CancellationToken CancelToken);
 
         public class Result : IWorkflowChainBindingResult

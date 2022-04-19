@@ -6,6 +6,7 @@ using Temporal.Api.Enums.V1;
 using Temporal.Api.WorkflowService.V1;
 using Temporal.Common;
 using Temporal.WorkflowClient.Interceptors;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {
@@ -426,7 +427,7 @@ namespace Temporal.WorkflowClient
         public Task SignalAsync(string signalName,
                                 CancellationToken cancelToken = default)
         {
-            return SignalAsync(signalName, Payload.Void, cancelToken);
+            return SignalAsync(signalName, Payload.Void, signalConfig: null, cancelToken);
         }
 
         /// <summary>
@@ -435,6 +436,7 @@ namespace Temporal.WorkflowClient
         /// </summary>
         public async Task SignalAsync<TSigArg>(string signalName,
                                                TSigArg signalArg,
+                                               SignalWorkflowConfiguration signalConfig = null,
                                                CancellationToken cancelToken = default)
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
@@ -444,6 +446,8 @@ namespace Temporal.WorkflowClient
                                                                     : await BeginBindingOperationIfRequiredAsync(cancelToken);
             try
             {
+                signalConfig = signalConfig ?? SignalWorkflowConfiguration.Default;
+
                 ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
                 SignalWorkflow.Result resSigWf = await invokerPipeline.SignalWorkflowAsync(
                                                                     new SignalWorkflow.Arguments<TSigArg>(Namespace,
@@ -452,6 +456,7 @@ namespace Temporal.WorkflowClient
                                                                                                           WorkflowRunId: null,
                                                                                                           signalName,
                                                                                                           signalArg,
+                                                                                                          signalConfig,
                                                                                                           cancelToken));
                 ApplyBindingIfOperationSucceeded(bindingLock, resSigWf);
             }

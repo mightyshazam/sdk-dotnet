@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Temporal.Util;
+using Temporal.WorkflowClient.OperationConfigurations;
 using GrpcStatusCode = Grpc.Core.StatusCode;
 
 namespace Temporal.WorkflowClient.Interceptors

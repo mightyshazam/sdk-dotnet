@@ -2,7 +2,7 @@
 using Temporal.Api.Common.V1;
 using Temporal.Api.Enums.V1;
 
-namespace Temporal.WorkflowClient
+namespace Temporal.WorkflowClient.OperationConfigurations
 {
     public class StartWorkflowChainConfiguration
     {

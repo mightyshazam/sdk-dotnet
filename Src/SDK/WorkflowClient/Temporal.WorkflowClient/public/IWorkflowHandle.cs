@@ -5,6 +5,7 @@ using Temporal.Api.Enums.V1;
 using Temporal.Api.WorkflowService.V1;
 using Temporal.Common;
 using Temporal.WorkflowClient.Interceptors;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {
@@ -118,6 +119,7 @@ namespace Temporal.WorkflowClient
 
         Task SignalAsync<TSigArg>(string signalName,
                                   TSigArg signalArg,
+                                  SignalWorkflowConfiguration signalConfig = null,
                                   CancellationToken cancelToken = default);
 
         Task<TResult> QueryAsync<TResult>(string queryName,

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Temporal.Common;
 using Temporal.WorkflowClient.Interceptors;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {
