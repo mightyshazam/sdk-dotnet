@@ -100,7 +100,7 @@ namespace Temporal.WorkflowClient.Errors
         public ApplicationException(string message, string type, bool isNonRetryable, PayloadContainers.IUnnamed details, Exception innerException)
             : base(FormatMessage(message, type, isNonRetryable, details, innerException), innerException)
         {
-            Type = Format.TrimSafe(type);
+            Type = type ?? String.Empty;
             IsNonRetryable = isNonRetryable;
             Details = details ?? new PayloadContainers.Unnamed.Empty();
         }
@@ -114,7 +114,7 @@ namespace Temporal.WorkflowClient.Errors
 
             try
             {
-                Type = Format.TrimSafe(info.GetString(nameof(Type)));
+                Type = info.GetString(nameof(Type)) ?? String.Empty;
             }
             catch (SerializationException)
             {
