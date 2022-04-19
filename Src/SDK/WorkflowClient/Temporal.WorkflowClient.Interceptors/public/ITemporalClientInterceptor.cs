@@ -8,24 +8,9 @@ namespace Temporal.WorkflowClient.Interceptors
     {
         void Init(ITemporalClientInterceptor nextInterceptor);
 
-        Task<StartWorkflowResult> StartWorkflowAsync<TWfArg>(string @namespace,
-                                                             string workflowId,
-                                                             string workflowTypeName,
-                                                             string taskQueue,
-                                                             TWfArg workflowArg,
-                                                             StartWorkflowChainConfiguration workflowConfig,
-                                                             bool throwOnAlreadyExists,
-                                                             CancellationToken cancelToken);
-
-        Task<IWorkflowRunResult> AwaitConclusionAsync(string @namespace,
-                                                      string workflowId,
-                                                      string workflowChainId,
-                                                      string workflowRunId,
-                                                      bool followChain,
-                                                      CancellationToken cancelToken);
-
-        Task<string> GetLatestWorkflowChainId(string @namespace,
-                                              string workflowId,
-                                              CancellationToken cancelToken);
+        Task<StartWorkflow.Result> StartWorkflowAsync<TWfArg>(StartWorkflow.Arguments<TWfArg> opArgs);
+        Task<IWorkflowRunResult> AwaitConclusionAsync(AwaitConclusion.Arguments opArgs);
+        Task<GetLatestWorkflowChainId.Result> GetLatestWorkflowChainIdAsync(GetLatestWorkflowChainId.Arguments opArgs);
+        Task<DescribeWorkflowRun.Result> DescribeWorkflowRunAsync(DescribeWorkflowRun.Arguments opArgs);
     }
 }

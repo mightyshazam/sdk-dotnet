@@ -72,84 +72,78 @@ namespace Temporal.WorkflowClient
             // @ToDo: handle _grpcServiceClient.
         }
 
-        public async Task<StartWorkflowResult> StartWorkflowAsync<TWfArg>(string @namespace,
-                                                                          string workflowId,
-                                                                          string workflowTypeName,
-                                                                          string taskQueue,
-                                                                          TWfArg workflowArg,
-                                                                          StartWorkflowChainConfiguration workflowConfig,
-                                                                          bool throwOnAlreadyExists,
-                                                                          CancellationToken cancelToken)
+        public async Task<StartWorkflow.Result> StartWorkflowAsync<TWfArg>(StartWorkflow.Arguments<TWfArg> opArgs)
         {
             // We need to re-validate the arguments because they went through the interceptor pipeline and thus may have
             // been modified by customer code.
 
-            Validate.NotNullOrWhitespace(@namespace);
-            Validate.NotNullOrWhitespace(workflowId);
-            Validate.NotNullOrWhitespace(workflowTypeName);
-            Validate.NotNullOrWhitespace(taskQueue);
-            Validate.NotNull(workflowConfig);
+            Validate.NotNull(opArgs);
+            Validate.NotNullOrWhitespace(opArgs.Namespace);
+            Validate.NotNullOrWhitespace(opArgs.WorkflowId);
+            Validate.NotNullOrWhitespace(opArgs.WorkflowTypeName);
+            Validate.NotNullOrWhitespace(opArgs.TaskQueue);
+            Validate.NotNull(opArgs.WorkflowConfig);
 
             StartWorkflowExecutionRequest reqStartWf = new()
             {
-                Namespace = @namespace,
-                WorkflowId = workflowId,
-                WorkflowType = new WorkflowType() { Name = workflowTypeName },
-                TaskQueue = new TaskQueue() { Name = taskQueue },
+                Namespace = opArgs.Namespace,
+                WorkflowId = opArgs.WorkflowId,
+                WorkflowType = new WorkflowType() { Name = opArgs.WorkflowTypeName },
+                TaskQueue = new TaskQueue() { Name = opArgs.TaskQueue },
 
-                Identity = workflowConfig.Identity ?? _clientIdentityMarker,
+                Identity = opArgs.WorkflowConfig.Identity ?? _clientIdentityMarker,
                 RequestId = Guid.NewGuid().ToString("D"),
             };
 
             Payloads serializedWfArg = new();
-            PayloadConverter.Serialize(_payloadConverter, workflowArg, serializedWfArg);
+            PayloadConverter.Serialize(_payloadConverter, opArgs.WorkflowArg, serializedWfArg);
 
             if (_payloadCodec != null)
             {
-                serializedWfArg = await _payloadCodec.EncodeAsync(serializedWfArg, cancelToken);
+                serializedWfArg = await _payloadCodec.EncodeAsync(serializedWfArg, opArgs.CancelToken);
             }
 
-            if (workflowConfig.WorkflowExecutionTimeout.HasValue)
+            if (opArgs.WorkflowConfig.WorkflowExecutionTimeout.HasValue)
             {
-                reqStartWf.WorkflowExecutionTimeout = Duration.FromTimeSpan(workflowConfig.WorkflowExecutionTimeout.Value);
+                reqStartWf.WorkflowExecutionTimeout = Duration.FromTimeSpan(opArgs.WorkflowConfig.WorkflowExecutionTimeout.Value);
             }
 
-            if (workflowConfig.WorkflowRunTimeout.HasValue)
+            if (opArgs.WorkflowConfig.WorkflowRunTimeout.HasValue)
             {
-                reqStartWf.WorkflowRunTimeout = Duration.FromTimeSpan(workflowConfig.WorkflowRunTimeout.Value);
+                reqStartWf.WorkflowRunTimeout = Duration.FromTimeSpan(opArgs.WorkflowConfig.WorkflowRunTimeout.Value);
             }
 
-            if (workflowConfig.WorkflowTaskTimeout.HasValue)
+            if (opArgs.WorkflowConfig.WorkflowTaskTimeout.HasValue)
             {
-                reqStartWf.WorkflowTaskTimeout = Duration.FromTimeSpan(workflowConfig.WorkflowTaskTimeout.Value);
+                reqStartWf.WorkflowTaskTimeout = Duration.FromTimeSpan(opArgs.WorkflowConfig.WorkflowTaskTimeout.Value);
             }
 
-            if (workflowConfig.WorkflowIdReusePolicy.HasValue)
+            if (opArgs.WorkflowConfig.WorkflowIdReusePolicy.HasValue)
             {
-                reqStartWf.WorkflowIdReusePolicy = workflowConfig.WorkflowIdReusePolicy.Value;
+                reqStartWf.WorkflowIdReusePolicy = opArgs.WorkflowConfig.WorkflowIdReusePolicy.Value;
             }
 
-            if (workflowConfig.RetryPolicy != null)
+            if (opArgs.WorkflowConfig.RetryPolicy != null)
             {
-                reqStartWf.RetryPolicy = workflowConfig.RetryPolicy;
+                reqStartWf.RetryPolicy = opArgs.WorkflowConfig.RetryPolicy;
             }
 
-            if (workflowConfig.CronSchedule != null)
+            if (opArgs.WorkflowConfig.CronSchedule != null)
             {
-                reqStartWf.CronSchedule = workflowConfig.CronSchedule;
+                reqStartWf.CronSchedule = opArgs.WorkflowConfig.CronSchedule;
             }
 
-            if (workflowConfig.Memo != null)
-            {
-                throw new NotImplementedException("@ToDo");
-            }
-
-            if (workflowConfig.SearchAttributes != null)
+            if (opArgs.WorkflowConfig.Memo != null)
             {
                 throw new NotImplementedException("@ToDo");
             }
 
-            if (workflowConfig.Header != null)
+            if (opArgs.WorkflowConfig.SearchAttributes != null)
+            {
+                throw new NotImplementedException("@ToDo");
+            }
+
+            if (opArgs.WorkflowConfig.Header != null)
             {
                 throw new NotImplementedException("@ToDo");
             }
@@ -157,10 +151,10 @@ namespace Temporal.WorkflowClient
             StatusCode rpcStatusCode = StatusCode.OK;
 
             StartWorkflowExecutionResponse resStartWf = await InvokeRemoteCallAndProcessErrors(
-                    @namespace,
-                    workflowId,
+                    opArgs.Namespace,
+                    opArgs.WorkflowId,
                     workflowRunId: null,
-                    cancelToken,
+                    opArgs.CancelToken,
                     async (cancelCallToken) =>
                     {
                         try
@@ -170,7 +164,7 @@ namespace Temporal.WorkflowClient
                                                                                         deadline: null,
                                                                                         cancelCallToken);
                         }
-                        catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.AlreadyExists && !throwOnAlreadyExists)
+                        catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.AlreadyExists && !opArgs.ThrowOnAlreadyExists)
                         {
                             // Workflow already exists, but user specified not to throw in such cases => make a note and swallow exception.
                             // Other errors will be processed by invoker-wrapper.
@@ -181,11 +175,11 @@ namespace Temporal.WorkflowClient
 
             if (rpcStatusCode == StatusCode.OK)
             {
-                return new StartWorkflowResult(resStartWf.RunId, StartWorkflowResult.Status.OK);
+                return new StartWorkflow.Result(resStartWf.RunId);
             }
             else if (rpcStatusCode == StatusCode.AlreadyExists)
             {
-                return new StartWorkflowResult(null, StartWorkflowResult.Status.AlreadyExists);
+                return new StartWorkflow.Result(rpcStatusCode);
             }
             else
             {
@@ -196,38 +190,36 @@ namespace Temporal.WorkflowClient
         }
 
         [SuppressMessage("Style", "IDE0010:Add missing cases", Justification = "Switch on `historyEvent.EventType` only needs to process terminal events.")]
-        public async Task<IWorkflowRunResult> AwaitConclusionAsync(string @namespace,
-                                                                   string workflowId,
-                                                                   string workflowChainId,
-                                                                   string workflowRunId,
-                                                                   bool followChain,
-                                                                   CancellationToken cancelToken)
+        public async Task<IWorkflowRunResult> AwaitConclusionAsync(AwaitConclusion.Arguments opArgs)
         {
             const string ServerCallDescriptionForDebug = nameof(_grpcServiceClient.GetWorkflowExecutionHistoryAsync)
                                                        + "(..) with HistoryEventFilterType = CloseEvent";
             const string ScenarioDescriptionForDebug = nameof(AwaitConclusionAsync);
 
-            WorkflowRunHandle.ValidateWorkflowRunId(workflowRunId);
+            Validate.NotNull(opArgs);
+            WorkflowRunHandle.ValidateWorkflowRunId(opArgs.WorkflowRunId);
+
+            string workflowRunId = opArgs.WorkflowRunId;
 
             WorkflowRunResultFactory runResultFactory = new WorkflowRunResultFactory(_payloadConverter,
                                                                                      _payloadCodec,
-                                                                                     @namespace,
-                                                                                     workflowId,
-                                                                                     workflowChainId);
+                                                                                     opArgs.Namespace,
+                                                                                     opArgs.WorkflowId,
+                                                                                     opArgs.WorkflowChainId);
 
             ByteString nextPageToken = ByteString.Empty;
 
             // Spin and retry or follow the workflow chain until we get a result, or hit a non-retriable error, or time out:
             while (true)
             {
-                cancelToken.ThrowIfCancellationRequested();
+                opArgs.CancelToken.ThrowIfCancellationRequested();
 
                 GetWorkflowExecutionHistoryRequest reqGetWfExHist = new()
                 {
-                    Namespace = @namespace,
+                    Namespace = opArgs.Namespace,
                     Execution = new WorkflowExecution()
                     {
-                        WorkflowId = workflowId,
+                        WorkflowId = opArgs.WorkflowId,
                         RunId = workflowRunId ?? String.Empty,
                     },
                     NextPageToken = nextPageToken,
@@ -236,10 +228,10 @@ namespace Temporal.WorkflowClient
                 };
 
                 GetWorkflowExecutionHistoryResponse resGetWfExHist = await InvokeRemoteCallAndProcessErrors(
-                        @namespace,
-                        workflowId,
+                        opArgs.Namespace,
+                        opArgs.WorkflowId,
                         workflowRunId,
-                        cancelToken,
+                        opArgs.CancelToken,
                         (cancelCallToken) => _grpcServiceClient.GetWorkflowExecutionHistoryAsync(reqGetWfExHist,
                                                                                                  headers: null,
                                                                                                  deadline: null,
@@ -268,7 +260,7 @@ namespace Temporal.WorkflowClient
                     {
                         string nextRunId = historyEvent.WorkflowExecutionFailedEventAttributes.NewExecutionRunId;
 
-                        if (!String.IsNullOrWhiteSpace(nextRunId) && followChain)
+                        if (!String.IsNullOrWhiteSpace(nextRunId) && opArgs.FollowWorkflowChain)
                         {
                             workflowRunId = nextRunId;
                             continue;
@@ -276,14 +268,14 @@ namespace Temporal.WorkflowClient
 
                         return await runResultFactory.ForCompletedAsync(workflowRunId,
                                                                         historyEvent.WorkflowExecutionCompletedEventAttributes,
-                                                                        cancelToken);
+                                                                        opArgs.CancelToken);
                     }
 
                     case EventType.WorkflowExecutionFailed:
                     {
                         string nextRunId = historyEvent.WorkflowExecutionFailedEventAttributes.NewExecutionRunId;
 
-                        if (!String.IsNullOrWhiteSpace(nextRunId) && followChain)
+                        if (!String.IsNullOrWhiteSpace(nextRunId) && opArgs.FollowWorkflowChain)
                         {
                             workflowRunId = nextRunId;
                             continue;
@@ -291,14 +283,14 @@ namespace Temporal.WorkflowClient
 
                         return await runResultFactory.ForFailedAsync(workflowRunId,
                                                                      historyEvent.WorkflowExecutionFailedEventAttributes,
-                                                                     cancelToken);
+                                                                     opArgs.CancelToken);
                     }
 
                     case EventType.WorkflowExecutionTimedOut:
                     {
                         string nextRunId = historyEvent.WorkflowExecutionTimedOutEventAttributes.NewExecutionRunId;
 
-                        if (!String.IsNullOrWhiteSpace(nextRunId) && followChain)
+                        if (!String.IsNullOrWhiteSpace(nextRunId) && opArgs.FollowWorkflowChain)
                         {
                             workflowRunId = nextRunId;
                             continue;
@@ -306,21 +298,21 @@ namespace Temporal.WorkflowClient
 
                         return await runResultFactory.ForTimedOutAsync(workflowRunId,
                                                                        historyEvent.WorkflowExecutionTimedOutEventAttributes,
-                                                                       cancelToken);
+                                                                       opArgs.CancelToken);
                     }
 
                     case EventType.WorkflowExecutionCanceled:
                     {
                         return await runResultFactory.ForCanceledAsync(workflowRunId,
                                                                        historyEvent.WorkflowExecutionCanceledEventAttributes,
-                                                                       cancelToken);
+                                                                       opArgs.CancelToken);
                     }
 
                     case EventType.WorkflowExecutionTerminated:
                     {
                         return await runResultFactory.ForTerminatedAsync(workflowRunId,
                                                                          historyEvent.WorkflowExecutionTerminatedEventAttributes,
-                                                                         cancelToken);
+                                                                         opArgs.CancelToken);
                     }
 
                     case EventType.WorkflowExecutionContinuedAsNew:
@@ -335,7 +327,7 @@ namespace Temporal.WorkflowClient
                                                                      + $" NewExecutionRunId={nextRunId.QuoteOrNull()}");
                         }
 
-                        if (followChain)
+                        if (opArgs.FollowWorkflowChain)
                         {
                             workflowRunId = nextRunId;
                             continue;
@@ -343,7 +335,7 @@ namespace Temporal.WorkflowClient
 
                         return await runResultFactory.ForContinuedAsNewAsync(workflowRunId,
                                                                              historyEvent.WorkflowExecutionContinuedAsNewEventAttributes,
-                                                                             cancelToken);
+                                                                             opArgs.CancelToken);
                     }
 
                     default:
@@ -356,28 +348,27 @@ namespace Temporal.WorkflowClient
             }  // while(true)
         }
 
-        public async Task<string> GetLatestWorkflowChainId(string @namespace,
-                                                           string workflowId,
-                                                           CancellationToken cancelToken)
+        public async Task<GetLatestWorkflowChainId.Result> GetLatestWorkflowChainIdAsync(GetLatestWorkflowChainId.Arguments opArgs)
         {
             const string ServerCallDescriptionForDebug = nameof(_grpcServiceClient.GetWorkflowExecutionHistoryAsync)
                                                        + "(..) with HistoryEventFilterType = AllEvent";
             const string ScenarioDescriptionForDebug = nameof(GetLatestWorkflowChainId);
 
-            Validate.NotNullOrWhitespace(@namespace);
-            Validate.NotNullOrWhitespace(workflowId);
+            Validate.NotNull(opArgs);
+            Validate.NotNullOrWhitespace(opArgs.Namespace);
+            Validate.NotNullOrWhitespace(opArgs.WorkflowId);
 
             // Spin and retry or follow the workflow chain until we get a result, or hit a non-retriable error, or time out:
             while (true)
             {
-                cancelToken.ThrowIfCancellationRequested();
+                opArgs.CancelToken.ThrowIfCancellationRequested();
 
                 GetWorkflowExecutionHistoryRequest reqGetWfExHist = new()
                 {
-                    Namespace = @namespace,
+                    Namespace = opArgs.Namespace,
                     Execution = new WorkflowExecution()
                     {
-                        WorkflowId = workflowId,
+                        WorkflowId = opArgs.WorkflowId,
                         RunId = String.Empty,
                     },
                     NextPageToken = ByteString.Empty,
@@ -386,10 +377,10 @@ namespace Temporal.WorkflowClient
                 };
 
                 GetWorkflowExecutionHistoryResponse resGetWfExHist = await InvokeRemoteCallAndProcessErrors(
-                        @namespace,
-                        workflowId,
+                        opArgs.Namespace,
+                        opArgs.WorkflowId,
                         workflowRunId: null,
-                        cancelToken,
+                        opArgs.CancelToken,
                         (cancelCallToken) => _grpcServiceClient.GetWorkflowExecutionHistoryAsync(reqGetWfExHist,
                                                                                                  headers: null,
                                                                                                  deadline: null,
@@ -418,7 +409,7 @@ namespace Temporal.WorkflowClient
                                                                      + $" is {firstRunId.QuoteOrNull()}.");
                         }
 
-                        return firstRunId;
+                        return new GetLatestWorkflowChainId.Result(firstRunId);
                     }
                 }
 

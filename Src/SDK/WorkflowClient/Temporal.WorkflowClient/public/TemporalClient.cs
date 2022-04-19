@@ -164,13 +164,13 @@ namespace Temporal.WorkflowClient
         }
 
         public async Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
-                                                                                        string workflowTypeName,
-                                                                                        string taskQueue,
-                                                                                        TWfArg workflowArg,
-                                                                                        string signalName,
-                                                                                        TSigArg signalArg,
-                                                                                        StartWorkflowChainConfiguration workflowConfig = null,
-                                                                                        CancellationToken cancelToken = default)
+                                                                                         string workflowTypeName,
+                                                                                         string taskQueue,
+                                                                                         TWfArg workflowArg,
+                                                                                         string signalName,
+                                                                                         TSigArg signalArg,
+                                                                                         StartWorkflowChainConfiguration workflowConfig = null,
+                                                                                         CancellationToken cancelToken = default)
         {
             IWorkflowHandle workflow = CreateWorkflowHandle(workflowId);
             await workflow.StartWithSignalAsync<TWfArg, TSigArg>(workflowTypeName, taskQueue,
@@ -203,9 +203,9 @@ namespace Temporal.WorkflowClient
         /// <param name="workflowChainId">The workflow-run-id of the <em>first workflow run</em> of the <em>workflow chain</em> represented
         /// by the newly created handle.</param>
         public IWorkflowHandle CreateWorkflowHandle(string workflowId,
-                                                   string workflowChainId)
+                                                    string workflowChainId)
         {
-            throw new NotImplementedException("@ToDo");
+            return new WorkflowHandle(this, workflowId, workflowChainId);
         }
         #endregion CreateWorkflowHandle(..)
 
@@ -216,7 +216,7 @@ namespace Temporal.WorkflowClient
         /// Create an workflow run handle that represents a workflow run with the specified <c>workflowId</c> and <c>workflowRunId</c>.
         /// </summary>
         public IWorkflowRunHandle CreateWorkflowRunHandle(string workflowId,
-                                                    string workflowRunId)
+                                                          string workflowRunId)
         {
             throw new NotImplementedException("@ToDo");
         }
