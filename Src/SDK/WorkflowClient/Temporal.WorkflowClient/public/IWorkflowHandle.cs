@@ -83,11 +83,6 @@ namespace Temporal.WorkflowClient
         /// <exception cref="InvalidOperationException">If this handle is not bound.</exception>
         IWorkflowRunHandle CreateRunHandle(string workflowRunId);
 
-        /// <summary>Get the run with the specified run-id, if such run exists within THIS workflow chain.
-        /// Return false if not found.</summary>
-        Task<TryResult<IWorkflowRunHandle>> TryGetRunAsync(string workflowRunId,
-                                                           CancellationToken cancelToken = default);
-
         /// <summary>Get the first / initial run in this chain.</summary>
         Task<IWorkflowRunHandle> GetFirstRunAsync(CancellationToken cancelToken = default);
 

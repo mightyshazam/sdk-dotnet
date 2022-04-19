@@ -18,12 +18,14 @@ namespace Temporal.WorkflowClient.Interceptors
 
         public class Result : IWorkflowChainBindingResult
         {
-            public Result(DescribeWorkflowExecutionResponse describeWorkflowExecutionResponse)
+            public Result(DescribeWorkflowExecutionResponse describeWorkflowExecutionResponse, string workflowChainId)
             {
                 Validate.NotNull(describeWorkflowExecutionResponse);
+                ValidateWorkflowProperty.ChainId.Bound(workflowChainId);
 
                 DescribeWorkflowExecutionResponse = describeWorkflowExecutionResponse;
                 StatusCode = GrpcStatusCode.OK;
+                WorkflowChainId = workflowChainId;
             }
 
             public Result(GrpcStatusCode statusCode)
@@ -36,16 +38,17 @@ namespace Temporal.WorkflowClient.Interceptors
 
                 DescribeWorkflowExecutionResponse = null;
                 StatusCode = statusCode;
+                WorkflowChainId = null;
             }
 
             public DescribeWorkflowExecutionResponse DescribeWorkflowExecutionResponse { get; }
+            public string WorkflowChainId { get; }
             public GrpcStatusCode StatusCode { get; }
 
             public bool TryGetBoundWorkflowChainId(out string workflowChainId)
             {
-                throw new NotImplementedException($"@ToDo. Once supported by the server, this will be extracted"
-                                                + $" from {nameof(DescribeWorkflowExecutionResponse)}."
-                                                + " See https://github.com/temporalio/temporal/issues/2691");
+                workflowChainId = WorkflowChainId;
+                return (workflowChainId != null);
             }
         }
     }

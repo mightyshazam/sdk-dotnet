@@ -272,7 +272,7 @@ namespace Temporal.Demos.AdHocScenarios
                 {
                     WorkflowId = "qqq", // String.Empty,
                     RunId = "f47f5aa0-8740-4c40-b4df-b40c44c5f068",
-                }                
+                }
             };
 
             DescribeWorkflowExecutionResponse resDesrcWfExecWf;
@@ -323,7 +323,7 @@ namespace Temporal.Demos.AdHocScenarios
                 Console.WriteLine($"Could not Signal Workflow Execution. {rpcEx}");
                 return;
             }
-            
+
             Console.WriteLine("\n----------- } Workflow SignalWorkflowAsync ----------- -----------\n");
         }
 

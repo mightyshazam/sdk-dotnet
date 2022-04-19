@@ -3,10 +3,8 @@ using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Temporal.Util;
 using Temporal.Api.Enums.V1;
-using Temporal.Common;
 using Temporal.WorkflowClient;
 using Temporal.WorkflowClient.Errors;
-using Temporal.WorkflowClient.Interceptors;
 
 namespace Temporal.Demos.AdHocScenarios
 {

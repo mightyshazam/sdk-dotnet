@@ -79,7 +79,7 @@ namespace Temporal.WorkflowClient
 
             Validate.NotNull(opArgs);
             Validate.NotNullOrWhitespace(opArgs.Namespace);
-            Validate.NotNullOrWhitespace(opArgs.WorkflowId);
+            ValidateWorkflowProperty.WorkflowId(opArgs.WorkflowId);
             Validate.NotNullOrWhitespace(opArgs.WorkflowTypeName);
             Validate.NotNullOrWhitespace(opArgs.TaskQueue);
             Validate.NotNull(opArgs.WorkflowConfig);
@@ -197,15 +197,31 @@ namespace Temporal.WorkflowClient
             const string ScenarioDescriptionForDebug = nameof(AwaitConclusionAsync);
 
             Validate.NotNull(opArgs);
-            WorkflowRunHandle.ValidateWorkflowRunId(opArgs.WorkflowRunId);
+            Validate.NotNullOrWhitespace(opArgs.Namespace);
+            ValidateWorkflowProperty.RunId.SpecifiedOrUnspecified(opArgs.WorkflowRunId);
 
             string workflowRunId = opArgs.WorkflowRunId;
+            string workflowChainId = opArgs.WorkflowChainId;
+
+            if (workflowChainId == null)
+            {
+                // Temporary workaround for missing server features. See comments in the invoked method for more info.
+                HackyWorkflowChainBindingInfo bindingInfo = await GetBindingInfoTemporaryHackAsync(opArgs.Namespace,
+                                                                                                   opArgs.WorkflowId,
+                                                                                                   workflowRunId,
+                                                                                                   opArgs.CancelToken);
+                if (bindingInfo.IsSuccess)
+                {
+                    workflowRunId = bindingInfo.WorkflowRunId;
+                    workflowChainId = bindingInfo.WorkflowChainId;
+                }
+            }
 
             WorkflowRunResultFactory runResultFactory = new WorkflowRunResultFactory(_payloadConverter,
                                                                                      _payloadCodec,
                                                                                      opArgs.Namespace,
                                                                                      opArgs.WorkflowId,
-                                                                                     opArgs.WorkflowChainId);
+                                                                                     workflowChainId);
 
             ByteString nextPageToken = ByteString.Empty;
 
@@ -348,15 +364,16 @@ namespace Temporal.WorkflowClient
             }  // while(true)
         }
 
-        public async Task<GetLatestWorkflowChainId.Result> GetLatestWorkflowChainIdAsync(GetLatestWorkflowChainId.Arguments opArgs)
+        public async Task<GetWorkflowChainId.Result> GetWorkflowChainIdAsync(GetWorkflowChainId.Arguments opArgs)
         {
             const string ServerCallDescriptionForDebug = nameof(_grpcServiceClient.GetWorkflowExecutionHistoryAsync)
                                                        + "(..) with HistoryEventFilterType = AllEvent";
-            const string ScenarioDescriptionForDebug = nameof(GetLatestWorkflowChainId);
+            const string ScenarioDescriptionForDebug = nameof(GetWorkflowChainIdAsync);
 
             Validate.NotNull(opArgs);
             Validate.NotNullOrWhitespace(opArgs.Namespace);
-            Validate.NotNullOrWhitespace(opArgs.WorkflowId);
+            ValidateWorkflowProperty.WorkflowId(opArgs.WorkflowId);
+            ValidateWorkflowProperty.RunId.SpecifiedOrUnspecified(opArgs.WorkflowRunId);
 
             // Spin and retry or follow the workflow chain until we get a result, or hit a non-retriable error, or time out:
             while (true)
@@ -369,7 +386,7 @@ namespace Temporal.WorkflowClient
                     Execution = new WorkflowExecution()
                     {
                         WorkflowId = opArgs.WorkflowId,
-                        RunId = String.Empty,
+                        RunId = opArgs.WorkflowRunId ?? String.Empty,
                     },
                     NextPageToken = ByteString.Empty,
                     WaitNewEvent = false,
@@ -379,7 +396,7 @@ namespace Temporal.WorkflowClient
                 GetWorkflowExecutionHistoryResponse resGetWfExHist = await InvokeRemoteCallAndProcessErrors(
                         opArgs.Namespace,
                         opArgs.WorkflowId,
-                        workflowRunId: null,
+                        opArgs.WorkflowRunId,
                         opArgs.CancelToken,
                         (cancelCallToken) => _grpcServiceClient.GetWorkflowExecutionHistoryAsync(reqGetWfExHist,
                                                                                                  headers: null,
@@ -409,13 +426,115 @@ namespace Temporal.WorkflowClient
                                                                      + $" is {firstRunId.QuoteOrNull()}.");
                         }
 
-                        return new GetLatestWorkflowChainId.Result(firstRunId);
+                        return new GetWorkflowChainId.Result(firstRunId);
                     }
                 }
 
                 throw new MalformedServerResponseException(ServerCallDescriptionForDebug,
                                                            ScenarioDescriptionForDebug,
                                                            $"No event with type `WorkflowExecutionStarted` found on the initial history page.");
+            }  // while(true)
+        }
+
+        public async Task<DescribeWorkflowRun.Result> DescribeWorkflowRunAsync(DescribeWorkflowRun.Arguments opArgs)
+        {
+            Validate.NotNull(opArgs);
+            Validate.NotNullOrWhitespace(opArgs.Namespace);
+            ValidateWorkflowProperty.WorkflowId(opArgs.WorkflowId);
+            ValidateWorkflowProperty.ChainId.BoundOrUnbound(opArgs.WorkflowChainId);
+            ValidateWorkflowProperty.RunId.SpecifiedOrUnspecified(opArgs.WorkflowRunId);
+
+            string workflowRunId = opArgs.WorkflowRunId;
+            string workflowChainId = opArgs.WorkflowChainId;
+
+            // Do not call the hack for a null workflowRunId to prevent infinite recursion.
+            // Instead, if noth runId and chainId are null, descrive the very latest run of all chains and then
+            // use the runId obtained by doing that to fill in the chainId later.
+            if (workflowRunId != null && workflowChainId == null)
+            {
+                // Temporary workaround for missing server features. See comments in the invoked method for more info.
+                HackyWorkflowChainBindingInfo bindingInfo = await GetBindingInfoTemporaryHackAsync(opArgs.Namespace,
+                                                                                                   opArgs.WorkflowId,
+                                                                                                   workflowRunId,
+                                                                                                   opArgs.CancelToken);
+                if (bindingInfo.IsSuccess)
+                {
+                    workflowRunId = bindingInfo.WorkflowRunId;
+                    workflowChainId = bindingInfo.WorkflowChainId;
+                }
+            }
+
+            // Spin and retry or follow the workflow chain until we get a result, or hit a non-retriable error, or time out:
+            while (true)
+            {
+                opArgs.CancelToken.ThrowIfCancellationRequested();
+
+                DescribeWorkflowExecutionRequest reqDescrWfExec = new()
+                {
+                    Namespace = opArgs.Namespace,
+                    Execution = new WorkflowExecution()
+                    {
+                        WorkflowId = opArgs.WorkflowId,
+                        RunId = opArgs.WorkflowRunId ?? String.Empty,
+                    }
+                };
+
+                StatusCode rpcStatusCode = StatusCode.OK;
+
+                DescribeWorkflowExecutionResponse resDescrWfExec = await InvokeRemoteCallAndProcessErrors(
+                        opArgs.Namespace,
+                        opArgs.WorkflowId,
+                        opArgs.WorkflowRunId,
+                        opArgs.CancelToken,
+                        async (cancelCallToken) =>
+                        {
+                            try
+                            {
+                                return await _grpcServiceClient.DescribeWorkflowExecutionAsync(reqDescrWfExec,
+                                                                                               headers: null,
+                                                                                               deadline: null,
+                                                                                               cancelCallToken);
+                            }
+                            catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.NotFound && !opArgs.ThrowIfWorkflowNotFound)
+                            {
+                                // Workflow not found, but user specified not to throw in such cases => make a note and swallow exception.
+                                // Other errors will be processed by invoker-wrapper.
+                                rpcStatusCode = rpcEx.StatusCode;
+                                return null;
+                            }
+                        });
+
+                if (rpcStatusCode == StatusCode.OK)
+                {
+                    workflowRunId = resDescrWfExec.WorkflowExecutionInfo.Execution.RunId;
+
+                    // If we did not apply the temnporary binding hack earlier, do it now.
+                    if (workflowRunId != null && workflowChainId == null)
+                    {
+                        // Temporary workaround for missing server features. See comments in the invoked method for more info.
+                        HackyWorkflowChainBindingInfo bindingInfo = await GetBindingInfoTemporaryHackAsync(opArgs.Namespace,
+                                                                                                           opArgs.WorkflowId,
+                                                                                                           workflowRunId,
+                                                                                                           opArgs.CancelToken);
+                        if (bindingInfo.IsSuccess)
+                        {
+                            workflowRunId = bindingInfo.WorkflowRunId;
+                            workflowChainId = bindingInfo.WorkflowChainId;
+                        }
+                    }
+
+                    return new DescribeWorkflowRun.Result(resDescrWfExec, workflowChainId);
+                }
+                else if (rpcStatusCode == StatusCode.NotFound)
+                {
+                    return new DescribeWorkflowRun.Result(rpcStatusCode);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unexpected {nameof(rpcStatusCode)}"
+                                                      + $" ({rpcStatusCode.ToString()} = {((int) rpcStatusCode)})."
+                                                      + $" Possible SDK bug. Please report on: https://github.com/temporalio/sdk-dotnet/issues");
+                }
             }  // while(true)
         }
 
@@ -463,5 +582,49 @@ namespace Temporal.WorkflowClient
                 throw new TemporalServiceException(@namespace, workflowId, workflowRunId, ex);
             }
         }
+
+        /// <summary>
+        /// Many server APIs optonally take a null workflow-run-id to refer to the latest run/chain for the given workflow-run-id.
+        /// In the long-term, we will make such APIs return the workflow-chain-id that was chosen (aka the first-run-of-the-chain-id).
+        /// Once that is done, and we will bind this chain to that ID.
+        /// Details in the issue tracker: https://github.com/temporalio/temporal/issues/2691
+        /// !! At that time we must remove this method and all calls to it !!
+        /// !! https://github.com/temporalio/sdk-dotnet/issues/29 !!
+        /// Until then we use this method to ensure in the same observable behaviour at the cost of one additional remote call
+        /// before the first remote call the chain makes.
+        /// Note that since some server APIs do not even take a chain id (aka first run) parameter, there is still a racy
+        /// behaviour difference and chain handle can "pverflow". We still use this hack to simulate the "binding".
+        /// </summary>
+        private async Task<HackyWorkflowChainBindingInfo> GetBindingInfoTemporaryHackAsync(string @namespace,
+                                                                                           string workflowId,
+                                                                                           string workflowRunId,
+                                                                                           CancellationToken cancelToken)
+        {
+            if (workflowRunId == null)
+            {
+                DescribeWorkflowRun.Result resDescrWfExec = await DescribeWorkflowRunAsync(
+                                                                        new DescribeWorkflowRun.Arguments(@namespace,
+                                                                                                          workflowId,
+                                                                                                          WorkflowChainId: null,
+                                                                                                          WorkflowRunId: null,
+                                                                                                          ThrowIfWorkflowNotFound: false,
+                                                                                                          cancelToken));
+                if (resDescrWfExec.StatusCode != StatusCode.OK)
+                {
+                    return new HackyWorkflowChainBindingInfo(false, null, null);
+                }
+
+                workflowRunId = resDescrWfExec.DescribeWorkflowExecutionResponse.WorkflowExecutionInfo.Execution.RunId;
+            }
+
+            GetWorkflowChainId.Result resGetWfChainId = await GetWorkflowChainIdAsync(
+                                                                        new GetWorkflowChainId.Arguments(@namespace,
+                                                                                                         workflowId,
+                                                                                                         workflowRunId,
+                                                                                                         cancelToken));
+            return new HackyWorkflowChainBindingInfo(true, resGetWfChainId.WorkflowChainId, workflowRunId);
+        }
+
+        private record HackyWorkflowChainBindingInfo(bool IsSuccess, string WorkflowChainId, string WorkflowRunId);
     }
 }

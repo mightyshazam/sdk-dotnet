@@ -11,15 +11,6 @@ namespace Temporal.WorkflowClient
 {
     internal class WorkflowHandle : IWorkflowHandle, IDisposable
     {
-        public static void ValidateWorkflowChainId(string workflowChainId)
-        {
-            if (workflowChainId != null && String.IsNullOrWhiteSpace(workflowChainId))
-            {
-                throw new ArgumentException($"{nameof(workflowChainId)} must be either null, or a non-empty-or-whitespace string."
-                                          + $" However, \"{workflowChainId}\" was specified.");
-            }
-        }
-
         private readonly TemporalClient _temporalClient;
 
         private SemaphoreSlim _bindigLock = null;
@@ -37,8 +28,8 @@ namespace Temporal.WorkflowClient
         {
             Validate.NotNull(temporalClient);
             Validate.NotNullOrWhitespace(temporalClient.Namespace);
-            Validate.NotNullOrWhitespace(workflowId);
-            ValidateWorkflowChainId(workflowChainId);
+            ValidateWorkflowProperty.WorkflowId(workflowId);
+            ValidateWorkflowProperty.ChainId.BoundOrUnbound(workflowChainId);
 
             _temporalClient = temporalClient;
 
@@ -134,7 +125,6 @@ namespace Temporal.WorkflowClient
         private async Task<DescribeWorkflowRun.Result> DescribeAsync(bool throwIfWorkflowNotFound, CancellationToken cancelToken)
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
-            await ForceBindHackAsync(cancelToken);
 
             (SemaphoreSlim bindingLock, string workflowChainId) = IsBound
                                                                     ? (null, WorkflowChainId)
@@ -188,18 +178,27 @@ namespace Temporal.WorkflowClient
                 await _temporalClient.EnsureConnectedAsync(cancelToken);
 
                 ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                GetLatestWorkflowChainId.Result resLatestWfChain = await invokerPipeline.GetLatestWorkflowChainIdAsync(
-                                                                                new GetLatestWorkflowChainId.Arguments(Namespace,
-                                                                                                                       WorkflowId,
-                                                                                                                       cancelToken));
+                GetWorkflowChainId.Result resLatestWfChain = await invokerPipeline.GetWorkflowChainIdAsync(
+                                                                                new GetWorkflowChainId.Arguments(Namespace,
+                                                                                                                 WorkflowId,
+                                                                                                                 WorkflowRunId: null,
+                                                                                                                 cancelToken));
                 string chainId = resLatestWfChain.WorkflowChainId;
 
-                ValidateWorkflowChainId(chainId);
-                if (chainId != null)
+                try
                 {
-                    Bind(chainId);
+                    ValidateWorkflowProperty.ChainId.Bound(chainId);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to {nameof(BindToLatestChainAsync)}(..) because"
+                                                      + $" {nameof(invokerPipeline.GetWorkflowChainIdAsync)}(..)"
+                                                      + $" returned an invalid null {nameof(chainId)}-value. This may be an SDK bug."
+                                                      + $" Please report: https://github.com/temporalio/sdk-dotnet/issues.",
+                                                        ex);
                 }
 
+                Bind(chainId);
                 return chainId;
             }
             finally
@@ -295,25 +294,43 @@ namespace Temporal.WorkflowClient
         /// <summary>
         /// See the implemented iface API (<see cref="IWorkflowHandle.GetFirstRunAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
-        public Task<IWorkflowRunHandle> GetFirstRunAsync(CancellationToken cancelToken = default)
+        public async Task<IWorkflowRunHandle> GetFirstRunAsync(CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            if (IsBound)
+            {
+                return CreateRunHandle(WorkflowChainId);
+            }
+
+            string chainId = await BindToLatestChainAsync(cancelToken);
+            return CreateRunHandle(chainId);
         }
 
         /// <summary>
         /// See the implemented iface API (<see cref="IWorkflowHandle.GetLatestRunAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
-        public Task<IWorkflowRunHandle> GetLatestRunAsync(CancellationToken cancelToken = default)
+        public async Task<IWorkflowRunHandle> GetLatestRunAsync(CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            DescribeWorkflowExecutionResponse resDescrWf = await DescribeAsync(cancelToken);
+            return CreateRunHandle(resDescrWf.WorkflowExecutionInfo.Execution.RunId);
         }
 
         /// <summary>
         /// See the implemented iface API (<see cref="IWorkflowHandle.TryGetFinalRunAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
-        public Task<TryResult<IWorkflowRunHandle>> TryGetFinalRunAsync(CancellationToken cancelToken = default)
+        public async Task<TryResult<IWorkflowRunHandle>> TryGetFinalRunAsync(CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            DescribeWorkflowExecutionResponse resDescrWf = await DescribeAsync(cancelToken);
+            WorkflowExecutionStatus status = resDescrWf.WorkflowExecutionInfo.Status;
+
+            if (status.IsTerminal())
+            {
+                IWorkflowRunHandle finalRun = CreateRunHandle(resDescrWf.WorkflowExecutionInfo.Execution.RunId);
+                return new TryResult<IWorkflowRunHandle>(finalRun);
+            }
+            else
+            {
+                return new TryResult<IWorkflowRunHandle>(isSuccess: false, null);
+            }
         }
 
         #endregion --- GetXxxRunAsync(..) APIs to access a specific run ---
@@ -340,7 +357,6 @@ namespace Temporal.WorkflowClient
         public async Task<IWorkflowRunResult> AwaitConclusionAsync(CancellationToken cancelToken)
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
-            await ForceBindHackAsync(cancelToken);
 
             (SemaphoreSlim bindingLock, string workflowChainId) = IsBound
                                                                     ? (null, WorkflowChainId)
@@ -445,21 +461,6 @@ namespace Temporal.WorkflowClient
         #endregion --- APIs to interact with the chain ---
 
         #region Privates
-
-        /// <summary>
-        /// Many server APIs optonally take a null workflow-run-id to refer to the latest run/chain for the given workflow-run-id.
-        /// In the long-term, we will make such APIs return the workflow-chain-id that was chosen (aka the first-run-of-the-chain-id).
-        /// Once that is done, and we will bind this chain to that ID.
-        /// ! At that time we must remove this method and all calls to it !
-        /// Until then we use this method to ensure in the same observable behaviour art the cost of one additional remote call
-        /// before the first remote call the chain makes.
-        /// </summary>
-        /// <param name="cancelToken"></param>
-        /// <returns></returns>
-        private Task ForceBindHackAsync(CancellationToken cancelToken)
-        {
-            return EnsureBoundAsync(cancelToken);
-        }
 
         private ITemporalClientInterceptor GetOrCreateServiceInvocationPipeline()
         {

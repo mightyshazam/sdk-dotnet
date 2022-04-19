@@ -35,13 +35,14 @@ namespace Temporal.WorkflowClient
             Validate.NotNullOrWhitespace(@namespace);
             Namespace = @namespace;
 
-            Validate.NotNullOrWhitespace(workflowId);
+            ValidateWorkflowProperty.WorkflowId(workflowId);
             WorkflowId = workflowId;
 
-            WorkflowHandle.ValidateWorkflowChainId(workflowChainId);
+            ValidateWorkflowProperty.ChainId.Bound(workflowChainId);
             _workflowChainId = workflowChainId;
 
-            WorkflowRunHandle.ValidateWorkflowRunId(workflowRunId);
+            // @ToDo: Once server supports it, change to 
+            ValidateWorkflowProperty.RunId.Specified(workflowRunId);
             WorkflowRunId = workflowRunId;
 
             Status = status;
@@ -49,7 +50,7 @@ namespace Temporal.WorkflowClient
 
             _serializedPayloads = serializedPayloads; // may be null
 
-            WorkflowRunHandle.ValidateWorkflowRunId(continuationRunId);
+            ValidateWorkflowProperty.RunId.SpecifiedOrUnspecified(continuationRunId);
             _continuationRunId = continuationRunId;
 
             ConclusionEventAttributes = conclusionEventAttributes;

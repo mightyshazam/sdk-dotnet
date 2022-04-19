@@ -8,11 +8,15 @@ namespace Temporal.WorkflowClient
 {
     public interface IWorkflowRunHandle
     {
+        #region --- APIs to access basic workflow run details ---
+
         string Namespace { get; }
         string WorkflowId { get; }
         string WorkflowRunId { get; }
 
         Task<IWorkflowHandle> GetOwnerWorkflowAsync(CancellationToken cancelToken = default);
+
+        #endregion --- APIs to access basic workflow run details ---
 
         #region --- APIs to describe the workflow run ---
 
@@ -26,7 +30,7 @@ namespace Temporal.WorkflowClient
 
         #endregion --- APIs to describe the workflow run ---
 
-        #region --- APIs to interact with the chain ---
+        #region --- APIs to interact with the workflow run ---
 
         /// <summary>The returned task completes when this chain finishes (incl. any runs not yet started). Performs long poll.</summary>
         Task<TResult> GetResultAsync<TResult>(CancellationToken cancelToken = default);
@@ -55,6 +59,6 @@ namespace Temporal.WorkflowClient
         Task TerminateAsync<TTermArg>(string reason,
                                       TTermArg details,
                                       CancellationToken cancelToken = default);
-        #endregion --- APIs to interact with the chain ---
+        #endregion --- APIs to interact with the workflow run ---
     }
 }

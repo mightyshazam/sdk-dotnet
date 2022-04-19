@@ -10,7 +10,7 @@ namespace Temporal.WorkflowClient.Interceptors
 
         Task<StartWorkflow.Result> StartWorkflowAsync<TWfArg>(StartWorkflow.Arguments<TWfArg> opArgs);
         Task<IWorkflowRunResult> AwaitConclusionAsync(AwaitConclusion.Arguments opArgs);
-        Task<GetLatestWorkflowChainId.Result> GetLatestWorkflowChainIdAsync(GetLatestWorkflowChainId.Arguments opArgs);
+        Task<GetWorkflowChainId.Result> GetWorkflowChainIdAsync(GetWorkflowChainId.Arguments opArgs);
         Task<DescribeWorkflowRun.Result> DescribeWorkflowRunAsync(DescribeWorkflowRun.Arguments opArgs);
     }
 }

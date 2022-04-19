@@ -26,8 +26,8 @@ namespace Temporal.WorkflowClient
         {
             Validate.NotNull(payloadConverter);
             Validate.NotNullOrWhitespace(@namespace);
-            Validate.NotNullOrWhitespace(workflowId);
-            WorkflowHandle.ValidateWorkflowChainId(workflowChainId);
+            ValidateWorkflowProperty.WorkflowId(workflowId);
+            ValidateWorkflowProperty.ChainId.Bound(workflowChainId);  // Once the server supports it, this will be updated form each event attrs.
 
             _payloadConverter = payloadConverter;
             _payloadCodec = payloadCodec;  // may be null
