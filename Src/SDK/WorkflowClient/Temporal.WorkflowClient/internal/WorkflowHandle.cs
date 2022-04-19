@@ -234,14 +234,14 @@ namespace Temporal.WorkflowClient
 
                 ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
                 StartWorkflow.Result resStartWf = await invokerPipeline.StartWorkflowAsync(
-                                                            new StartWorkflow.Arguments<TWfArg>(Namespace,
-                                                                                                WorkflowId,
-                                                                                                workflowTypeName,
-                                                                                                taskQueue,
-                                                                                                workflowArg,
-                                                                                                workflowConfig,
-                                                                                                throwIfWorkflowChainAlreadyExists,
-                                                                                                cancelToken));
+                                                            new StartWorkflow.Arguments.StartOnly<TWfArg>(Namespace,
+                                                                                                          WorkflowId,
+                                                                                                          workflowTypeName,
+                                                                                                          taskQueue,
+                                                                                                          workflowArg,
+                                                                                                          workflowConfig,
+                                                                                                          throwIfWorkflowChainAlreadyExists,
+                                                                                                          cancelToken));
                 if (resStartWf.TryGetBoundWorkflowChainId(out string boundChainId))
                 {
                     Bind(boundChainId);
@@ -264,15 +264,47 @@ namespace Temporal.WorkflowClient
         /// <see cref="IWorkflowHandle.StartWithSignalAsync{TWfArg, TSigArg}(String, String, TWfArg, String, TSigArg, StartWorkflowChainConfiguration, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
-        public Task<StartWorkflow.Result> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
-                                                                                string taskQueue,
-                                                                                TWfArg workflowArg,
-                                                                                string signalName,
-                                                                                TSigArg signalArg,
-                                                                                StartWorkflowChainConfiguration workflowConfig = null,
-                                                                                CancellationToken cancelToken = default)
+        public async Task<StartWorkflow.Result> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
+                                                                                      string taskQueue,
+                                                                                      TWfArg workflowArg,
+                                                                                      string signalName,
+                                                                                      TSigArg signalArg,
+                                                                                      StartWorkflowChainConfiguration workflowConfig = null,
+                                                                                      CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            ValidateIsNotBound();
+            await _temporalClient.EnsureConnectedAsync(cancelToken);
+
+            SemaphoreSlim bindingLock = GetOrCreateBindingLock();
+            await bindingLock.WaitAsync(cancelToken);
+            try
+            {
+                ValidateIsNotBound();
+
+                workflowConfig = workflowConfig ?? StartWorkflowChainConfiguration.Default;
+
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
+                StartWorkflow.Result resStartWf = await invokerPipeline.StartWorkflowWithSignalAsync(
+                                                            new StartWorkflow.Arguments.WithSignal<TWfArg, TSigArg>(Namespace,
+                                                                                                                    WorkflowId,
+                                                                                                                    workflowTypeName,
+                                                                                                                    taskQueue,
+                                                                                                                    workflowArg,
+                                                                                                                    signalName,
+                                                                                                                    signalArg,
+                                                                                                                    workflowConfig,
+                                                                                                                    cancelToken));
+                if (resStartWf.TryGetBoundWorkflowChainId(out string boundChainId))
+                {
+                    Bind(boundChainId);
+                }
+
+                return resStartWf;
+            }
+            finally
+            {
+                bindingLock.Release();
+            }
         }
 
         #endregion StartWithSignalAsync(..)

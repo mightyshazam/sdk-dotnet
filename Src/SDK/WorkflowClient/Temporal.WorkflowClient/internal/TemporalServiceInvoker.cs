@@ -72,7 +72,7 @@ namespace Temporal.WorkflowClient
             // @ToDo: handle _grpcServiceClient.
         }
 
-        public async Task<StartWorkflow.Result> StartWorkflowAsync<TWfArg>(StartWorkflow.Arguments<TWfArg> opArgs)
+        public async Task<StartWorkflow.Result> StartWorkflowAsync<TWfArg>(StartWorkflow.Arguments.StartOnly<TWfArg> opArgs)
         {
             // We need to re-validate the arguments because they went through the interceptor pipeline and thus may have
             // been modified by customer code.
@@ -84,17 +84,6 @@ namespace Temporal.WorkflowClient
             Validate.NotNullOrWhitespace(opArgs.TaskQueue);
             Validate.NotNull(opArgs.WorkflowConfig);
 
-            StartWorkflowExecutionRequest reqStartWf = new()
-            {
-                Namespace = opArgs.Namespace,
-                WorkflowId = opArgs.WorkflowId,
-                WorkflowType = new WorkflowType() { Name = opArgs.WorkflowTypeName },
-                TaskQueue = new TaskQueue() { Name = opArgs.TaskQueue },
-
-                Identity = opArgs.WorkflowConfig.Identity ?? _clientIdentityMarker,
-                RequestId = Guid.NewGuid().ToString("D"),
-            };
-
             Payloads serializedWfArg = new();
             PayloadConverter.Serialize(_payloadConverter, opArgs.WorkflowArg, serializedWfArg);
 
@@ -102,6 +91,18 @@ namespace Temporal.WorkflowClient
             {
                 serializedWfArg = await _payloadCodec.EncodeAsync(serializedWfArg, opArgs.CancelToken);
             }
+
+            StartWorkflowExecutionRequest reqStartWf = new()
+            {
+                Namespace = opArgs.Namespace,
+                WorkflowId = opArgs.WorkflowId,
+                WorkflowType = new WorkflowType() { Name = opArgs.WorkflowTypeName },
+                TaskQueue = new TaskQueue() { Name = opArgs.TaskQueue },
+                Input = serializedWfArg,
+
+                Identity = opArgs.WorkflowConfig.Identity ?? _clientIdentityMarker,
+                RequestId = Guid.NewGuid().ToString("D"),
+            };
 
             if (opArgs.WorkflowConfig.WorkflowExecutionTimeout.HasValue)
             {
@@ -135,17 +136,20 @@ namespace Temporal.WorkflowClient
 
             if (opArgs.WorkflowConfig.Memo != null)
             {
-                throw new NotImplementedException("@ToDo");
+                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.Memo)}"
+                                               + " is not supported in this SDK version (@ToDo)");
             }
 
             if (opArgs.WorkflowConfig.SearchAttributes != null)
             {
-                throw new NotImplementedException("@ToDo");
+                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.SearchAttributes)}"
+                                               + " is not supported in this SDK version (@ToDo)");
             }
 
             if (opArgs.WorkflowConfig.Header != null)
             {
-                throw new NotImplementedException("@ToDo");
+                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.Header)}"
+                                               + " is not supported in this SDK version (@ToDo)");
             }
 
             StatusCode rpcStatusCode = StatusCode.OK;
@@ -164,7 +168,7 @@ namespace Temporal.WorkflowClient
                                                                                         deadline: null,
                                                                                         cancelCallToken);
                         }
-                        catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.AlreadyExists && !opArgs.ThrowOnAlreadyExists)
+                        catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.AlreadyExists && !opArgs.ThrowIfWorkflowChainAlreadyExists)
                         {
                             // Workflow already exists, but user specified not to throw in such cases => make a note and swallow exception.
                             // Other errors will be processed by invoker-wrapper.
@@ -187,6 +191,111 @@ namespace Temporal.WorkflowClient
                                                   + $" ({rpcStatusCode.ToString()} = {((int) rpcStatusCode)})."
                                                   + $" Possible SDK bug. Please report.");
             }
+        }
+
+        public async Task<StartWorkflow.Result> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(StartWorkflow.Arguments.WithSignal<TWfArg, TSigArg> opArgs)
+        {
+            // We need to re-validate the arguments because they went through the interceptor pipeline and thus may have
+            // been modified by customer code.
+
+            Validate.NotNull(opArgs);
+            Validate.NotNullOrWhitespace(opArgs.Namespace);
+            ValidateWorkflowProperty.WorkflowId(opArgs.WorkflowId);
+            Validate.NotNullOrWhitespace(opArgs.WorkflowTypeName);
+            Validate.NotNullOrWhitespace(opArgs.TaskQueue);
+            Validate.NotNullOrWhitespace(opArgs.SignalName);
+            Validate.NotNull(opArgs.WorkflowConfig);
+
+            Payloads serializedWfArg = new();
+            PayloadConverter.Serialize(_payloadConverter, opArgs.WorkflowArg, serializedWfArg);
+
+            if (_payloadCodec != null)
+            {
+                serializedWfArg = await _payloadCodec.EncodeAsync(serializedWfArg, opArgs.CancelToken);
+            }
+
+            Payloads serializedSigArg = new();
+            PayloadConverter.Serialize(_payloadConverter, opArgs.SignalArg, serializedSigArg);
+
+            if (_payloadCodec != null)
+            {
+                serializedSigArg = await _payloadCodec.EncodeAsync(serializedSigArg, opArgs.CancelToken);
+            }
+
+            SignalWithStartWorkflowExecutionRequest reqSigWithStartWf = new()
+            {
+                Namespace = opArgs.Namespace,
+                WorkflowId = opArgs.WorkflowId,
+                WorkflowType = new WorkflowType() { Name = opArgs.WorkflowTypeName },
+                TaskQueue = new TaskQueue() { Name = opArgs.TaskQueue },
+                Input = serializedWfArg,
+
+                Identity = opArgs.WorkflowConfig.Identity ?? _clientIdentityMarker,
+                RequestId = Guid.NewGuid().ToString("D"),
+
+                SignalName = opArgs.SignalName,
+                SignalInput = serializedSigArg,
+            };
+
+            if (opArgs.WorkflowConfig.WorkflowExecutionTimeout.HasValue)
+            {
+                reqSigWithStartWf.WorkflowExecutionTimeout = Duration.FromTimeSpan(opArgs.WorkflowConfig.WorkflowExecutionTimeout.Value);
+            }
+
+            if (opArgs.WorkflowConfig.WorkflowRunTimeout.HasValue)
+            {
+                reqSigWithStartWf.WorkflowRunTimeout = Duration.FromTimeSpan(opArgs.WorkflowConfig.WorkflowRunTimeout.Value);
+            }
+
+            if (opArgs.WorkflowConfig.WorkflowTaskTimeout.HasValue)
+            {
+                reqSigWithStartWf.WorkflowTaskTimeout = Duration.FromTimeSpan(opArgs.WorkflowConfig.WorkflowTaskTimeout.Value);
+            }
+
+            if (opArgs.WorkflowConfig.WorkflowIdReusePolicy.HasValue)
+            {
+                reqSigWithStartWf.WorkflowIdReusePolicy = opArgs.WorkflowConfig.WorkflowIdReusePolicy.Value;
+            }
+
+            if (opArgs.WorkflowConfig.RetryPolicy != null)
+            {
+                reqSigWithStartWf.RetryPolicy = opArgs.WorkflowConfig.RetryPolicy;
+            }
+
+            if (opArgs.WorkflowConfig.CronSchedule != null)
+            {
+                reqSigWithStartWf.CronSchedule = opArgs.WorkflowConfig.CronSchedule;
+            }
+
+            if (opArgs.WorkflowConfig.Memo != null)
+            {
+                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.Memo)}"
+                                               + " is not supported in this SDK version (@ToDo)");
+            }
+
+            if (opArgs.WorkflowConfig.SearchAttributes != null)
+            {
+                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.SearchAttributes)}"
+                                               + " is not supported in this SDK version (@ToDo)");
+            }
+
+            if (opArgs.WorkflowConfig.Header != null)
+            {
+                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.Header)}"
+                                               + " is not supported in this SDK version (@ToDo)");
+            }
+
+            SignalWithStartWorkflowExecutionResponse resSigWithStartWf = await InvokeRemoteCallAndProcessErrors(
+                    opArgs.Namespace,
+                    opArgs.WorkflowId,
+                    workflowRunId: null,
+                    opArgs.CancelToken,
+                    (cancelCallToken) => _grpcServiceClient.SignalWithStartWorkflowExecutionAsync(reqSigWithStartWf,
+                                                                                                  headers: null,
+                                                                                                  deadline: null,
+                                                                                                  cancelCallToken));
+
+            return new StartWorkflow.Result(resSigWithStartWf.RunId);
         }
 
         [SuppressMessage("Style", "IDE0010:Add missing cases", Justification = "Switch on `historyEvent.EventType` only needs to process terminal events.")]
