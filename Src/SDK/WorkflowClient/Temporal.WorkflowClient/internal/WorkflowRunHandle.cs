@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Temporal.Api.Enums.V1;
 using Temporal.Api.WorkflowService.V1;
+using Temporal.Common;
 using Temporal.Util;
 
 namespace Temporal.WorkflowClient
@@ -83,7 +84,7 @@ namespace Temporal.WorkflowClient
         public Task SignalAsync(string signalName,
                                 CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            return SignalAsync(signalName, Payload.Void, cancelToken);
         }
 
         public Task SignalAsync<TSigArg>(string signalName,
@@ -96,7 +97,7 @@ namespace Temporal.WorkflowClient
         public Task<TResult> QueryAsync<TResult>(string queryName,
                                                  CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            return QueryAsync<IPayload.Void, TResult>(queryName, Payload.Void, cancelToken);
         }
 
         public Task<TResult> QueryAsync<TQryArg, TResult>(string queryName,
@@ -115,7 +116,7 @@ namespace Temporal.WorkflowClient
         public Task TerminateAsync(string reason = null,
                                    CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            return TerminateAsync(reason, Payload.Void, cancelToken);
         }
 
         public Task TerminateAsync<TTermArg>(string reason,

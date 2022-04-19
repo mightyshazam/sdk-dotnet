@@ -326,11 +326,11 @@ namespace Temporal.WorkflowClient
                 }
             }
 
-            WorkflowRunResultFactory runResultFactory = new WorkflowRunResultFactory(_payloadConverter,
-                                                                                     _payloadCodec,
-                                                                                     opArgs.Namespace,
-                                                                                     opArgs.WorkflowId,
-                                                                                     workflowChainId);
+            AwaitConclusionResultFactory runResultFactory = new(_payloadConverter,
+                                                                _payloadCodec,
+                                                                opArgs.Namespace,
+                                                                opArgs.WorkflowId,
+                                                                workflowChainId);
 
             ByteString nextPageToken = ByteString.Empty;
 
@@ -545,7 +545,7 @@ namespace Temporal.WorkflowClient
             }  // while(true)
         }
 
-        public async Task<DescribeWorkflowRun.Result> DescribeWorkflowRunAsync(DescribeWorkflowRun.Arguments opArgs)
+        public async Task<DescribeWorkflow.Result> DescribeWorkflowAsync(DescribeWorkflow.Arguments opArgs)
         {
             Validate.NotNull(opArgs);
             Validate.NotNullOrWhitespace(opArgs.Namespace);
@@ -632,11 +632,11 @@ namespace Temporal.WorkflowClient
                         }
                     }
 
-                    return new DescribeWorkflowRun.Result(resDescrWfExec, workflowChainId);
+                    return new DescribeWorkflow.Result(resDescrWfExec, workflowChainId);
                 }
                 else if (rpcStatusCode == StatusCode.NotFound)
                 {
-                    return new DescribeWorkflowRun.Result(rpcStatusCode);
+                    return new DescribeWorkflow.Result(rpcStatusCode);
                 }
                 else
                 {
@@ -645,6 +645,26 @@ namespace Temporal.WorkflowClient
                                                       + $" Possible SDK bug. Please report on: https://github.com/temporalio/sdk-dotnet/issues");
                 }
             }  // while(true)
+        }
+
+        public Task<SignalWorkflow.Result> SignalWorkflowAsync<TSigArg>(SignalWorkflow.Arguments<TSigArg> opArgs)
+        {
+            throw new NotImplementedException("@ToDo");
+        }
+
+        public Task<QueryWorkflow.Result> QueryWorkflowAsync<TQryArg>(QueryWorkflow.Arguments<TQryArg> opArgs)
+        {
+            throw new NotImplementedException("@ToDo");
+        }
+
+        public Task<RequestCancellation.Result> RequestCancellationAsync(RequestCancellation.Arguments opArgs)
+        {
+            throw new NotImplementedException("@ToDo");
+        }
+
+        public Task<TerminateWorkflow.Result> TerminateWorkflowAsync<TTermArg>(TerminateWorkflow.Arguments<TTermArg> opArgs)
+        {
+            throw new NotImplementedException("@ToDo");
         }
 
         private static Task<TResponse> InvokeRemoteCallAndProcessErrors<TResponse>(string @namespace,
@@ -711,13 +731,13 @@ namespace Temporal.WorkflowClient
         {
             if (workflowRunId == null)
             {
-                DescribeWorkflowRun.Result resDescrWfExec = await DescribeWorkflowRunAsync(
-                                                                        new DescribeWorkflowRun.Arguments(@namespace,
-                                                                                                          workflowId,
-                                                                                                          WorkflowChainId: null,
-                                                                                                          WorkflowRunId: null,
-                                                                                                          ThrowIfWorkflowNotFound: false,
-                                                                                                          cancelToken));
+                DescribeWorkflow.Result resDescrWfExec = await DescribeWorkflowAsync(
+                                                                        new DescribeWorkflow.Arguments(@namespace,
+                                                                                                       workflowId,
+                                                                                                       WorkflowChainId: null,
+                                                                                                       WorkflowRunId: null,
+                                                                                                       ThrowIfWorkflowNotFound: false,
+                                                                                                       cancelToken));
                 if (resDescrWfExec.StatusCode != StatusCode.OK)
                 {
                     return new HackyWorkflowChainBindingInfo(false, null, null);

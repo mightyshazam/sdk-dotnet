@@ -7,7 +7,7 @@ using GrpcStatusCode = Grpc.Core.StatusCode;
 
 namespace Temporal.WorkflowClient.Interceptors
 {
-    public static class DescribeWorkflowRun
+    public static class DescribeWorkflow
     {
         public record Arguments(string Namespace,
                                 string WorkflowId,

@@ -94,7 +94,7 @@ namespace Temporal.WorkflowClient
         /// </summary>        
         public async Task<bool> ExistsAsync(CancellationToken cancelToken)
         {
-            DescribeWorkflowRun.Result resDesrc = await DescribeAsync(throwIfWorkflowNotFound: true, cancelToken);
+            DescribeWorkflow.Result resDesrc = await DescribeAsync(throwIfWorkflowNotFound: true, cancelToken);
 
             if (resDesrc.StatusCode == Grpc.Core.StatusCode.OK)
             {
@@ -106,7 +106,7 @@ namespace Temporal.WorkflowClient
             }
             else
             {
-                throw new InvalidOperationException($"Unexpected {nameof(DescribeWorkflowRun.Result.StatusCode)}"
+                throw new InvalidOperationException($"Unexpected {nameof(DescribeWorkflow.Result.StatusCode)}"
                                                   + $" ({resDesrc.StatusCode.ToString()} = {(int) resDesrc.StatusCode})."
                                                   + " This is likely a Temporal SDK bug."
                                                   + " Please report: https://github.com/temporalio/sdk-dotnet/issues");
@@ -118,11 +118,11 @@ namespace Temporal.WorkflowClient
         /// </summary>
         public async Task<DescribeWorkflowExecutionResponse> DescribeAsync(CancellationToken cancelToken)
         {
-            DescribeWorkflowRun.Result resDesrc = await DescribeAsync(throwIfWorkflowNotFound: true, cancelToken);
+            DescribeWorkflow.Result resDesrc = await DescribeAsync(throwIfWorkflowNotFound: true, cancelToken);
             return resDesrc.DescribeWorkflowExecutionResponse;
         }
 
-        private async Task<DescribeWorkflowRun.Result> DescribeAsync(bool throwIfWorkflowNotFound, CancellationToken cancelToken)
+        private async Task<DescribeWorkflow.Result> DescribeAsync(bool throwIfWorkflowNotFound, CancellationToken cancelToken)
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
 
@@ -132,13 +132,13 @@ namespace Temporal.WorkflowClient
             try
             {
                 ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                DescribeWorkflowRun.Result resDesrc = await invokerPipeline.DescribeWorkflowRunAsync(
-                                                                    new DescribeWorkflowRun.Arguments(Namespace,
-                                                                                                      WorkflowId,
-                                                                                                      workflowChainId,
-                                                                                                      WorkflowRunId: null,
-                                                                                                      throwIfWorkflowNotFound,
-                                                                                                      cancelToken));
+                DescribeWorkflow.Result resDesrc = await invokerPipeline.DescribeWorkflowAsync(
+                                                                    new DescribeWorkflow.Arguments(Namespace,
+                                                                                                   WorkflowId,
+                                                                                                   workflowChainId,
+                                                                                                   WorkflowRunId: null,
+                                                                                                   throwIfWorkflowNotFound,
+                                                                                                   cancelToken));
                 ApplyBindingIfOperationSucceeded(bindingLock, resDesrc);
                 return resDesrc;
             }
@@ -403,12 +403,12 @@ namespace Temporal.WorkflowClient
                                                                                                                        FollowWorkflowChain: true,
                                                                                                                        cancelToken));
 
-                if (resWfRun != null && resWfRun is WorkflowRunResult resWfRunIntrnlImpl)
+                if (resWfRun != null && resWfRun is AwaitConclusion.Result resAwaitWfConcl)
                 {
                     // If we have a known implementation of IWorkflowRunResult, then set its TemporalClient so that the result's
                     // TryGetContinuationRun(..) method can create the respective run handle using the right client instance.
 
-                    resWfRunIntrnlImpl.TemporalClient = _temporalClient;
+                    resAwaitWfConcl.TemporalClient = _temporalClient;
                 }
 
                 ApplyBindingIfOperationSucceeded(bindingLock, resWfRun);
@@ -426,18 +426,39 @@ namespace Temporal.WorkflowClient
         public Task SignalAsync(string signalName,
                                 CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            return SignalAsync(signalName, Payload.Void, cancelToken);
         }
 
         /// <summary>
         /// See the implemented iface API (<see cref="IWorkflowHandle.SignalAsync{TSigArg}(String, TSigArg, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
-        public Task SignalAsync<TSigArg>(string signalName,
-                                         TSigArg signalArg,
-                                         CancellationToken cancelToken = default)
+        public async Task SignalAsync<TSigArg>(string signalName,
+                                               TSigArg signalArg,
+                                               CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            await _temporalClient.EnsureConnectedAsync(cancelToken);
+
+            (SemaphoreSlim bindingLock, string workflowChainId) = IsBound
+                                                                    ? (null, WorkflowChainId)
+                                                                    : await BeginBindingOperationIfRequiredAsync(cancelToken);
+            try
+            {
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
+                SignalWorkflow.Result resSigWf = await invokerPipeline.SignalWorkflowAsync(
+                                                                    new SignalWorkflow.Arguments<TSigArg>(Namespace,
+                                                                                                          WorkflowId,
+                                                                                                          workflowChainId,
+                                                                                                          WorkflowRunId: null,
+                                                                                                          signalName,
+                                                                                                          signalArg,
+                                                                                                          cancelToken));
+                ApplyBindingIfOperationSucceeded(bindingLock, resSigWf);
+            }
+            finally
+            {
+                bindingLock?.Release();
+            }
         }
 
         /// <summary>
@@ -447,7 +468,7 @@ namespace Temporal.WorkflowClient
         public Task<TResult> QueryAsync<TResult>(string queryName,
                                                  CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            return QueryAsync<IPayload.Void, TResult>(queryName, Payload.Void, cancelToken);
         }
 
         /// <summary>
@@ -476,7 +497,7 @@ namespace Temporal.WorkflowClient
         public Task TerminateAsync(string reason = null,
                                    CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            return TerminateAsync(reason, Payload.Void, cancelToken);
         }
 
         /// <summary>

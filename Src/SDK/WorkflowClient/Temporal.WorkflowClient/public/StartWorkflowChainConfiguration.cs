@@ -36,7 +36,7 @@ namespace Temporal.WorkflowClient
         public SearchAttributes SearchAttributes { get; init; }
         public Header Header { get; init; }
 
-        // Settings that are ot user-facing:
+        // Settings that are not user-facing:
         // string RequestId 
     }
 }
