@@ -19,7 +19,7 @@ namespace Temporal.WorkflowClient.Errors
                                                                                                 innerException.AsException(),
                                                                                                 out int basisMsgLength);
 
-            if (ExceptionMessage.StartNextInfoItemIfRequired(msg, message, nameof(Namespace), basisMsgLength))
+            if (ExceptionMessage.StartNextInfoItemIfRequired(msg, message, nameof(ConclusionStatus), basisMsgLength))
             {
                 msg.Append(nameof(ConclusionStatus) + "='");
                 msg.Append(conclusionStatus.ToString());
