@@ -40,7 +40,7 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine($"    WorkflowChainId: {workflow.WorkflowChainId}");
 
             Console.WriteLine();
-            Console.WriteLine("Starting again...");
+            Console.WriteLine("Attempting to start a workflow with the same WorkflowId...");
             Console.WriteLine();
 
             try
@@ -64,6 +64,7 @@ namespace Temporal.Demos.AdHocScenarios
 
             Console.WriteLine();
             Console.WriteLine("Creating a handle to the existing workflow...");
+            Console.WriteLine();
 
             IWorkflowHandle workflow2 = client.CreateWorkflowHandle(demoWfId);
 
@@ -90,6 +91,25 @@ namespace Temporal.Demos.AdHocScenarios
                     innerEx = innerEx.InnerException;
                 }
             }
+
+            Console.WriteLine();
+            Console.WriteLine("Obtaining Workflow Type Name...");
+            Console.WriteLine();
+
+            string workflowTypeName = await workflow2.GetWorkflowTypeNameAsync();
+
+            Console.WriteLine($"Obtained. {nameof(workflowTypeName)}={workflowTypeName.QuoteOrNull()}.");
+            Console.WriteLine("Updated handle info:");
+            Console.WriteLine($"    IsBound:         {workflow2.IsBound}");
+            Console.WriteLine($"    WorkflowChainId: {workflow2.WorkflowChainId}");
+
+            Console.WriteLine();
+            Console.WriteLine("Sending signal to a workflow...");
+            Console.WriteLine();
+
+            await workflow.SignalAsync("Some-Signal-01", "Some-Signal-Argument");
+
+            Console.WriteLine("Signal sent. Look for it in the workflow history.");
 
             Console.WriteLine();
             Console.WriteLine("Waiting for result...");
@@ -127,7 +147,59 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine($"    IsBound:         {workflow3.IsBound}");
 
             Console.WriteLine();
-            Console.WriteLine("Waiting for result on a non-existing workflow...");
+            Console.WriteLine("Verifying existence...");
+            Console.WriteLine();
+
+            bool wfExists = await workflow3.ExistsAsync();
+
+            Console.WriteLine($"Verified. {nameof(wfExists)}={wfExists}.");
+            Console.WriteLine("Updated handle info:");
+            Console.WriteLine($"    IsBound:         {workflow3.IsBound}");
+
+            try
+            {
+                Console.WriteLine($"    WorkflowChainId: {workflow3.WorkflowChainId}");
+
+                throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
+            }
+            catch (InvalidOperationException invOpEx)
+            {
+                Console.WriteLine($"    Expected exception while getting {nameof(workflow3.WorkflowChainId)}:");
+                Console.WriteLine($"    --> {invOpEx.TypeAndMessage()}");
+
+                Exception innerEx = invOpEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n      Inner --> " + invOpEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Sending signal to a non-existing workflow...");
+            Console.WriteLine();
+
+            try
+            {
+                await workflow3.SignalAsync("Some-Signal-02");
+
+                throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
+            }
+            catch (WorkflowNotFoundException wnfEx)
+            {
+                Console.WriteLine("Received expected exception.");
+                Console.WriteLine(wnfEx.TypeAndMessage());
+
+                Exception innerEx = wnfEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n  Inner --> " + innerEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Waiting for result of a non-existing workflow...");
             Console.WriteLine();
 
             try

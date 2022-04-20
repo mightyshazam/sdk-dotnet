@@ -558,7 +558,7 @@ namespace Temporal.WorkflowClient
             string workflowChainId = opArgs.WorkflowChainId;
 
             // Do not call the hack for a null workflowRunId to prevent infinite recursion.
-            // Instead, if noth runId and chainId are null, descrive the very latest run of all chains and then
+            // Instead, if both, runId and chainId, are null, describe the very latest run of all chains and then
             // use the runId obtained by doing that to fill in the chainId later.
             if (workflowRunId != null && workflowChainId == null)
             {

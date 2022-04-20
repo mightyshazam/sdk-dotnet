@@ -51,7 +51,8 @@ namespace Temporal.WorkflowClient.Interceptors
                 _workflowChainId = workflowChainId;
 
                 // @ToDo: Once server supports it, change to 
-                ValidateWorkflowProperty.RunId.Specified(workflowRunId);
+                // ValidateWorkflowProperty.RunId.Specified(workflowRunId);
+                ValidateWorkflowProperty.RunId.SpecifiedOrUnspecified(workflowRunId);
                 WorkflowRunId = workflowRunId;
 
                 Status = status;

@@ -95,7 +95,7 @@ namespace Temporal.WorkflowClient
         /// </summary>        
         public async Task<bool> ExistsAsync(CancellationToken cancelToken)
         {
-            DescribeWorkflow.Result resDesrc = await DescribeAsync(throwIfWorkflowNotFound: true, cancelToken);
+            DescribeWorkflow.Result resDesrc = await DescribeAsync(throwIfWorkflowNotFound: false, cancelToken);
 
             if (resDesrc.StatusCode == Grpc.Core.StatusCode.OK)
             {

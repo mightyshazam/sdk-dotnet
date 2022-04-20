@@ -28,7 +28,11 @@ namespace Temporal.WorkflowClient
             Validate.NotNull(payloadConverter);
             Validate.NotNullOrWhitespace(@namespace);
             ValidateWorkflowProperty.WorkflowId(workflowId);
-            ValidateWorkflowProperty.ChainId.Bound(workflowChainId);  // Once the server supports it, this will be updated form each event attrs.
+
+            // Once the server supports it, `workflowChainId` will be updated form each event attrs.
+            // In the interim, we construct the factory early, before we know that the workflow actually exists,
+            // so we cannot guanatee that `workflowChainId` is bound.
+            ValidateWorkflowProperty.ChainId.BoundOrUnbound(workflowChainId);
 
             _payloadConverter = payloadConverter;
             _payloadCodec = payloadCodec;  // may be null

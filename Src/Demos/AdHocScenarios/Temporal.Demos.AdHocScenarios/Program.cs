@@ -9,8 +9,8 @@ namespace Temporal.Demos.AdHocScenarios
         {
             Console.WriteLine($"RuntimeEnvironmentInfo: \n{RuntimeEnvironmentInfo.SingletonInstance}");
 
-            (new UseRawGrpcClient()).Run();
-            //(new SimpleClientInvocations()).Run();
+            //(new UseRawGrpcClient()).Run();
+            (new SimpleClientInvocations()).Run();
             //(new AdHocClientInvocations()).Run();
         }
     }
