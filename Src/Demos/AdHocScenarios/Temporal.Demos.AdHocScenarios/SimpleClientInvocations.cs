@@ -6,6 +6,7 @@ using Temporal.Common;
 using Temporal.WorkflowClient;
 using Temporal.WorkflowClient.Errors;
 using Temporal.WorkflowClient.Interceptors;
+using System.Threading;
 
 namespace Temporal.Demos.AdHocScenarios
 {
@@ -112,13 +113,63 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine("Signal sent. Look for it in the workflow history.");
 
             Console.WriteLine();
+            Console.WriteLine("Sending query to a workflow...");
+
+            try
+            {
+                TimeSpan delayQueryCancel = TimeSpan.FromSeconds(2);
+                Console.WriteLine($"The workflow was not designed for queries,"
+                                + $" so we will cancel the wait for query completion after '{delayQueryCancel}'.");
+                Console.WriteLine();
+
+                using CancellationTokenSource query01CancelControl = new(delayQueryCancel);
+                object resQuery01 = await workflow.QueryAsync<object, string>("Some-Query-01",
+                                                                              "Some-Query-Argument",
+                                                                              cancelToken: query01CancelControl.Token);
+
+                Console.WriteLine("Query sent. Look for it in the workflow history.");
+                Console.WriteLine($"Query result: |{Format.QuoteIfString(resQuery01)}|.");
+            }
+            catch (OperationCanceledException opCncldEx)
+            {
+                Console.WriteLine("Received expected exception.");
+                Console.WriteLine(opCncldEx.TypeAndMessage());
+
+                Exception innerEx = opCncldEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n  Inner --> " + innerEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Sending cancellation request to a workflow...");
+            Console.WriteLine();
+
+            await workflow.RequestCancellationAsync();
+
+            Console.WriteLine("Cancellation requested. However, it the workflow was not designed to honor it, so it will remain ignored. Look for the request in the workflow history.");
+            Console.WriteLine("Look for the request in the workflow history.");
+
+            _ = Task.Run(async () =>
+                {
+                    TimeSpan delayTermination = TimeSpan.FromSeconds(2);
+                    Console.WriteLine($"Started automatic termination invoker with a delay of '{delayTermination}'.");
+
+                    await Task.Delay(delayTermination);
+                    Console.WriteLine($"Delay of {delayTermination} elapsed. Terminating workflow...");
+
+                    await workflow.TerminateAsync("Good-reason-for-termination", details: DateTimeOffset.Now);
+                    Console.WriteLine($"Workflow terminated.");
+                });
+
+            Console.WriteLine();
             Console.WriteLine("Waiting for result...");
             Console.WriteLine();
 
             try
             {
-                // At this point, we expect the user to manually terminate the workflow via the UI
-                // (or course, manual interventions need to be removed in the mid-term).
                 await workflow.GetResultAsync<object>();
 
                 throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");

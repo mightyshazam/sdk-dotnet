@@ -894,7 +894,7 @@ namespace Temporal.WorkflowClient
                     WorkflowId = opArgs.WorkflowId,
                     RunId = workflowRunId ?? String.Empty,
                 },
-                Reason = opArgs.Reason,
+                Reason = opArgs.Reason ?? String.Empty,
                 Details = serializedDets,
                 Identity = _clientIdentityMarker,
                 FirstExecutionRunId = workflowChainId,
@@ -950,6 +950,10 @@ namespace Temporal.WorkflowClient
             catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.NotFound)
             {
                 throw new WorkflowNotFoundException(@namespace, workflowId, workflowRunId, rpcEx);
+            }
+            catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.Cancelled && cancelToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("Temporal service call was cancelled by the client.", rpcEx, cancelToken);
             }
             catch (Exception ex)
             {
