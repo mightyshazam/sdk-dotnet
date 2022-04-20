@@ -808,14 +808,109 @@ namespace Temporal.WorkflowClient
             return new QueryWorkflow.Result<TResult>(resultValue, workflowChainId);
         }
 
-        public Task<RequestCancellation.Result> RequestCancellationAsync(RequestCancellation.Arguments opArgs)
+        public async Task<RequestCancellation.Result> RequestCancellationAsync(RequestCancellation.Arguments opArgs)
         {
-            throw new NotImplementedException("@ToDo");
+            Validate.NotNull(opArgs);
+            Validate.NotNullOrWhitespace(opArgs.Namespace);
+            ValidateWorkflowProperty.WorkflowId(opArgs.WorkflowId);
+            ValidateWorkflowProperty.ChainId.BoundOrUnbound(opArgs.WorkflowChainId);
+            ValidateWorkflowProperty.RunId.SpecifiedOrUnspecified(opArgs.WorkflowRunId);
+
+            string workflowRunId = opArgs.WorkflowRunId;
+            string workflowChainId = opArgs.WorkflowChainId;
+
+            if (workflowChainId == null)
+            {
+                // Temporary workaround for missing server features. See comments in the invoked method for more info.
+                HackyWorkflowChainBindingInfo bindingInfo = await GetBindingInfoTemporaryHackAsync(opArgs.Namespace,
+                                                                                                   opArgs.WorkflowId,
+                                                                                                   workflowRunId,
+                                                                                                   opArgs.CancelToken);
+                if (bindingInfo.IsSuccess)
+                {
+                    workflowRunId = bindingInfo.WorkflowRunId;
+                    workflowChainId = bindingInfo.WorkflowChainId;
+                }
+            }
+
+            RequestCancelWorkflowExecutionRequest reqReqCnclWf = new()
+            {
+                Namespace = opArgs.Namespace,
+                WorkflowExecution = new WorkflowExecution()
+                {
+                    WorkflowId = opArgs.WorkflowId,
+                    RunId = workflowRunId ?? String.Empty,
+                },
+                Identity = _clientIdentityMarker,
+                RequestId = Guid.NewGuid().ToString("D"),
+                FirstExecutionRunId = workflowChainId
+            };
+
+            RequestCancelWorkflowExecutionResponse resReqCnclWf = await InvokeRemoteCallAndProcessErrors(
+                    opArgs.Namespace,
+                    opArgs.WorkflowId,
+                    workflowRunId,
+                    opArgs.CancelToken,
+                    (cancelCallToken) => _grpcServiceClient.RequestCancelWorkflowExecutionAsync(reqReqCnclWf,
+                                                                                                headers: null,
+                                                                                                deadline: null,
+                                                                                                cancelCallToken));
+
+            return new RequestCancellation.Result(workflowChainId);
         }
 
-        public Task<TerminateWorkflow.Result> TerminateWorkflowAsync<TTermArg>(TerminateWorkflow.Arguments<TTermArg> opArgs)
+        public async Task<TerminateWorkflow.Result> TerminateWorkflowAsync<TTermArg>(TerminateWorkflow.Arguments<TTermArg> opArgs)
         {
-            throw new NotImplementedException("@ToDo");
+            Validate.NotNull(opArgs);
+            Validate.NotNullOrWhitespace(opArgs.Namespace);
+            ValidateWorkflowProperty.WorkflowId(opArgs.WorkflowId);
+            ValidateWorkflowProperty.ChainId.BoundOrUnbound(opArgs.WorkflowChainId);
+            ValidateWorkflowProperty.RunId.SpecifiedOrUnspecified(opArgs.WorkflowRunId);
+
+            string workflowRunId = opArgs.WorkflowRunId;
+            string workflowChainId = opArgs.WorkflowChainId;
+
+            if (workflowChainId == null)
+            {
+                // Temporary workaround for missing server features. See comments in the invoked method for more info.
+                HackyWorkflowChainBindingInfo bindingInfo = await GetBindingInfoTemporaryHackAsync(opArgs.Namespace,
+                                                                                                   opArgs.WorkflowId,
+                                                                                                   workflowRunId,
+                                                                                                   opArgs.CancelToken);
+                if (bindingInfo.IsSuccess)
+                {
+                    workflowRunId = bindingInfo.WorkflowRunId;
+                    workflowChainId = bindingInfo.WorkflowChainId;
+                }
+            }
+
+            Payloads serializedDets = await _payloadConverter.SerializeAsync(_payloadCodec, opArgs.Details, opArgs.CancelToken);
+
+            TerminateWorkflowExecutionRequest reqTermWf = new()
+            {
+                Namespace = opArgs.Namespace,
+                WorkflowExecution = new WorkflowExecution()
+                {
+                    WorkflowId = opArgs.WorkflowId,
+                    RunId = workflowRunId ?? String.Empty,
+                },
+                Reason = opArgs.Reason,
+                Details = serializedDets,
+                Identity = _clientIdentityMarker,
+                FirstExecutionRunId = workflowChainId,
+            };
+
+            TerminateWorkflowExecutionResponse resTermWf = await InvokeRemoteCallAndProcessErrors(
+                    opArgs.Namespace,
+                    opArgs.WorkflowId,
+                    workflowRunId,
+                    opArgs.CancelToken,
+                    (cancelCallToken) => _grpcServiceClient.TerminateWorkflowExecutionAsync(reqTermWf,
+                                                                                            headers: null,
+                                                                                            deadline: null,
+                                                                                            cancelCallToken));
+
+            return new TerminateWorkflow.Result(workflowChainId);
         }
 
         private static Task<TResponse> InvokeRemoteCallAndProcessErrors<TResponse>(string @namespace,

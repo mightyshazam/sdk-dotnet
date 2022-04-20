@@ -519,9 +519,28 @@ namespace Temporal.WorkflowClient
         /// See the implemented iface API (<see cref="IWorkflowHandle.RequestCancellationAsync(CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
-        public Task RequestCancellationAsync(CancellationToken cancelToken = default)
+        public async Task RequestCancellationAsync(CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            await _temporalClient.EnsureConnectedAsync(cancelToken);
+
+            (SemaphoreSlim bindingLock, string workflowChainId) = IsBound
+                                                                    ? (null, WorkflowChainId)
+                                                                    : await BeginBindingOperationIfRequiredAsync(cancelToken);
+            try
+            {
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
+                RequestCancellation.Result resReqCnclWf = await invokerPipeline.RequestCancellationAsync(
+                                                                    new RequestCancellation.Arguments(Namespace,
+                                                                                                      WorkflowId,
+                                                                                                      workflowChainId,
+                                                                                                      WorkflowRunId: null,
+                                                                                                      cancelToken));
+                ApplyBindingIfOperationSucceeded(bindingLock, resReqCnclWf);
+            }
+            finally
+            {
+                bindingLock?.Release();
+            }
         }
 
         /// <summary>
@@ -537,11 +556,32 @@ namespace Temporal.WorkflowClient
         /// See the implemented iface API (<see cref="IWorkflowHandle.TerminateAsync{TTermArg}(String, TTermArg, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
-        public Task TerminateAsync<TTermArg>(string reason,
-                                             TTermArg details,
-                                             CancellationToken cancelToken = default)
+        public async Task TerminateAsync<TTermArg>(string reason,
+                                                   TTermArg details,
+                                                   CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            await _temporalClient.EnsureConnectedAsync(cancelToken);
+
+            (SemaphoreSlim bindingLock, string workflowChainId) = IsBound
+                                                                    ? (null, WorkflowChainId)
+                                                                    : await BeginBindingOperationIfRequiredAsync(cancelToken);
+            try
+            {
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
+                TerminateWorkflow.Result resTermWf = await invokerPipeline.TerminateWorkflowAsync(
+                                                                    new TerminateWorkflow.Arguments<TTermArg>(Namespace,
+                                                                                                              WorkflowId,
+                                                                                                              workflowChainId,
+                                                                                                              WorkflowRunId: null,
+                                                                                                              reason,
+                                                                                                              details,
+                                                                                                              cancelToken));
+                ApplyBindingIfOperationSucceeded(bindingLock, resTermWf);
+            }
+            finally
+            {
+                bindingLock?.Release();
+            }
         }
 
         #endregion --- APIs to interact with the chain ---

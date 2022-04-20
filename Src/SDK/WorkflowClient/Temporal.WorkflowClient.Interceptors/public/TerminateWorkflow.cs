@@ -1,8 +1,16 @@
-﻿namespace Temporal.WorkflowClient.Interceptors
+﻿using System.Threading;
+
+namespace Temporal.WorkflowClient.Interceptors
 {
     public static class TerminateWorkflow
     {
-        public record Arguments<TTermArg>();
+        public record Arguments<TTermArg>(string Namespace,
+                                          string WorkflowId,
+                                          string WorkflowChainId,
+                                          string WorkflowRunId,
+                                          string Reason,
+                                          TTermArg Details,
+                                          CancellationToken CancelToken);
 
         public class Result : IWorkflowChainBindingResult
         {

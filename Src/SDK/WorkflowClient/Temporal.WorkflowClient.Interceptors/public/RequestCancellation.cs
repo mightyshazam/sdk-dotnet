@@ -1,8 +1,14 @@
-﻿namespace Temporal.WorkflowClient.Interceptors
+﻿using System.Threading;
+
+namespace Temporal.WorkflowClient.Interceptors
 {
     public static class RequestCancellation
     {
-        public record Arguments();
+        public record Arguments(string Namespace,
+                                string WorkflowId,
+                                string WorkflowChainId,
+                                string WorkflowRunId,
+                                CancellationToken CancelToken);
 
         public class Result : IWorkflowChainBindingResult
         {
