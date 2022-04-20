@@ -2,18 +2,18 @@
 
 namespace Temporal.WorkflowClient.OperationConfigurations
 {
-    public class SignalWorkflowConfiguration
+    public record SignalWorkflowConfiguration(Header Header)
     {
-        private static readonly SignalWorkflowConfiguration s_default = new SignalWorkflowConfiguration()
-        {
-            Header = null
-        };
+        private static readonly SignalWorkflowConfiguration s_default = new();
 
         public static SignalWorkflowConfiguration Default
         {
             get { return s_default; }
         }
 
-        public Header Header { get; init; }
+        public SignalWorkflowConfiguration()
+            : this(Header: null)
+        {
+        }
     }
 }

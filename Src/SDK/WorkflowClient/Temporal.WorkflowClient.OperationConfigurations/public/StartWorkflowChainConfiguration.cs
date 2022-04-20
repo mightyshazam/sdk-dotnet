@@ -4,37 +4,37 @@ using Temporal.Api.Enums.V1;
 
 namespace Temporal.WorkflowClient.OperationConfigurations
 {
-    public class StartWorkflowChainConfiguration
+    public record StartWorkflowChainConfiguration(TimeSpan? WorkflowExecutionTimeout,
+                                                  TimeSpan? WorkflowRunTimeout,
+                                                  TimeSpan? WorkflowTaskTimeout,
+                                                  string Identity,
+                                                  WorkflowIdReusePolicy? WorkflowIdReusePolicy,
+                                                  RetryPolicy RetryPolicy,
+                                                  string CronSchedule,
+                                                  Memo Memo,
+                                                  SearchAttributes SearchAttributes,
+                                                  Header Header)
     {
-        private static readonly StartWorkflowChainConfiguration s_default = new StartWorkflowChainConfiguration()
-        {
-            WorkflowExecutionTimeout = null,
-            WorkflowRunTimeout = null,
-            WorkflowTaskTimeout = null,
-            Identity = null,
-            WorkflowIdReusePolicy = null,
-            RetryPolicy = null,
-            CronSchedule = null,
-            Memo = null,
-            SearchAttributes = null,
-            Header = null
-        };
+        private static readonly StartWorkflowChainConfiguration s_default = new();
 
         public static StartWorkflowChainConfiguration Default
         {
             get { return s_default; }
         }
 
-        public TimeSpan? WorkflowExecutionTimeout { get; init; }
-        public TimeSpan? WorkflowRunTimeout { get; init; }
-        public TimeSpan? WorkflowTaskTimeout { get; init; }
-        public string Identity { get; init; }
-        public WorkflowIdReusePolicy? WorkflowIdReusePolicy { get; init; }
-        public RetryPolicy RetryPolicy { get; init; }
-        public string CronSchedule { get; init; }
-        public Memo Memo { get; init; }
-        public SearchAttributes SearchAttributes { get; init; }
-        public Header Header { get; init; }
+        public StartWorkflowChainConfiguration()
+            : this(WorkflowExecutionTimeout: null,
+                   WorkflowRunTimeout: null,
+                   WorkflowTaskTimeout: null,
+                   Identity: null,
+                   WorkflowIdReusePolicy: null,
+                   RetryPolicy: null,
+                   CronSchedule: null,
+                   Memo: null,
+                   SearchAttributes: null,
+                   Header: null)
+        {
+        }
 
         // Settings that are not user-facing:
         // string RequestId 
