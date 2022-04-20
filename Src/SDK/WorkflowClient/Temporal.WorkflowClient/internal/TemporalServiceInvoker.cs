@@ -101,7 +101,7 @@ namespace Temporal.WorkflowClient
                 TaskQueue = new TaskQueue() { Name = opArgs.TaskQueue },
                 Input = serializedWfArg,
 
-                Identity = opArgs.WorkflowConfig.Identity ?? _clientIdentityMarker,
+                Identity = _clientIdentityMarker,
                 RequestId = Guid.NewGuid().ToString("D"),
             };
 
@@ -231,7 +231,7 @@ namespace Temporal.WorkflowClient
                 TaskQueue = new TaskQueue() { Name = opArgs.TaskQueue },
                 Input = serializedWfArg,
 
-                Identity = opArgs.WorkflowConfig.Identity ?? _clientIdentityMarker,
+                Identity = _clientIdentityMarker,
                 RequestId = Guid.NewGuid().ToString("D"),
 
                 SignalName = opArgs.SignalName,

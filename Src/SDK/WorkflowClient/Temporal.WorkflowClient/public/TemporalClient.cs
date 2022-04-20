@@ -16,6 +16,7 @@ namespace Temporal.WorkflowClient
         #region -- Static APIs --
 
         private static int s_identityMarkersCount = 0;
+        private static string s_processDescriptor = null;
 
         /// <summary>
         /// </summary>
@@ -27,6 +28,42 @@ namespace Temporal.WorkflowClient
             return client;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static string CreateProcessDescriptor()
+        {
+            try
+            {
+                CurrentProcess.GetIdentityInfo(out string processName, out string machineName, out int processId);
+                return $"{machineName}/{processName}/{processId}";
+            }
+            catch
+            {
+                return Guid.NewGuid().ToString("D");
+            }
+        }
+
+        private static string GetProcessDescriptor()
+        {
+            string processDescriptor = s_processDescriptor;
+            if (processDescriptor == null)
+            {
+                try
+                {
+                    processDescriptor = CreateProcessDescriptor();
+                }
+                catch { }
+
+                if (processDescriptor == null)
+                {
+                    processDescriptor = Guid.NewGuid().ToString("D");
+                }
+
+                s_processDescriptor = processDescriptor;  // benign race
+            }
+
+            return processDescriptor;
+        }
+
         private static string CreateIdentityMarker()
         {
             int identityMarkersIndex;
@@ -35,15 +72,7 @@ namespace Temporal.WorkflowClient
                 identityMarkersIndex = Interlocked.Increment(ref s_identityMarkersCount);
             }
 
-            try
-            {
-                CurrentProcess.GetIdentityInfo(out string processName, out string machineName, out int processId);
-                return $"{machineName}/{processName}/{processId}/{identityMarkersIndex}";
-            }
-            catch
-            {
-                return $"{Guid.NewGuid().ToString("D")}/{identityMarkersIndex}";
-            }
+            return $"{GetProcessDescriptor()}/{identityMarkersIndex}";
         }
 
         #endregion -- Static APIs --
@@ -66,7 +95,7 @@ namespace Temporal.WorkflowClient
             Configuration = config;
 
             _grpcChannel = GrpcChannelFactory.SingletonInstance.GetOrCreateChannel(config);
-            _identityMarker = CreateIdentityMarker();
+            _identityMarker = config.ClientIdentity ?? CreateIdentityMarker();
         }
 
         public TemporalClientConfiguration Configuration { get; }
