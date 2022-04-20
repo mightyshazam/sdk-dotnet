@@ -648,9 +648,72 @@ namespace Temporal.WorkflowClient
             }  // while(true)
         }
 
-        public Task<SignalWorkflow.Result> SignalWorkflowAsync<TSigArg>(SignalWorkflow.Arguments<TSigArg> opArgs)
+        public async Task<SignalWorkflow.Result> SignalWorkflowAsync<TSigArg>(SignalWorkflow.Arguments<TSigArg> opArgs)
         {
-            throw new NotImplementedException("@ToDo");
+            Validate.NotNull(opArgs);
+            Validate.NotNullOrWhitespace(opArgs.Namespace);
+            ValidateWorkflowProperty.WorkflowId(opArgs.WorkflowId);
+            ValidateWorkflowProperty.ChainId.BoundOrUnbound(opArgs.WorkflowChainId);
+            ValidateWorkflowProperty.RunId.SpecifiedOrUnspecified(opArgs.WorkflowRunId);
+            Validate.NotNullOrWhitespace(opArgs.SignalName);
+            Validate.NotNull(opArgs.SignalConfig);
+
+            string workflowRunId = opArgs.WorkflowRunId;
+            string workflowChainId = opArgs.WorkflowChainId;
+
+            if (workflowChainId == null)
+            {
+                // Temporary workaround for missing server features. See comments in the invoked method for more info.
+                HackyWorkflowChainBindingInfo bindingInfo = await GetBindingInfoTemporaryHackAsync(opArgs.Namespace,
+                                                                                                   opArgs.WorkflowId,
+                                                                                                   workflowRunId,
+                                                                                                   opArgs.CancelToken);
+                if (bindingInfo.IsSuccess)
+                {
+                    workflowRunId = bindingInfo.WorkflowRunId;
+                    workflowChainId = bindingInfo.WorkflowChainId;
+                }
+            }
+
+            Payloads serializedSigArg = new();
+            PayloadConverter.Serialize(_payloadConverter, opArgs.SignalArg, serializedSigArg);
+
+            if (_payloadCodec != null)
+            {
+                serializedSigArg = await _payloadCodec.EncodeAsync(serializedSigArg, opArgs.CancelToken);
+            }
+
+            SignalWorkflowExecutionRequest reqSigWf = new()
+            {
+                Namespace = opArgs.Namespace,
+                WorkflowExecution = new WorkflowExecution()
+                {
+                    WorkflowId = opArgs.WorkflowId,
+                    RunId = workflowRunId ?? String.Empty,
+                },
+                SignalName = opArgs.SignalName,
+                Input = serializedSigArg,
+                Identity = _clientIdentityMarker,
+                RequestId = Guid.NewGuid().ToString("D"),
+            };
+
+            if (opArgs.SignalConfig.Header != null)
+            {
+                throw new NotSupportedException($"{nameof(SignalWorkflowConfiguration)}.{nameof(SignalWorkflowConfiguration.Header)}"
+                                               + " is not supported in this SDK version (@ToDo)");
+            }
+
+            SignalWorkflowExecutionResponse resSigWf = await InvokeRemoteCallAndProcessErrors(
+                    opArgs.Namespace,
+                    opArgs.WorkflowId,
+                    workflowRunId,
+                    opArgs.CancelToken,
+                    (cancelCallToken) => _grpcServiceClient.SignalWorkflowExecutionAsync(reqSigWf,
+                                                                                         headers: null,
+                                                                                         deadline: null,
+                                                                                         cancelCallToken));
+
+            return new SignalWorkflow.Result(workflowChainId);
         }
 
         public Task<QueryWorkflow.Result> QueryWorkflowAsync<TQryArg>(QueryWorkflow.Arguments<TQryArg> opArgs)
