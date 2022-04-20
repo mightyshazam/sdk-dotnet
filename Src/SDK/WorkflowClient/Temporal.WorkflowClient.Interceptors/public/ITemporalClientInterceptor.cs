@@ -14,7 +14,7 @@ namespace Temporal.WorkflowClient.Interceptors
         Task<GetWorkflowChainId.Result> GetWorkflowChainIdAsync(GetWorkflowChainId.Arguments opArgs);
         Task<DescribeWorkflow.Result> DescribeWorkflowAsync(DescribeWorkflow.Arguments opArgs);
         Task<SignalWorkflow.Result> SignalWorkflowAsync<TSigArg>(SignalWorkflow.Arguments<TSigArg> opArgs);
-        Task<QueryWorkflow.Result> QueryWorkflowAsync<TQryArg>(QueryWorkflow.Arguments<TQryArg> opArgs);
+        Task<QueryWorkflow.Result<TResult>> QueryWorkflowAsync<TQryArg, TResult>(QueryWorkflow.Arguments<TQryArg> opArgs);
         Task<RequestCancellation.Result> RequestCancellationAsync(RequestCancellation.Arguments opArgs);
         Task<TerminateWorkflow.Result> TerminateWorkflowAsync<TTermArg>(TerminateWorkflow.Arguments<TTermArg> opArgs);
     }

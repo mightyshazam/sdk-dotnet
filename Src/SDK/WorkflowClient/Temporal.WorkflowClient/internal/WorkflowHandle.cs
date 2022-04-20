@@ -425,9 +425,10 @@ namespace Temporal.WorkflowClient
         /// See the implemented iface API (<see cref="IWorkflowHandle.SignalAsync(String, CancellationToken)"/>) for a detailed description.
         /// </summary>
         public Task SignalAsync(string signalName,
+                                SignalWorkflowConfiguration signalConfig = null,
                                 CancellationToken cancelToken = default)
         {
-            return SignalAsync(signalName, Payload.Void, signalConfig: null, cancelToken);
+            return SignalAsync(signalName, Payload.Void, signalConfig, cancelToken);
         }
 
         /// <summary>
@@ -471,20 +472,47 @@ namespace Temporal.WorkflowClient
         /// for a detailed description.
         /// </summary>
         public Task<TResult> QueryAsync<TResult>(string queryName,
+                                                 QueryWorkflowConfiguration queryConfig = null,
                                                  CancellationToken cancelToken = default)
         {
-            return QueryAsync<IPayload.Void, TResult>(queryName, Payload.Void, cancelToken);
+            return QueryAsync<IPayload.Void, TResult>(queryName, Payload.Void, queryConfig, cancelToken);
         }
 
         /// <summary>
         /// See the implemented iface API (<see cref="IWorkflowHandle.QueryAsync{TQryArg, TResult}(String, TQryArg, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
-        public Task<TResult> QueryAsync<TQryArg, TResult>(string queryName,
-                                                          TQryArg queryArg,
-                                                          CancellationToken cancelToken = default)
+        public async Task<TResult> QueryAsync<TQryArg, TResult>(string queryName,
+                                                                TQryArg queryArg,
+                                                                QueryWorkflowConfiguration queryConfig = null,
+                                                                CancellationToken cancelToken = default)
         {
-            throw new NotImplementedException("@ToDo");
+            await _temporalClient.EnsureConnectedAsync(cancelToken);
+
+            (SemaphoreSlim bindingLock, string workflowChainId) = IsBound
+                                                                    ? (null, WorkflowChainId)
+                                                                    : await BeginBindingOperationIfRequiredAsync(cancelToken);
+            try
+            {
+                queryConfig = queryConfig ?? QueryWorkflowConfiguration.Default;
+
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
+                QueryWorkflow.Result<TResult> resQryWf = await invokerPipeline.QueryWorkflowAsync<TQryArg, TResult>(
+                                                                    new QueryWorkflow.Arguments<TQryArg>(Namespace,
+                                                                                                         WorkflowId,
+                                                                                                         workflowChainId,
+                                                                                                         WorkflowRunId: null,
+                                                                                                         queryName,
+                                                                                                         queryArg,
+                                                                                                         queryConfig,
+                                                                                                         cancelToken));
+                ApplyBindingIfOperationSucceeded(bindingLock, resQryWf);
+                return resQryWf.Value;
+            }
+            finally
+            {
+                bindingLock?.Release();
+            }
         }
 
         /// <summary>

@@ -15,6 +15,7 @@ using Temporal.Serialization;
 using Temporal.WorkflowClient.Errors;
 using Temporal.WorkflowClient.Interceptors;
 using Temporal.WorkflowClient.OperationConfigurations;
+using Temporal.Api.Query.V1;
 
 namespace Temporal.WorkflowClient
 {
@@ -85,13 +86,7 @@ namespace Temporal.WorkflowClient
             Validate.NotNullOrWhitespace(opArgs.TaskQueue);
             Validate.NotNull(opArgs.WorkflowConfig);
 
-            Payloads serializedWfArg = new();
-            PayloadConverter.Serialize(_payloadConverter, opArgs.WorkflowArg, serializedWfArg);
-
-            if (_payloadCodec != null)
-            {
-                serializedWfArg = await _payloadCodec.EncodeAsync(serializedWfArg, opArgs.CancelToken);
-            }
+            Payloads serializedWfArg = await _payloadConverter.SerializeAsync(_payloadCodec, opArgs.WorkflowArg, opArgs.CancelToken);
 
             StartWorkflowExecutionRequest reqStartWf = new()
             {
@@ -207,21 +202,8 @@ namespace Temporal.WorkflowClient
             Validate.NotNullOrWhitespace(opArgs.SignalName);
             Validate.NotNull(opArgs.WorkflowConfig);
 
-            Payloads serializedWfArg = new();
-            PayloadConverter.Serialize(_payloadConverter, opArgs.WorkflowArg, serializedWfArg);
-
-            if (_payloadCodec != null)
-            {
-                serializedWfArg = await _payloadCodec.EncodeAsync(serializedWfArg, opArgs.CancelToken);
-            }
-
-            Payloads serializedSigArg = new();
-            PayloadConverter.Serialize(_payloadConverter, opArgs.SignalArg, serializedSigArg);
-
-            if (_payloadCodec != null)
-            {
-                serializedSigArg = await _payloadCodec.EncodeAsync(serializedSigArg, opArgs.CancelToken);
-            }
+            Payloads serializedWfArg = await _payloadConverter.SerializeAsync(_payloadCodec, opArgs.WorkflowArg, opArgs.CancelToken);
+            Payloads serializedSigArg = await _payloadConverter.SerializeAsync(_payloadCodec, opArgs.SignalArg, opArgs.CancelToken);
 
             SignalWithStartWorkflowExecutionRequest reqSigWithStartWf = new()
             {
@@ -675,13 +657,7 @@ namespace Temporal.WorkflowClient
                 }
             }
 
-            Payloads serializedSigArg = new();
-            PayloadConverter.Serialize(_payloadConverter, opArgs.SignalArg, serializedSigArg);
-
-            if (_payloadCodec != null)
-            {
-                serializedSigArg = await _payloadCodec.EncodeAsync(serializedSigArg, opArgs.CancelToken);
-            }
+            Payloads serializedSigArg = await _payloadConverter.SerializeAsync(_payloadCodec, opArgs.SignalArg, opArgs.CancelToken);
 
             SignalWorkflowExecutionRequest reqSigWf = new()
             {
@@ -716,9 +692,120 @@ namespace Temporal.WorkflowClient
             return new SignalWorkflow.Result(workflowChainId);
         }
 
-        public Task<QueryWorkflow.Result> QueryWorkflowAsync<TQryArg>(QueryWorkflow.Arguments<TQryArg> opArgs)
+        public async Task<QueryWorkflow.Result<TResult>> QueryWorkflowAsync<TQryArg, TResult>(QueryWorkflow.Arguments<TQryArg> opArgs)
         {
-            throw new NotImplementedException("@ToDo");
+            Validate.NotNull(opArgs);
+            Validate.NotNullOrWhitespace(opArgs.Namespace);
+            ValidateWorkflowProperty.WorkflowId(opArgs.WorkflowId);
+            ValidateWorkflowProperty.ChainId.BoundOrUnbound(opArgs.WorkflowChainId);
+            ValidateWorkflowProperty.RunId.SpecifiedOrUnspecified(opArgs.WorkflowRunId);
+            Validate.NotNullOrWhitespace(opArgs.QueryName);
+            Validate.NotNull(opArgs.QueryConfig);
+
+            string workflowRunId = opArgs.WorkflowRunId;
+            string workflowChainId = opArgs.WorkflowChainId;
+
+            if (workflowChainId == null)
+            {
+                // Temporary workaround for missing server features. See comments in the invoked method for more info.
+                HackyWorkflowChainBindingInfo bindingInfo = await GetBindingInfoTemporaryHackAsync(opArgs.Namespace,
+                                                                                                   opArgs.WorkflowId,
+                                                                                                   workflowRunId,
+                                                                                                   opArgs.CancelToken);
+                if (bindingInfo.IsSuccess)
+                {
+                    workflowRunId = bindingInfo.WorkflowRunId;
+                    workflowChainId = bindingInfo.WorkflowChainId;
+                }
+            }
+
+            Payloads serializedQryArg = await _payloadConverter.SerializeAsync(_payloadCodec, opArgs.QueryArg, opArgs.CancelToken);
+
+            QueryWorkflowRequest reqQryWf = new()
+            {
+                Namespace = opArgs.Namespace,
+                Execution = new WorkflowExecution()
+                {
+                    WorkflowId = opArgs.WorkflowId,
+                    RunId = workflowRunId ?? String.Empty,
+                },
+                Query = new WorkflowQuery()
+                {
+                    QueryType = opArgs.QueryName,
+                    QueryArgs = serializedQryArg,
+                    // Header @ToDo
+                },
+                QueryRejectCondition = opArgs.QueryConfig.QueryRejectCondition,
+            };
+
+            if (opArgs.QueryConfig.Header != null)
+            {
+                throw new NotSupportedException($"{nameof(QueryWorkflowConfiguration)}.{nameof(QueryWorkflowConfiguration.Header)}"
+                                               + " is not supported in this SDK version (@ToDo)");
+            }
+
+            QueryWorkflowResponse resQryWf = await InvokeRemoteCallAndProcessErrors(
+                    opArgs.Namespace,
+                    opArgs.WorkflowId,
+                    workflowRunId,
+                    opArgs.CancelToken,
+                    async (cancelCallToken) =>
+                    {
+                        try
+                        {
+                            return await _grpcServiceClient.QueryWorkflowAsync(reqQryWf,
+                                                                               headers: null,
+                                                                               deadline: null,
+                                                                               cancelCallToken);
+                        }
+                        catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.InvalidArgument)
+                        {
+                            // @ToDo: Looks like the Go SDK does this to check whether the query completed with an error.
+                            // https://github.com/temporalio/api-go/blob/70459d0ace9f443781ab9cd6039ec46cd5440582/serviceerror/convert.go#L108-L115
+                            // However, this seems very strange:
+                            // This DOES make good sense if the error is "the worker does not have a handler for that particular query type".
+                            // After all, the query type is an argument to the operation as far as Temporal is concerned.
+                            // But if the query was handled and the handler user code threw an error, this is less sensible (or not at all).
+                            // @ToDo: We need to carefully validate that it really matches the server behavior.
+
+                            string message = $"Workflow query was rejected: {rpcEx.Message}.";
+                            throw new WorkflowQueryException(message,
+                                                             opArgs.QueryName,
+                                                             opArgs.Namespace,
+                                                             opArgs.WorkflowId,
+                                                             workflowChainId,
+                                                             workflowRunId,
+                                                             rpcEx);
+                        }
+                    });
+
+            if (resQryWf.QueryRejected != null)
+            {
+                string message = "Workflow query was rejected.";
+
+                // Attmpt to interprete QueryResult as the error message.
+                // @ToDo: needs careful validation. E.g. Go does not do it:
+                // https://github.com/temporalio/sdk-go/blob/779d3b2ef8386f12cb65d8270068ee2f24754b42/internal/internal_workflow_client.go#L694-L703
+                if (resQryWf.QueryResult != null)
+                {
+                    try
+                    {
+                        message = await _payloadConverter.DeserializeAsync<string>(_payloadCodec, resQryWf.QueryResult, opArgs.CancelToken);
+                    }
+                    catch { }
+                }
+
+                throw new WorkflowQueryException(message,
+                                                 opArgs.QueryName,
+                                                 resQryWf.QueryRejected.Status,
+                                                 opArgs.Namespace,
+                                                 opArgs.WorkflowId,
+                                                 workflowChainId,
+                                                 workflowRunId);
+            }
+
+            TResult resultValue = await _payloadConverter.DeserializeAsync<TResult>(_payloadCodec, resQryWf.QueryResult, opArgs.CancelToken);
+            return new QueryWorkflow.Result<TResult>(resultValue, workflowChainId);
         }
 
         public Task<RequestCancellation.Result> RequestCancellationAsync(RequestCancellation.Arguments opArgs)

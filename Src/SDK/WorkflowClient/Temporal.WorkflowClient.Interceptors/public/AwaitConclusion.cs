@@ -28,15 +28,15 @@ namespace Temporal.WorkflowClient.Interceptors
             private readonly Payloads _serializedPayloads;
 
             public Result(IPayloadConverter payloadConverter,
-                                     string @namespace,
-                                     string workflowId,
-                                     string workflowChainId,
-                                     string workflowRunId,
-                                     WorkflowExecutionStatus status,
-                                     Payloads serializedPayloads,
-                                     Exception failure,
-                                     string continuationRunId,
-                                     object conclusionEventAttributes)
+                          string @namespace,
+                          string workflowId,
+                          string workflowChainId,
+                          string workflowRunId,
+                          WorkflowExecutionStatus status,
+                          Payloads serializedPayloads,
+                          Exception failure,
+                          string continuationRunId,
+                          object conclusionEventAttributes)
             {
                 Validate.NotNull(payloadConverter);
                 _payloadConverter = payloadConverter;

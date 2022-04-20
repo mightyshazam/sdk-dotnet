@@ -3,6 +3,8 @@ using Temporal.Util;
 using Google.Protobuf;
 using Temporal.Api.Common.V1;
 using Temporal.Common.Payloads;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Temporal.Serialization
 {
@@ -54,6 +56,31 @@ namespace Temporal.Serialization
             }
         }
 
+        public static async Task<T> DeserializeAsync<T>(this IPayloadConverter converter,
+                                                        IPayloadCodec codec,
+                                                        Payloads serializedData,
+                                                        CancellationToken cancelToken)
+        {
+            if (codec != null && serializedData !=  null)
+            {
+                try
+                {
+                    serializedData = await codec.DecodeAsync(serializedData, cancelToken);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Cannot {nameof(IPayloadCodec.DecodeAsync)} the specified"
+                                                      + $" {nameof(serializedData)};"
+                                                      + $" type of the specified {nameof(codec)}: \"{codec.GetType().FullName}\";"
+                                                      + $" number of specified {nameof(Temporal.Api.Common.V1.Payload)}-entries:"
+                                                      + $" {Format.SpellIfNull(serializedData.Payloads_?.Count)}.",
+                                                        ex);
+                }
+            }
+
+            return converter.Deserialize<T>(serializedData);
+        }
+
         /// <summary>
         /// Convenience wrapper method for the corresponding <see cref="IPayloadConverter" />-API.
         /// (See <see cref="IPayloadConverter.TrySerialize{T}(T, Payloads)" />.)
@@ -78,6 +105,39 @@ namespace Temporal.Serialization
                                                         : $" runtime type of the specified {nameof(item)}: \"{item.GetType().FullName}\"."),
                                                     ex);
             }
+        }
+
+        public static async Task<Payloads> SerializeAsync<T>(this IPayloadConverter converter,
+                                                             IPayloadCodec codec,
+                                                             T item,
+                                                             CancellationToken cancelToken)
+        {
+            Payloads serializedData = new();
+            converter.Serialize<T>(item, serializedData);
+
+            if (codec != null)
+            {
+                try
+                {
+                    serializedData = await codec.EncodeAsync(serializedData, cancelToken);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Cannot {nameof(IPayloadCodec.EncodeAsync)} the serialized form of the specified"
+                                                      + $" {nameof(item)};"
+                                                      + $" type of the specified {nameof(codec)}: \"{codec.GetType().FullName}\";"
+                                                      + $" number of {nameof(Temporal.Api.Common.V1.Payload)}-entries within"
+                                                      + $" the serialized form of the specified {nameof(item)}:"
+                                                      + $" {Format.SpellIfNull(serializedData.Payloads_?.Count)};"
+                                                      + $" static type of the specified {nameof(item)}: \"{typeof(T).FullName}\";"
+                                                      + (item == null
+                                                            ? $" the specified {nameof(item)} is null."
+                                                            : $" runtime type of the specified {nameof(item)}: \"{item.GetType().FullName}\"."),
+                                                        ex);
+                }
+            }
+
+            return serializedData;
         }
 
         private static T DeserializeOrThrow<T>(IPayloadConverter converter, Payloads serializedData)
