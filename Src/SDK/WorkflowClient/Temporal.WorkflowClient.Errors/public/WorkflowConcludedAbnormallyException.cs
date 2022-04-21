@@ -7,42 +7,6 @@ namespace Temporal.WorkflowClient.Errors
 {
     public sealed class WorkflowConcludedAbnormallyException : Exception
     {
-        private static Exception AsException(ITemporalFailure failure)
-        {
-            if (failure == null)
-            {
-                return null;
-            }
-
-            if (failure is not Exception exception)
-            {
-                throw new ArgumentException($"The type of the specified instance of {nameof(ITemporalFailure)} must"
-                                          + $" be a subclass of {nameof(Exception)}, but it is not the case for the"
-                                          + $" actual runtime type (\"{failure.GetType().FullName}\").",
-                                            nameof(failure));
-            }
-
-            return exception;
-        }
-
-        private static ITemporalFailure AsTemporalFailure(Exception exception)
-        {
-            if (exception == null)
-            {
-                return null;
-            }
-
-            if (exception is not ITemporalFailure failure)
-            {
-                throw new ArgumentException($"The type of the specified instance of {nameof(Exception)} must"
-                                          + $" implement the interface {nameof(ITemporalFailure)}, but it is not the case for the"
-                                          + $" actual runtime type (\"{exception.GetType().FullName}\").",
-                                            nameof(exception));
-            }
-
-            return failure;
-        }
-
         private static string FormatMessage(string message,
                                             WorkflowExecutionStatus conclusionStatus,
                                             string @namespace,
@@ -52,10 +16,10 @@ namespace Temporal.WorkflowClient.Errors
                                             ITemporalFailure innerException)
         {
             StringBuilder msg = ExceptionMessage.GetBasis<WorkflowConcludedAbnormallyException>(message,
-                                                                                                AsException(innerException),
+                                                                                                innerException.AsException(),
                                                                                                 out int basisMsgLength);
 
-            if (ExceptionMessage.StartNextInfoItemIfRequired(msg, message, nameof(Namespace), basisMsgLength))
+            if (ExceptionMessage.StartNextInfoItemIfRequired(msg, message, nameof(ConclusionStatus), basisMsgLength))
             {
                 msg.Append(nameof(ConclusionStatus) + "='");
                 msg.Append(conclusionStatus.ToString());
@@ -97,7 +61,7 @@ namespace Temporal.WorkflowClient.Errors
                                                     string workflowChainId,
                                                     string workflowRunId,
                                                     Exception innerException)
-            : this(message, conclusionStatus, @namespace, workflowId, workflowChainId, workflowRunId, AsTemporalFailure(innerException))
+            : this(message, conclusionStatus, @namespace, workflowId, workflowChainId, workflowRunId, innerException.AsTemporalFailure())
         {
         }
 
@@ -109,7 +73,7 @@ namespace Temporal.WorkflowClient.Errors
                                                     string workflowRunId,
                                                     ITemporalFailure innerException)
             : base(FormatMessage(message, conclusionStatus, @namespace, workflowId, workflowChainId, workflowRunId, innerException),
-                   AsException(innerException))
+                   innerException.AsException())
         {
             ConclusionStatus = conclusionStatus;
             Namespace = @namespace;

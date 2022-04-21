@@ -112,22 +112,22 @@ namespace Temporal.WorkflowClient.Errors
             : base(FormatMessage(message, activityTypeName, activityId, scheduledEventId, startedEventId, identity, retryState, innerException),
                    innerException)
         {
-            ActivityTypeName = Format.TrimSafe(activityTypeName);
-            ActivityId = Format.TrimSafe(activityId);
+            ActivityTypeName = activityTypeName ?? String.Empty;
+            ActivityId = activityId ?? String.Empty;
             ScheduledEventId = scheduledEventId;
             StartedEventId = startedEventId;
-            Identity = Format.TrimSafe(identity);
+            Identity = identity ?? String.Empty;
             RetryState = retryState;
         }
 
         internal ActivityException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            ActivityTypeName = Format.TrimSafe(info.GetString(nameof(ActivityTypeName)));
-            ActivityId = Format.TrimSafe(info.GetString(nameof(ActivityId)));
+            ActivityTypeName = info.GetString(nameof(ActivityTypeName)) ?? String.Empty;
+            ActivityId = info.GetString(nameof(ActivityId)) ?? String.Empty;
             ScheduledEventId = info.GetInt64(nameof(ScheduledEventId));
             StartedEventId = info.GetInt64(nameof(StartedEventId));
-            Identity = Format.TrimSafe(info.GetString(nameof(Identity)));
+            Identity = info.GetString(nameof(Identity)) ?? String.Empty;
             RetryState = (RetryState) info.GetInt32(nameof(RetryState));
         }
     }

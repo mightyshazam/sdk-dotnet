@@ -38,6 +38,14 @@ namespace Temporal.Serialization
                         && Equals(delegatingPayloadConverter);
         }
 
+        /// <summary>
+        /// Determines if this payload converter can be considered equal to the specified <c>other</c> converter.
+        /// Among other things, converters are compared for equality when data held in a lazily deresialized container
+        /// is re-serialized. In such cases, if the serializing and the deserializing converters are equal, data does not
+        /// to re round-tripped.
+        /// See <see cref="Temporal.Common.Payloads.PayloadContainers.Unnamed.SerializedDataBacked" /> and 
+        /// <see cref="UnnamedContainerPayloadConverter" />.
+        /// </summary>    
         public virtual bool Equals(DelegatingPayloadConverterBase obj)
         {
             if (Object.ReferenceEquals(this, obj))

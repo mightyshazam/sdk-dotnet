@@ -32,6 +32,42 @@ namespace Temporal.WorkflowClient.Errors
             return rtEx.InnerException.Cast<Exception, ITemporalFailure>();
         }
 
+        public static Exception AsException(this ITemporalFailure failure)
+        {
+            if (failure == null)
+            {
+                return null;
+            }
+
+            if (failure is not Exception exception)
+            {
+                throw new ArgumentException($"The type of the specified instance of {nameof(ITemporalFailure)} must"
+                                          + $" be a subclass of {nameof(Exception)}, but it is not the case for the"
+                                          + $" actual runtime type (\"{failure.GetType().FullName}\").",
+                                            nameof(failure));
+            }
+
+            return exception;
+        }
+
+        internal static ITemporalFailure AsTemporalFailure(this Exception exception)
+        {
+            if (exception == null)
+            {
+                return null;
+            }
+
+            if (exception is not ITemporalFailure failure)
+            {
+                throw new ArgumentException($"The type of the specified instance of {nameof(Exception)} must"
+                                          + $" implement the interface {nameof(ITemporalFailure)}, but it is not the case for the"
+                                          + $" actual runtime type (\"{exception.GetType().FullName}\").",
+                                            nameof(exception));
+            }
+
+            return failure;
+        }
+
         public static async Task<Exception> FromPayloadAsync(Failure failurePayload,
                                                              IPayloadConverter payloadConverter,
                                                              IPayloadCodec payloadCodec,
