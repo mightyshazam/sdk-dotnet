@@ -152,6 +152,65 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine("Cancellation requested. However, it the workflow was not designed to honor it, so it will remain ignored. Look for the request in the workflow history.");
             Console.WriteLine("Look for the request in the workflow history.");
 
+            Console.WriteLine();
+            Console.WriteLine("Getting LatestRun of the workflow...");
+
+            IWorkflowRunHandle latestRun = await workflow.GetLatestRunAsync();
+
+            Console.WriteLine("Got the latest run. Calling Getting LatestRun of the workflow...");
+            Console.WriteLine($"    Namespace:       {latestRun.Namespace}");
+            Console.WriteLine($"    WorkflowId:      {latestRun.WorkflowId}");
+            Console.WriteLine($"    WorkflowRunId:   {latestRun.WorkflowRunId}");
+
+            Console.WriteLine();
+            Console.WriteLine("Sending signal to a run...");
+            Console.WriteLine();
+
+            await latestRun.SignalAsync("Some-Signal-02", Payload.Unnamed(42, DateTimeOffset.Now, "Last-Signal-Argument-Value"));
+
+            Console.WriteLine("Signal sent to run. Look for it in the run history.");
+
+            Console.WriteLine();
+            Console.WriteLine("Creating an independent workflow run handle...");
+
+            IWorkflowRunHandle run2 = client.CreateWorkflowRunHandle(latestRun.WorkflowId, latestRun.WorkflowRunId);
+
+            Console.WriteLine("Independent run handle created.");
+            Console.WriteLine($"    Namespace:       {latestRun.Namespace}");
+            Console.WriteLine($"    WorkflowId:      {latestRun.WorkflowId}");
+            Console.WriteLine($"    WorkflowRunId:   {latestRun.WorkflowRunId}");
+
+            Console.WriteLine();
+            Console.WriteLine("Obtaining owner workflow of independent run handle...");
+            Console.WriteLine();
+
+            IWorkflowHandle ownerWorkflow = await run2.GetOwnerWorkflowAsync();
+
+            Console.WriteLine("Owner workflow obtained.");
+            Console.WriteLine($"    Namespace:       {ownerWorkflow.Namespace}");
+            Console.WriteLine($"    WorkflowId:      {ownerWorkflow.WorkflowId}");
+            Console.WriteLine($"    IsBound:         {ownerWorkflow.IsBound}");
+            Console.WriteLine($"    WorkflowChainId: {ownerWorkflow.WorkflowChainId}");
+
+            Console.WriteLine();
+            Console.WriteLine($"Owner-workflow-handle and the Original-workflow refer to the same chain (TRUE expected):"
+                            + $" {ownerWorkflow.WorkflowChainId.Equals(workflow.WorkflowChainId)}");
+
+            Console.WriteLine($"Owner-workflow-handle and the Original-workflow are the same instance (FALSE expected):"
+                            + $" {Object.ReferenceEquals(ownerWorkflow, workflow)}");
+
+            Console.WriteLine();
+            Console.WriteLine("Sending four signals to a run using independent handle...");
+            Console.WriteLine();
+
+            object[] signal3Inputvalues = new object[] { 42, new { Custom = "Foo", Datatype = 18 } };
+            await latestRun.SignalAsync("Some-Signal-03a", Payload.Unnamed(signal3Inputvalues));
+            await latestRun.SignalAsync("Some-Signal-03b", Payload.Unnamed<object[]>(signal3Inputvalues));
+            await latestRun.SignalAsync("Some-Signal-03c", Payload.Unnamed(42, 43, 44));
+            await latestRun.SignalAsync("Some-Signal-03d", Payload.Unnamed<int[]>(new[] { 42, 43, 44 }));
+
+            Console.WriteLine("Signasl sent via intependent run handle. Look for them in the run history.");
+
             _ = Task.Run(async () =>
                 {
                     TimeSpan delayTermination = TimeSpan.FromSeconds(2);
@@ -232,7 +291,7 @@ namespace Temporal.Demos.AdHocScenarios
 
             try
             {
-                await workflow3.SignalAsync("Some-Signal-02");
+                await workflow3.SignalAsync("Some-Signal-04");
 
                 throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
             }

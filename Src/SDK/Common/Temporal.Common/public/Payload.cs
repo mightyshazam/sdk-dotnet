@@ -25,6 +25,11 @@ namespace Temporal.Common
 
         #region Unnamed(..)
 
+        public static PayloadContainers.Unnamed.InstanceBacked<object> Unnamed(params object[] values)
+        {
+            return Payload.Unnamed<object>(values);
+        }
+
         public static PayloadContainers.Unnamed.InstanceBacked<T> Unnamed<T>(params T[] values)
         {
             return Payload.Unnamed((IReadOnlyList<T>) values);

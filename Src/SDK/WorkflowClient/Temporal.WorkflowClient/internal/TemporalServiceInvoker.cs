@@ -46,6 +46,8 @@ namespace Temporal.WorkflowClient
         {
         }
 
+        #region -- Dispose --
+
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
@@ -73,6 +75,8 @@ namespace Temporal.WorkflowClient
 
             // @ToDo: handle _grpcServiceClient.
         }
+
+        #endregion -- Dispose --
 
         public async Task<StartWorkflow.Result> StartWorkflowAsync<TWfArg>(StartWorkflow.Arguments.StartOnly<TWfArg> opArgs)
         {

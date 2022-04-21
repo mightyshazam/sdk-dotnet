@@ -65,7 +65,7 @@ namespace Temporal.WorkflowClient.Interceptors
 
                 ConclusionEventAttributes = conclusionEventAttributes;
 
-                TemporalClient = null;
+                WorkflowChain = null;
             }
 
             public string Namespace { get; }
@@ -88,7 +88,7 @@ namespace Temporal.WorkflowClient.Interceptors
 
             public bool IsContinuedAsNew { get { return (_continuationRunId != null); } }
 
-            internal ITemporalClient TemporalClient { get; set; }
+            internal IWorkflowHandle WorkflowChain { get; set; }
 
             public bool TryGetContinuationRunId(out string continuationRunId)
             {
@@ -98,10 +98,10 @@ namespace Temporal.WorkflowClient.Interceptors
 
             public bool TryGetContinuationRun(out IWorkflowRunHandle continuationRunHandle)
             {
-                if (TryGetContinuationRunId(out string continuationRunId) && TemporalClient != null)
+                if (TryGetContinuationRunId(out string continuationRunId) && WorkflowChain != null)
                 {
-                    continuationRunHandle = null; // new WorkflowRunHandle(..);
-                    throw new NotImplementedException("@ToDo");
+                    continuationRunHandle = WorkflowChain.CreateRunHandle(continuationRunId);
+                    return true;
                 }
 
                 continuationRunHandle = null;

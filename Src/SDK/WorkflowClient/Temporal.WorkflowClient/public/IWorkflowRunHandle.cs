@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Temporal.Api.Enums.V1;
 using Temporal.Api.WorkflowService.V1;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {
@@ -38,17 +39,21 @@ namespace Temporal.WorkflowClient
         Task<IWorkflowRunResult> AwaitConclusionAsync(CancellationToken cancelToken = default);
 
         Task SignalAsync(string signalName,
+                         SignalWorkflowConfiguration signalConfig = null,
                          CancellationToken cancelToken = default);
 
         Task SignalAsync<TSigArg>(string signalName,
                                   TSigArg signalArg,
+                                  SignalWorkflowConfiguration signalConfig = null,
                                   CancellationToken cancelToken = default);
 
         Task<TResult> QueryAsync<TResult>(string queryName,
+                                          QueryWorkflowConfiguration queryConfig = null,
                                           CancellationToken cancelToken = default);
 
         Task<TResult> QueryAsync<TQryArg, TResult>(string queryName,
                                                    TQryArg queryArg,
+                                                   QueryWorkflowConfiguration queryConfig = null,
                                                    CancellationToken cancelToken = default);
 
         Task RequestCancellationAsync(CancellationToken cancelToken = default);

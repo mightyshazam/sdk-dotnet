@@ -72,6 +72,11 @@ namespace Temporal.WorkflowClient
             }
         }
 
+        internal TemporalClient TemporalServiceClient
+        {
+            get { return _temporalClient; }
+        }
+
         /// <summary>
         /// See the implemented iface API (<see cref="IWorkflowHandle.GetWorkflowTypeNameAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
@@ -140,7 +145,7 @@ namespace Temporal.WorkflowClient
                                                                                                    WorkflowRunId: null,
                                                                                                    throwIfWorkflowNotFound,
                                                                                                    cancelToken));
-                ApplyBindingIfOperationSucceeded(bindingLock, resDesrc);
+                TryApplyBindingIfLockIsHeld(bindingLock, resDesrc);
                 return resDesrc;
             }
             finally
@@ -184,22 +189,17 @@ namespace Temporal.WorkflowClient
                                                                                                                  WorkflowId,
                                                                                                                  WorkflowRunId: null,
                                                                                                                  cancelToken));
-                string chainId = resLatestWfChain.WorkflowChainId;
 
-                try
+                string chainId = resLatestWfChain?.WorkflowChainId;
+
+                if (!TryApplyBindingIfLockIsHeld(bindingLock, resLatestWfChain))
                 {
-                    ValidateWorkflowProperty.ChainId.Bound(chainId);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException($"Failed to {nameof(BindToLatestChainAsync)}(..) because"
-                                                      + $" {nameof(invokerPipeline.GetWorkflowChainIdAsync)}(..)"
-                                                      + $" returned an invalid null {nameof(chainId)}-value. This may be an SDK bug."
-                                                      + $" Please report: https://github.com/temporalio/sdk-dotnet/issues.",
-                                                        ex);
+                    throw new InvalidOperationException($"Failed to {nameof(BindToLatestChainAsync)}(..)."
+                                                      + $" ({nameof(chainId)}={chainId.QuoteOrNull()})."
+                                                      + $" This may be an SDK bug."
+                                                      + $" Please report: https://github.com/temporalio/sdk-dotnet/issues.");
                 }
 
-                Bind(chainId);
                 return chainId;
             }
             finally
@@ -403,16 +403,17 @@ namespace Temporal.WorkflowClient
                                                                                                                        WorkflowRunId: null,
                                                                                                                        FollowWorkflowChain: true,
                                                                                                                        cancelToken));
+                TryApplyBindingIfLockIsHeld(bindingLock, resWfRun);
 
-                if (resWfRun != null && resWfRun is AwaitConclusion.Result resAwaitWfConcl)
+                if (resWfRun != null && resWfRun is AwaitConclusion.Result resAwaitWfConcl && IsBound)
                 {
-                    // If we have a known implementation of IWorkflowRunResult, then set its TemporalClient so that the result's
-                    // TryGetContinuationRun(..) method can create the respective run handle using the right client instance.
+                    // If we have a known implementation of IWorkflowRunResult, then set its WorkflowChain to this chain so that the
+                    // result's TryGetContinuationRun(..) method can create the respective run-handle using the right chain-handle
+                    // and client instances.
 
-                    resAwaitWfConcl.TemporalClient = _temporalClient;
+                    resAwaitWfConcl.WorkflowChain = this;
                 }
 
-                ApplyBindingIfOperationSucceeded(bindingLock, resWfRun);
                 return resWfRun;
             }
             finally
@@ -459,7 +460,7 @@ namespace Temporal.WorkflowClient
                                                                                                           signalArg,
                                                                                                           signalConfig,
                                                                                                           cancelToken));
-                ApplyBindingIfOperationSucceeded(bindingLock, resSigWf);
+                TryApplyBindingIfLockIsHeld(bindingLock, resSigWf);
             }
             finally
             {
@@ -506,7 +507,7 @@ namespace Temporal.WorkflowClient
                                                                                                          queryArg,
                                                                                                          queryConfig,
                                                                                                          cancelToken));
-                ApplyBindingIfOperationSucceeded(bindingLock, resQryWf);
+                TryApplyBindingIfLockIsHeld(bindingLock, resQryWf);
                 return resQryWf.Value;
             }
             finally
@@ -535,7 +536,7 @@ namespace Temporal.WorkflowClient
                                                                                                       workflowChainId,
                                                                                                       WorkflowRunId: null,
                                                                                                       cancelToken));
-                ApplyBindingIfOperationSucceeded(bindingLock, resReqCnclWf);
+                TryApplyBindingIfLockIsHeld(bindingLock, resReqCnclWf);
             }
             finally
             {
@@ -576,7 +577,7 @@ namespace Temporal.WorkflowClient
                                                                                                               reason,
                                                                                                               details,
                                                                                                               cancelToken));
-                ApplyBindingIfOperationSucceeded(bindingLock, resTermWf);
+                TryApplyBindingIfLockIsHeld(bindingLock, resTermWf);
             }
             finally
             {
@@ -586,9 +587,10 @@ namespace Temporal.WorkflowClient
 
         #endregion --- APIs to interact with the chain ---
 
-        #region Privates
 
-        private ITemporalClientInterceptor GetOrCreateServiceInvocationPipeline()
+        #region -- Internals --
+
+        internal ITemporalClientInterceptor GetOrCreateServiceInvocationPipeline()
         {
 
             ITemporalClientInterceptor pipeline = Volatile.Read(ref _serviceInvocationPipeline);
@@ -596,25 +598,98 @@ namespace Temporal.WorkflowClient
             if (pipeline == null)
             {
                 ITemporalClientInterceptor newPipeline = _temporalClient.CreateServiceInvocationPipeline(this);
-                pipeline = Concurrent.TrySetOrGetValue(ref _serviceInvocationPipeline, newPipeline);
+                pipeline = Concurrent.TrySetOrGetValue(ref _serviceInvocationPipeline, newPipeline, out bool isNewPipelineSet);
+
+                if (!isNewPipelineSet)
+                {
+                    newPipeline.Dispose();
+                }
             }
 
             return pipeline;
         }
 
+        /// <summary>
+        /// Binds this chain to the chain-id provided by <c>bindingResult</c> if it can provide the bound chain info.
+        /// Otherwise, does nothing.
+        /// Returns whether the binding was applied.
+        /// <para>
+        /// ATTENTION: Code within this class (<see cref="WorkflowHandle"/>) must only invoke this method via
+        /// <see cref="TryApplyBindingIfLockIsHeld(SemaphoreSlim, IWorkflowChainBindingResult)" /> to make sure that binding races are
+        /// avoided. However, <see cref="WorkflowRunHandle"/>-instances that are not associated with a <see cref="WorkflowHandle"/>
+        /// can create a a chain handle (i.e. an <see cref="WorkflowHandle"/>-instance) for EACH operation in order to access its
+        /// invocation pipeline, until the first binding operation completes, the respective chain handle gets bound, and the run
+        /// handle gets permanenetly associated with that chain handle. In those cases binding races cannot occur and the run handle
+        /// can call this method directly. <br/>
+        /// So, if you invoke this method, be sure that you did not expose this <c>WorkflowHandle</c> instance and that you can
+        /// guarantee that no remote operations are invoked concurrently!</para>
+        /// </summary>        
+        internal bool TryApplyBindingUnsafe(IWorkflowChainBindingResult bindingResult)
+        {
+            if (bindingResult != null && bindingResult.TryGetBoundWorkflowChainId(out string boundChainId))
+            {
+                Bind(boundChainId);
+                return true;
+            }
+
+            return false;
+        }
+
+        internal void ValidateIsBound()
+        {
+            if (IsBound)
+            {
+                return;
+            }
+
+            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowHandle)} instance"
+                                              + $" is not bound to a particular workflow chain. An \"unbound\""
+                                              + $" {nameof(IWorkflowHandle)} represents the last (aka most recent) workflow chain"
+                                              + $" with the given {nameof(WorkflowId)}. An {nameof(IWorkflowHandle)} gets bound"
+                                              + $" when any API is invoked that requires an interaction with an actual workflow"
+                                              + $" run on the server. At that time, the most recent workflow run (and, therefore,"
+                                              + $" the workflow chain that contains it) is determined, and the"
+                                              + $" {nameof(IWorkflowHandle)} instance is bound to that chain. From then on the"
+                                              + $" {nameof(IWorkflowHandle)} instance always refers to that particular workflow"
+                                              + $" chain, even if more recent chains are started later. To bind this instance,"
+                                              + $" call `{nameof(EnsureBoundAsync)}(..)` or any other API that interacts with a"
+                                              + $" particular workflow.");
+        }
+
+        #endregion -- Internals --
+
+
+        #region -- Privates --
+
+        private void ValidateIsNotBound()
+        {
+            if (!IsBound)
+            {
+                return;
+            }
+
+            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowHandle)} instance"
+                                              + $" is already bound to a particular workflow chain. A \"bound\" {nameof(IWorkflowHandle)}"
+                                              + $" instance represents a particular workflow chain with a particular {nameof(WorkflowId)}"
+                                              + $" and a particular {nameof(WorkflowChainId)} (aka the {nameof(IWorkflowRunHandle.WorkflowRunId)}"
+                                              + $" of the first workflow run in the chain). On contrary, an \"unbound\""
+                                              + $" {nameof(IWorkflowHandle)} represents the last (aka most recent) workflow chain"
+                                              + $" with of all chains with a particular {nameof(WorkflowId)}.");
+        }
+
         private void Bind(string workflowChainId)
         {
             Validate.NotNullOrWhitespace(workflowChainId);
+            ValidateIsNotBound();
             _workflowChainId = workflowChainId;
             _isBound = true;
         }
 
-        private bool ApplyBindingIfOperationSucceeded(SemaphoreSlim bindingLock, IWorkflowChainBindingResult bindingResult)
+        private bool TryApplyBindingIfLockIsHeld(SemaphoreSlim bindingLock, IWorkflowChainBindingResult bindingResult)
         {
-            if (bindingLock != null && bindingResult != null && bindingResult.TryGetBoundWorkflowChainId(out string boundChainId))
+            if (bindingLock != null)
             {
-                Bind(boundChainId);
-                return true;
+                return TryApplyBindingUnsafe(bindingResult);
             }
 
             return false;
@@ -660,42 +735,10 @@ namespace Temporal.WorkflowClient
             return bindingLock;
         }
 
-        private void ValidateIsNotBound()
-        {
-            if (!IsBound)
-            {
-                return;
-            }
+        #endregion -- Privates --
 
-            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowHandle)} instance"
-                                              + $" is already bound to a particular workflow chain. A \"bound\" {nameof(IWorkflowHandle)}"
-                                              + $" instance represents a particular workflow chain with a particular {nameof(WorkflowId)}"
-                                              + $" and a particular {nameof(WorkflowChainId)} (aka the {nameof(IWorkflowRunHandle.WorkflowRunId)}"
-                                              + $" of the first workflow run in the chain). On contrary, an \"unbound\""
-                                              + $" {nameof(IWorkflowHandle)} represents the last (aka most recent) workflow chain"
-                                              + $" with of all chains with a particular {nameof(WorkflowId)}.");
-        }
 
-        private void ValidateIsBound()
-        {
-            if (IsBound)
-            {
-                return;
-            }
-
-            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowHandle)} instance"
-                                              + $" is not bound to a particular workflow chain. An \"unbound\""
-                                              + $" {nameof(IWorkflowHandle)} represents the last (aka most recent) workflow chain"
-                                              + $" with the given {nameof(WorkflowId)}. An {nameof(IWorkflowHandle)} gets bound"
-                                              + $" when any API is invoked that requires an interaction with an actual workflow"
-                                              + $" run on the server. At that time, the most recent workflow run (and, therefore,"
-                                              + $" the workflow chain that contains it) is determined, and the"
-                                              + $" {nameof(IWorkflowHandle)} instance is bound to that chain. From then on the"
-                                              + $" {nameof(IWorkflowHandle)} instance always refers to that particular workflow"
-                                              + $" chain, even if more recent chains are started later. To bind this instance,"
-                                              + $" call `{nameof(EnsureBoundAsync)}(..)` or any other API that interacts with a"
-                                              + $" particular workflow.");
-        }
+        #region -- Dispose --
 
         protected virtual void Dispose(bool disposing)
         {
@@ -712,7 +755,6 @@ namespace Temporal.WorkflowClient
                 {
                     pipeline.Dispose();
                 }
-
             }
         }
 
@@ -728,6 +770,6 @@ namespace Temporal.WorkflowClient
             GC.SuppressFinalize(this);
         }
 
-        #endregion Privates
+        #endregion -- Dispose --
     }
 }

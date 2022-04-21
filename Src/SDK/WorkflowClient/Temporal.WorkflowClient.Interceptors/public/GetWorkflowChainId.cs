@@ -10,6 +10,21 @@ namespace Temporal.WorkflowClient.Interceptors
                                 string WorkflowRunId,
                                 CancellationToken CancelToken);
 
-        public record Result(string WorkflowChainId);
+        public class Result : IWorkflowChainBindingResult
+        {
+            public Result(string workflowChainId)
+            {
+                ValidateWorkflowProperty.ChainId.Bound(workflowChainId);
+                WorkflowChainId = workflowChainId;
+            }
+
+            public string WorkflowChainId { get; }
+
+            public bool TryGetBoundWorkflowChainId(out string workflowChainId)
+            {
+                workflowChainId = WorkflowChainId;
+                return (workflowChainId != null);
+            }
+        }
     }
 }

@@ -248,7 +248,7 @@ namespace Temporal.WorkflowClient
         public IWorkflowRunHandle CreateWorkflowRunHandle(string workflowId,
                                                           string workflowRunId)
         {
-            throw new NotImplementedException("@ToDo");
+            return new WorkflowRunHandle(this, workflowId, workflowRunId);
         }
         #endregion CreateWorkflowRunHandle(..)
 

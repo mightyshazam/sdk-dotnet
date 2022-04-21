@@ -61,7 +61,7 @@ namespace Temporal.Serialization
                                                         Payloads serializedData,
                                                         CancellationToken cancelToken)
         {
-            if (codec != null && serializedData !=  null)
+            if (codec != null && serializedData != null)
             {
                 try
                 {
