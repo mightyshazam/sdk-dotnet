@@ -15,7 +15,7 @@ namespace Temporal.WorkflowClient.Interceptors
                                                 string WorkflowTypeName,
                                                 string TaskQueue,
                                                 TWfArg WorkflowArg,
-                                                StartWorkflowChainConfiguration WorkflowConfig,
+                                                StartWorkflowConfiguration WorkflowConfig,
                                                 CancellationToken CancelToken);
 
             public record StartOnly<TWfArg>(string Namespace,
@@ -23,7 +23,7 @@ namespace Temporal.WorkflowClient.Interceptors
                                             string WorkflowTypeName,
                                             string TaskQueue,
                                             TWfArg WorkflowArg,
-                                            StartWorkflowChainConfiguration WorkflowConfig,
+                                            StartWorkflowConfiguration WorkflowConfig,
                                             bool ThrowIfWorkflowChainAlreadyExists,
                                             CancellationToken CancelToken)
                 : Base<TWfArg>(Namespace,
@@ -41,7 +41,7 @@ namespace Temporal.WorkflowClient.Interceptors
                                                       TWfArg WorkflowArg,
                                                       string SignalName,
                                                       TSigArg SignalArg,
-                                                      StartWorkflowChainConfiguration WorkflowConfig,
+                                                      StartWorkflowConfiguration WorkflowConfig,
                                                       CancellationToken CancelToken)
         : Base<TWfArg>(Namespace,
                                WorkflowId,

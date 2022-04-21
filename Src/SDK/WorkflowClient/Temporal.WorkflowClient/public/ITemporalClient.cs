@@ -23,14 +23,14 @@ namespace Temporal.WorkflowClient
         Task<IWorkflowHandle> StartWorkflowAsync(string workflowId,
                                                  string workflowTypeName,
                                                  string taskQueue,
-                                                 StartWorkflowChainConfiguration workflowConfig = null,
+                                                 StartWorkflowConfiguration workflowConfig = null,
                                                  CancellationToken cancelToken = default);
 
         Task<IWorkflowHandle> StartWorkflowAsync<TWfArg>(string workflowId,
                                                          string workflowTypeName,
                                                          string taskQueue,
                                                          TWfArg workflowArg,
-                                                         StartWorkflowChainConfiguration workflowConfig = null,
+                                                         StartWorkflowConfiguration workflowConfig = null,
                                                          CancellationToken cancelToken = default);
         #endregion StartWorkflowAsync(..)
 
@@ -41,7 +41,7 @@ namespace Temporal.WorkflowClient
                                                            string workflowTypeName,
                                                            string taskQueue,
                                                            string signalName,
-                                                           StartWorkflowChainConfiguration workflowConfig = null,
+                                                           StartWorkflowConfiguration workflowConfig = null,
                                                            CancellationToken cancelToken = default);
 
         Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TSigArg>(string workflowId,
@@ -49,7 +49,7 @@ namespace Temporal.WorkflowClient
                                                                     string taskQueue,
                                                                     string signalName,
                                                                     TSigArg signalArg,
-                                                                    StartWorkflowChainConfiguration workflowConfig = null,
+                                                                    StartWorkflowConfiguration workflowConfig = null,
                                                                     CancellationToken cancelToken = default);
 
         Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TWfArg>(string workflowId,
@@ -57,7 +57,7 @@ namespace Temporal.WorkflowClient
                                                                    string taskQueue,
                                                                    TWfArg workflowArg,
                                                                    string signalName,
-                                                                   StartWorkflowChainConfiguration workflowConfig = null,
+                                                                   StartWorkflowConfiguration workflowConfig = null,
                                                                    CancellationToken cancelToken = default);
 
         Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
@@ -66,7 +66,7 @@ namespace Temporal.WorkflowClient
                                                                             TWfArg workflowArg,
                                                                             string signalName,
                                                                             TSigArg signalArg,
-                                                                            StartWorkflowChainConfiguration workflowConfig = null,
+                                                                            StartWorkflowConfiguration workflowConfig = null,
                                                                             CancellationToken cancelToken = default);
 
         #endregion StartWorkflowWithSignalAsync(..)

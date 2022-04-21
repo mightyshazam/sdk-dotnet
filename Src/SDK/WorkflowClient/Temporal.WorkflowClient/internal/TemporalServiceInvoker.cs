@@ -136,19 +136,19 @@ namespace Temporal.WorkflowClient
 
             if (opArgs.WorkflowConfig.Memo != null)
             {
-                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.Memo)}"
+                throw new NotSupportedException($"{nameof(StartWorkflowConfiguration)}.{nameof(StartWorkflowConfiguration.Memo)}"
                                                + " is not supported in this SDK version (@ToDo)");
             }
 
             if (opArgs.WorkflowConfig.SearchAttributes != null)
             {
-                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.SearchAttributes)}"
+                throw new NotSupportedException($"{nameof(StartWorkflowConfiguration)}.{nameof(StartWorkflowConfiguration.SearchAttributes)}"
                                                + " is not supported in this SDK version (@ToDo)");
             }
 
             if (opArgs.WorkflowConfig.Header != null)
             {
-                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.Header)}"
+                throw new NotSupportedException($"{nameof(StartWorkflowConfiguration)}.{nameof(StartWorkflowConfiguration.Header)}"
                                                + " is not supported in this SDK version (@ToDo)");
             }
 
@@ -256,19 +256,19 @@ namespace Temporal.WorkflowClient
 
             if (opArgs.WorkflowConfig.Memo != null)
             {
-                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.Memo)}"
+                throw new NotSupportedException($"{nameof(StartWorkflowConfiguration)}.{nameof(StartWorkflowConfiguration.Memo)}"
                                                + " is not supported in this SDK version (@ToDo)");
             }
 
             if (opArgs.WorkflowConfig.SearchAttributes != null)
             {
-                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.SearchAttributes)}"
+                throw new NotSupportedException($"{nameof(StartWorkflowConfiguration)}.{nameof(StartWorkflowConfiguration.SearchAttributes)}"
                                                + " is not supported in this SDK version (@ToDo)");
             }
 
             if (opArgs.WorkflowConfig.Header != null)
             {
-                throw new NotSupportedException($"{nameof(StartWorkflowChainConfiguration)}.{nameof(StartWorkflowChainConfiguration.Header)}"
+                throw new NotSupportedException($"{nameof(StartWorkflowConfiguration)}.{nameof(StartWorkflowConfiguration.Header)}"
                                                + " is not supported in this SDK version (@ToDo)");
             }
 

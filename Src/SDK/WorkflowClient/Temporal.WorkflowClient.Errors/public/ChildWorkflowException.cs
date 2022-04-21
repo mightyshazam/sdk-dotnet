@@ -120,7 +120,7 @@ namespace Temporal.WorkflowClient.Errors
                                       long initiatedEventId,
                                       long startedEventId,
                                       RetryState retryState,
-                                      Exception innerException)
+                                      ITemporalFailure innerException)
             : base(FormatMessage(message,
                                  @namespace,
                                  workflowId,
@@ -129,13 +129,13 @@ namespace Temporal.WorkflowClient.Errors
                                  initiatedEventId,
                                  startedEventId,
                                  retryState,
-                                 innerException),
-                   innerException)
+                                 innerException.AsException()),
+                   innerException.AsException())
         {
-            Namespace = Format.TrimSafe(@namespace);
-            WorkflowId = Format.TrimSafe(workflowId);
-            WorkflowRunId = Format.TrimSafe(workflowRunId);
-            WorkflowTypeName = Format.TrimSafe(workflowTypeName);
+            Namespace = @namespace ?? String.Empty;
+            WorkflowId = workflowId ?? String.Empty;
+            WorkflowRunId = workflowRunId ?? String.Empty;
+            WorkflowTypeName = workflowTypeName ?? String.Empty;
             InitiatedEventId = initiatedEventId;
             StartedEventId = startedEventId;
             RetryState = retryState;
@@ -144,10 +144,10 @@ namespace Temporal.WorkflowClient.Errors
         internal ChildWorkflowException(SerializationInfo info, StreamingContext context)
                 : base(info, context)
         {
-            Namespace = Format.TrimSafe(info.GetString(nameof(Namespace)));
-            WorkflowId = Format.TrimSafe(info.GetString(nameof(WorkflowId)));
-            WorkflowRunId = Format.TrimSafe(info.GetString(nameof(WorkflowRunId)));
-            WorkflowTypeName = Format.TrimSafe(info.GetString(nameof(WorkflowTypeName)));
+            Namespace = info.GetString(nameof(Namespace)) ?? String.Empty;
+            WorkflowId = info.GetString(nameof(WorkflowId)) ?? String.Empty;
+            WorkflowRunId = info.GetString(nameof(WorkflowRunId)) ?? String.Empty;
+            WorkflowTypeName = info.GetString(nameof(WorkflowTypeName)) ?? String.Empty;
             InitiatedEventId = info.GetInt64(nameof(InitiatedEventId));
             StartedEventId = info.GetInt64(nameof(StartedEventId));
             RetryState = (RetryState) info.GetInt32(nameof(RetryState));
