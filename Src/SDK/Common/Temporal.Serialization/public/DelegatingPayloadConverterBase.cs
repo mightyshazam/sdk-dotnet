@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Candidly.Util;
 using Temporal.Api.Common.V1;
 
@@ -28,6 +29,38 @@ namespace Temporal.Serialization
             _delegateConverters = (delegateConverters is IPayloadConverter compositeConverter)
                                         ? compositeConverter
                                         : new CompositePayloadConverter(delegateConverters);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return (obj != null)
+                        && (obj is DelegatingPayloadConverterBase delegatingPayloadConverter)
+                        && Equals(delegatingPayloadConverter);
+        }
+
+        /// <summary>
+        /// Determines if this payload converter can be considered equal to the specified <c>other</c> converter.
+        /// Among other things, converters are compared for equality when data held in a lazily deresialized container
+        /// is re-serialized. In such cases, if the serializing and the deserializing converters are equal, data does not
+        /// to re round-tripped.
+        /// See <see cref="Temporal.Common.Payloads.PayloadContainers.Unnamed.SerializedDataBacked" /> and 
+        /// <see cref="UnnamedContainerPayloadConverter" />.
+        /// </summary>    
+        public virtual bool Equals(DelegatingPayloadConverterBase obj)
+        {
+            if (Object.ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return (obj != null)
+                        && this.GetType().Equals(obj.GetType())
+                        && DelegateConvertersContainer.Equals(DelegateConvertersContainer);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 }

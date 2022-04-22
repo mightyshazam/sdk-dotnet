@@ -102,7 +102,7 @@ namespace Temporal.Serialization
                         + $"\nThe specified serialized {nameof(Temporal.Api.Common.V1.Payloads)}-collection contains multiple"
                         + $" {nameof(Temporal.Api.Common.V1.Payload)}-entries. Built-in {nameof(IPayloadConverter)} implementations"
                         + $" only support deserializing such data into a target container of type"
-                        + $" \"{typeof(PayloadContainers.ForUnnamedValues.SerializedDataBacked).FullName}\"."
+                        + $" \"{typeof(PayloadContainers.Unnamed.SerializedDataBacked).FullName}\"."
                         + $" Use such container as de-serialization target, or implement a custom {nameof(IPayloadConverter)}"
                         + $" to handle multiple {nameof(Temporal.Api.Common.V1.Payload)}-entries within a single"
                         + $" {nameof(Temporal.Api.Common.V1.Payloads)}-collection.";
@@ -125,10 +125,10 @@ namespace Temporal.Serialization
                         : $"Cannot {nameof(Serialize)} the specified {nameof(item)}"
                             + $" because the specified {nameof(IPayloadConverter)} of cannot convert that {nameof(item)}.";
 
-            if (item != null && item is IUnnamedValuesContainer valuesContainer)
+            if (item != null && item is PayloadContainers.IUnnamed valuesContainer)
             {
                 message = message
-                        + $"\nThe specified data item is an {nameof(IUnnamedValuesContainer)} that holds {valuesContainer.Count} values."
+                        + $"\nThe specified data item is an {nameof(PayloadContainers.IUnnamed)} that holds {valuesContainer.Count} values."
                         + $" Although the specified {nameof(IPayloadConverter)} may be able to handle the container itself,"
                         + $" it may have not been able to handle one or more of the values within the container.";
             }
@@ -158,8 +158,8 @@ namespace Temporal.Serialization
         private static bool IsUnwrappedEnumerable<T>(T item)
         {
             // If Wrapped => False:
-            if ((item != null && item is IUnnamedValuesContainer)
-                    || typeof(IUnnamedValuesContainer).IsAssignableFrom(typeof(T)))
+            if ((item != null && item is PayloadContainers.IUnnamed)
+                    || typeof(PayloadContainers.IUnnamed).IsAssignableFrom(typeof(T)))
             {
                 return false;
             }

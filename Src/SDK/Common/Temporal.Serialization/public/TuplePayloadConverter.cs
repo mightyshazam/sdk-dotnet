@@ -12,7 +12,7 @@ namespace Temporal.Serialization
     /// The "build-in" payload converters can only de-/serialize a <see cref="Payloads"/>-collections with a
     /// single <see cref="Payload"/>-entry, with the exception of <see cref="UnnamedValuesContainerPayloadConverter"/>,
     /// which can deal with any number of <see cref="Payload"/>-entries, but can only de-/serialize to and from 
-    /// an <see cref="Temporal.Common.Payloads.IUnnamedValuesContainer"/>. Such container offers strongly-typed lazy
+    /// an <see cref="Temporal.Common.Payloads.PayloadContainers.IUnnamed"/>. Such container offers strongly-typed lazy
     /// access to the underlying data. Hopwever, users may provide their own implementations of <see cref="IPayloadConverter"/> that
     /// handle mupliple <see cref="Payload"/>-entries. This class is an example of a <c>IPayloadConverter</c> that can 
     /// convert any 3-tuple to/from a <see cref="Payloads"/>-collection with three <see cref="Payload"/>-entries.
@@ -84,6 +84,16 @@ namespace Temporal.Serialization
             Payloads wrapper = new();
             wrapper.Payloads_.Add(serializedData.Payloads_[index]);
             return wrapper;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Object.ReferenceEquals(this, obj) || ((obj != null) && this.GetType().Equals(obj.GetType()));
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 }

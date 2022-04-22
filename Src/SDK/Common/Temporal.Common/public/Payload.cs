@@ -16,6 +16,8 @@ namespace Temporal.Common
 
         public static object Named<T>(params object[] namedValues)
         {
+            // This method is currently used in nameof(..) clauses when generating descriptive messages.
+            // @ToDo: A full implementation will be added in later iterations.
             throw new NotImplementedException("@ToDo");
         }
 
@@ -23,12 +25,12 @@ namespace Temporal.Common
 
         #region Unnamed(..)
 
-        public static PayloadContainers.ForUnnamedValues.InstanceBacked<T> Unnamed<T>(params T[] values)
+        public static PayloadContainers.Unnamed.InstanceBacked<T> Unnamed<T>(params T[] values)
         {
             return Payload.Unnamed((IReadOnlyList<T>) values);
         }
 
-        public static PayloadContainers.ForUnnamedValues.InstanceBacked<T> Unnamed<T>(IEnumerable<T> values)
+        public static PayloadContainers.Unnamed.InstanceBacked<T> Unnamed<T>(IEnumerable<T> values)
         {
             Validate.NotNull(values);
 
@@ -46,9 +48,9 @@ namespace Temporal.Common
             return Payload.Unnamed<T>(valsList);
         }
 
-        public static PayloadContainers.ForUnnamedValues.InstanceBacked<T> Unnamed<T>(IReadOnlyList<T> values)
+        public static PayloadContainers.Unnamed.InstanceBacked<T> Unnamed<T>(IReadOnlyList<T> values)
         {
-            return new PayloadContainers.ForUnnamedValues.InstanceBacked<T>(values);
+            return new PayloadContainers.Unnamed.InstanceBacked<T>(values);
         }
 
         #endregion Unnamed(..)

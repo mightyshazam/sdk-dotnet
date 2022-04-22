@@ -291,10 +291,10 @@ namespace Temporal.WorkflowClient
 
             // Apply custom interceptor factory:
 
-            Action<IWorkflowChain, IList<ITemporalClientInterceptor>> customInterceptorFactory = Configuration.ClientInterceptorFactory;
+            Action<ITemporalClient, IWorkflowChain, IList<ITemporalClientInterceptor>> customInterceptorFactory = Configuration.ClientInterceptorFactory;
             if (customInterceptorFactory != null)
             {
-                customInterceptorFactory(workflowHandle, pipeline);
+                customInterceptorFactory(this, workflowHandle, pipeline);
             }
 
             // Now we need to add the final interceptor, aka the "sink".
@@ -302,10 +302,10 @@ namespace Temporal.WorkflowClient
             // Create the payload converter for the sink:
 
             IPayloadConverter payloadConverter = null;
-            Func<IWorkflowChain, IPayloadConverter> customPayloadConverterFactory = Configuration.PayloadConverterFactory;
+            Func<ITemporalClient, IWorkflowChain, IPayloadConverter> customPayloadConverterFactory = Configuration.PayloadConverterFactory;
             if (customPayloadConverterFactory != null)
             {
-                payloadConverter = customPayloadConverterFactory(workflowHandle);
+                payloadConverter = customPayloadConverterFactory(this, workflowHandle);
             }
 
             if (payloadConverter == null)
@@ -316,10 +316,10 @@ namespace Temporal.WorkflowClient
             // Create the payload codec for the sink:
 
             IPayloadCodec payloadCodec = null;
-            Func<IWorkflowChain, IPayloadCodec> customPayloadCodecFactory = Configuration.PayloadCodecFactory;
+            Func<ITemporalClient, IWorkflowChain, IPayloadCodec> customPayloadCodecFactory = Configuration.PayloadCodecFactory;
             if (customPayloadCodecFactory != null)
             {
-                payloadCodec = customPayloadCodecFactory(workflowHandle);
+                payloadCodec = customPayloadCodecFactory(this, workflowHandle);
             }
 
             // Create the sink:

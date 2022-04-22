@@ -67,13 +67,13 @@ namespace Temporal.WorkflowClient
         /// Factory receives the `IWorkflowChain` for which the payload converter is being constructed and returns
         /// a new non-null data converter to be applied to all calls made by the client for the specific `IWorkflowChain` instance.
         /// </summary>
-        public Func<IWorkflowChain, IPayloadConverter> PayloadConverterFactory { get; init; }
+        public Func<ITemporalClient, IWorkflowChain, IPayloadConverter> PayloadConverterFactory { get; init; }
 
         /// <summary>
         /// Factory receives the `IWorkflowChain` for which the payload codec is being constructed and returns
         /// a new non-null payload converter to be applied to all calls made by the client for the specific `IWorkflowChain` instance.
         /// </summary>
-        public Func<IWorkflowChain, IPayloadCodec> PayloadCodecFactory { get; init; }
+        public Func<ITemporalClient, IWorkflowChain, IPayloadCodec> PayloadCodecFactory { get; init; }
 
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Temporal.WorkflowClient
         /// the aforementioned sink) or adding new interceptors before or after.
         /// Nulls must not be added to the list.
         /// </summary>
-        public Action<IWorkflowChain, IList<ITemporalClientInterceptor>> ClientInterceptorFactory { get; init; }
+        public Action<ITemporalClient, IWorkflowChain, IList<ITemporalClientInterceptor>> ClientInterceptorFactory { get; init; }
 
         // . . .
     }

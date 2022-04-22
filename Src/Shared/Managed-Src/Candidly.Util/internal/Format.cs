@@ -58,6 +58,11 @@ namespace Candidly.Util
             return builder.ToString();
         }
 
+        public static string TrimSafe(string str)
+        {
+            return String.IsNullOrWhiteSpace(str) ? String.Empty : str.Trim();
+        }
+
         public static string QuoteIfString<T>(T val)
         {
             if (val == null)

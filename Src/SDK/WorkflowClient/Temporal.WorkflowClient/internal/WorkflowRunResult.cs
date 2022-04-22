@@ -142,9 +142,9 @@ namespace Temporal.WorkflowClient
             }
         }
 
-        public IUnnamedValuesContainer GetValue()
+        public PayloadContainers.IUnnamed GetValue()
         {
-            return GetValue<PayloadContainers.ForUnnamedValues.SerializedDataBacked>();
+            return GetValue<PayloadContainers.Unnamed.SerializedDataBacked>();
         }
 
         /// <summary>
@@ -167,9 +167,9 @@ namespace Temporal.WorkflowClient
                                               + $" does not represent any serialized value payloads.");
         }
 
-        public IUnnamedValuesContainer GetPayload()
+        public PayloadContainers.IUnnamed GetPayload()
         {
-            return GetPayload<IUnnamedValuesContainer>();
+            return GetPayload<PayloadContainers.IUnnamed>();
         }
 
         /// <summary>
@@ -186,9 +186,9 @@ namespace Temporal.WorkflowClient
             return _payloadConverter.TryDeserialize<TVal>(_serializedPayloads, out deserializedPayload);
         }
 
-        public bool TryGetPayload(out IUnnamedValuesContainer deserializedPayload)
+        public bool TryGetPayload(out PayloadContainers.IUnnamed deserializedPayload)
         {
-            bool canGet = TryGetPayload(out PayloadContainers.ForUnnamedValues.SerializedDataBacked container);
+            bool canGet = TryGetPayload(out PayloadContainers.Unnamed.SerializedDataBacked container);
             deserializedPayload = container;
             return canGet;
         }

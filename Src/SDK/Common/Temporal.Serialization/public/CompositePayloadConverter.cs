@@ -15,7 +15,7 @@ namespace Temporal.Serialization
             {
                 new VoidPayloadConverter(),
                 new NullPayloadConverter(),
-                new UnnamedValuesContainerPayloadConverter(),
+                new UnnamedContainerPayloadConverter(),
                 new CatchAllPayloadConverter(),
                 //@ToDo
             };
@@ -100,6 +100,58 @@ namespace Temporal.Serialization
         IEnumerator IEnumerable.GetEnumerator()
         {
             return ((IEnumerable<IPayloadConverter>) this).GetEnumerator();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return (obj != null)
+                        && (obj is CompositePayloadConverter compositePayloadConverter)
+                        && Equals(compositePayloadConverter);
+        }
+
+        /// <summary>
+        /// Determines if this payload converter can be considered equal to the specified <c>other</c> converter.
+        /// Among other things, converters are compared for equality when data held in a lazily deresialized container
+        /// is re-serialized. In such cases, if the serializing and the deserializing converters are equal, data does not
+        /// to re round-tripped.
+        /// See <see cref="Temporal.Common.Payloads.PayloadContainers.Unnamed.SerializedDataBacked" /> and 
+        /// <see cref="UnnamedContainerPayloadConverter" />.
+        /// </summary>        
+        public bool Equals(CompositePayloadConverter other)
+        {
+            if (Object.ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            if ((other == null) || !this.GetType().Equals(other.GetType()))
+            {
+                return false;
+            }
+
+            int countConverters = Converters.Count;
+            if (countConverters != other.Converters.Count)
+            {
+                return false;
+            }
+
+            for (int c = 0; c < countConverters; c++)
+            {
+                IPayloadConverter c1 = Converters[c];
+                IPayloadConverter c2 = other.Converters[c];
+
+                if (!(Object.ReferenceEquals(c1, c2) || c1.Equals(c2)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 }
