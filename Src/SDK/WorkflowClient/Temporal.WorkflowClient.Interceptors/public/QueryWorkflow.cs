@@ -12,9 +12,9 @@ namespace Temporal.WorkflowClient.Interceptors
                                          string QueryName,
                                          TQryArg QueryArg,
                                          QueryWorkflowConfiguration QueryConfig,
-                                         CancellationToken CancelToken);
+                                         CancellationToken CancelToken) : IWorkflowOperationArguments;
 
-        public class Result<TResult> : IWorkflowChainBindingResult
+        public class Result<TResult> : IWorkflowOperationResult
         {
             private readonly TResult _resultValue;
 

@@ -223,7 +223,7 @@ namespace Temporal.WorkflowClient
         /// </summary>
         public IWorkflowHandle CreateWorkflowHandle(string workflowId)
         {
-            return new WorkflowHandle(this, workflowId);
+            return WorkflowHandle.CreateUnbound(this, workflowId);
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace Temporal.WorkflowClient
         public IWorkflowHandle CreateWorkflowHandle(string workflowId,
                                                     string workflowChainId)
         {
-            return new WorkflowHandle(this, workflowId, workflowChainId);
+            return WorkflowHandle.CreateBound(this, workflowId, workflowChainId);
         }
         #endregion CreateWorkflowHandle(..)
 
@@ -309,22 +309,52 @@ namespace Temporal.WorkflowClient
         #region -- Service invocation pipeline management --
 
         /// <summary>
-        /// <c>WorkflowHandle</c> instances call this to create the invocation pipelie for themselves.
-        /// During races, this mthod may be called several times for a given chain, but only the pipeline returned
-        /// by the first completing invocation will atomically set, others will be discarded.
-        /// </summary>        
-        internal ITemporalClientInterceptor CreateServiceInvocationPipeline(IWorkflowHandle workflowHandle)
+        /// <c>WorkflowHandle</c> and <c>WorkflowRunHandle</c> instances call this to create the invocation pipelie for themselves.        
+        /// </summary>
+        internal ITemporalClientInterceptor GetOrCreateServiceInvocationPipeline(object initialPipelineInvoker,
+                                                                                 ref ITemporalClientInterceptor pipelineStorageRef,
+                                                                                 object pipelineCreationLock,
+                                                                                 IWorkflowOperationArguments initialOperationArguments)
+        {
+
+            ITemporalClientInterceptor pipeline = pipelineStorageRef;
+
+            if (pipeline == null)
+            {
+                lock (pipelineCreationLock)
+                {
+                    pipeline = pipelineStorageRef;
+
+                    if (pipeline == null)
+                    {
+                        pipeline = CreateServiceInvocationPipeline(initialPipelineInvoker, initialOperationArguments);
+                        pipelineStorageRef = pipeline;
+                    }
+                }
+            }
+
+            return pipeline;
+        }
+
+        private ITemporalClientInterceptor CreateServiceInvocationPipeline(object initialPipelineInvoker,
+                                                                           IWorkflowOperationArguments initialOperationArguments)
         {
             // Create default interceptor pipelie for all workflows (tracing etc..):
 
-            List<ITemporalClientInterceptor> pipeline = CreateDefaultServiceInvocationPipeline(workflowHandle);
+            List<ITemporalClientInterceptor> pipeline = CreateDefaultServiceInvocationPipeline();
+
+            // Construct the property bag used for passing information to pipeline item factories:
+
+            ServiceInvocationPipelineItemFactoryArguments pipelineItemFactoryArguments = new(this,
+                                                                                             initialPipelineInvoker,
+                                                                                             initialOperationArguments);
 
             // Apply custom interceptor factory:
 
-            Action<ITemporalClient, IWorkflowHandle, IList<ITemporalClientInterceptor>> customInterceptorFactory = Configuration.ClientInterceptorFactory;
+            Action<ServiceInvocationPipelineItemFactoryArguments, IList<ITemporalClientInterceptor>> customInterceptorFactory = Configuration.ClientInterceptorFactory;
             if (customInterceptorFactory != null)
             {
-                customInterceptorFactory(this, workflowHandle, pipeline);
+                customInterceptorFactory(pipelineItemFactoryArguments, pipeline);
             }
 
             // Now we need to add the final interceptor, aka the "sink".
@@ -332,10 +362,10 @@ namespace Temporal.WorkflowClient
             // Create the payload converter for the sink:
 
             IPayloadConverter payloadConverter = null;
-            Func<ITemporalClient, IWorkflowHandle, IPayloadConverter> customPayloadConverterFactory = Configuration.PayloadConverterFactory;
+            Func<ServiceInvocationPipelineItemFactoryArguments, IPayloadConverter> customPayloadConverterFactory = Configuration.PayloadConverterFactory;
             if (customPayloadConverterFactory != null)
             {
-                payloadConverter = customPayloadConverterFactory(this, workflowHandle);
+                payloadConverter = customPayloadConverterFactory(pipelineItemFactoryArguments);
             }
 
             if (payloadConverter == null)
@@ -346,10 +376,10 @@ namespace Temporal.WorkflowClient
             // Create the payload codec for the sink:
 
             IPayloadCodec payloadCodec = null;
-            Func<ITemporalClient, IWorkflowHandle, IPayloadCodec> customPayloadCodecFactory = Configuration.PayloadCodecFactory;
+            Func<ServiceInvocationPipelineItemFactoryArguments, IPayloadCodec> customPayloadCodecFactory = Configuration.PayloadCodecFactory;
             if (customPayloadCodecFactory != null)
             {
-                payloadCodec = customPayloadCodecFactory(this, workflowHandle);
+                payloadCodec = customPayloadCodecFactory(pipelineItemFactoryArguments);
             }
 
             // Create the sink:
@@ -376,7 +406,7 @@ namespace Temporal.WorkflowClient
             return downstream;
         }
 
-        private List<ITemporalClientInterceptor> CreateDefaultServiceInvocationPipeline(IWorkflowHandle _)
+        private List<ITemporalClientInterceptor> CreateDefaultServiceInvocationPipeline()
         {
             List<ITemporalClientInterceptor> pipeline = new List<ITemporalClientInterceptor>();
             return pipeline;

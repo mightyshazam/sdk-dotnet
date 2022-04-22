@@ -18,9 +18,9 @@ namespace Temporal.WorkflowClient.Interceptors
                                 string WorkflowChainId,
                                 string WorkflowRunId,
                                 bool FollowWorkflowChain,
-                                CancellationToken CancelToken);
+                                CancellationToken CancelToken) : IWorkflowOperationArguments;
 
-        internal class Result : IWorkflowRunResult
+        internal class Result : IWorkflowRunResult, IWorkflowOperationResult
         {
             private readonly IPayloadConverter _payloadConverter;
             private readonly string _continuationRunId;

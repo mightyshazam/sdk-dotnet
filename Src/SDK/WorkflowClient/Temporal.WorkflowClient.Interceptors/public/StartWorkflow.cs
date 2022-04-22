@@ -16,7 +16,18 @@ namespace Temporal.WorkflowClient.Interceptors
                                                 string TaskQueue,
                                                 TWfArg WorkflowArg,
                                                 StartWorkflowConfiguration WorkflowConfig,
-                                                CancellationToken CancelToken);
+                                                CancellationToken CancelToken) : IWorkflowOperationArguments
+            {
+                public string WorkflowChainId
+                {
+                    get { throw new NotSupportedException($"{nameof(WorkflowChainId)} is not supported by {GetType().Name}."); }
+                }
+
+                public string WorkflowRunId
+                {
+                    get { throw new NotSupportedException($"{nameof(WorkflowRunId)} is not supported by {GetType().Name}."); }
+                }
+            }
 
             public record StartOnly<TWfArg>(string Namespace,
                                             string WorkflowId,
@@ -52,7 +63,7 @@ namespace Temporal.WorkflowClient.Interceptors
                                CancelToken);
         }
 
-        public class Result : IWorkflowChainBindingResult
+        public class Result : IWorkflowOperationResult
         {
             public Result(string workflowRunId)
             {

@@ -12,9 +12,9 @@ namespace Temporal.WorkflowClient.Interceptors
                                          string SignalName,
                                          TSigArg SignalArg,
                                          SignalWorkflowConfiguration SignalConfig,
-                                         CancellationToken CancelToken);
+                                         CancellationToken CancelToken) : IWorkflowOperationArguments;
 
-        public class Result : IWorkflowChainBindingResult
+        public class Result : IWorkflowOperationResult
         {
             public Result(string workflowChainId)
             {

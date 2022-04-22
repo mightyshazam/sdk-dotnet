@@ -10,9 +10,9 @@ namespace Temporal.WorkflowClient.Interceptors
                                           string WorkflowRunId,
                                           string Reason,
                                           TTermArg Details,
-                                          CancellationToken CancelToken);
+                                          CancellationToken CancelToken) : IWorkflowOperationArguments;
 
-        public class Result : IWorkflowChainBindingResult
+        public class Result : IWorkflowOperationResult
         {
             public Result(string workflowChainId)
             {

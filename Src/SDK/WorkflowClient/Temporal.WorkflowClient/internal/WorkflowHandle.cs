@@ -12,20 +12,61 @@ namespace Temporal.WorkflowClient
 {
     internal class WorkflowHandle : IWorkflowHandle, IDisposable
     {
+        #region --- Static construction methods ---
+
+        internal static WorkflowHandle CreateUnbound(TemporalClient temporalClient, string workflowId)
+        {
+            Validate.NotNull(temporalClient);
+            ValidateWorkflowProperty.WorkflowId(workflowId);
+
+            return new WorkflowHandle(temporalClient,
+                                      workflowId,
+                                      workflowChainId: null,
+                                      serviceInvocationPipeline: null);
+        }
+
+        internal static WorkflowHandle CreateBound(TemporalClient temporalClient, string workflowId, string workflowChainId)
+        {
+            Validate.NotNull(temporalClient);
+            ValidateWorkflowProperty.WorkflowId(workflowId);
+            ValidateWorkflowProperty.ChainId.Bound(workflowChainId);
+
+            return new WorkflowHandle(temporalClient,
+                                      workflowId,
+                                      workflowChainId,
+                                      serviceInvocationPipeline: null);
+        }
+
+        internal static WorkflowHandle CreateForRun(TemporalClient temporalClient,
+                                             string workflowId,
+                                             string workflowChainId,
+                                             ITemporalClientInterceptor serviceInvocationPipeline)
+        {
+            Validate.NotNull(temporalClient);
+            ValidateWorkflowProperty.WorkflowId(workflowId);
+            ValidateWorkflowProperty.ChainId.Bound(workflowChainId);
+            Validate.NotNull(serviceInvocationPipeline);
+
+            return new WorkflowHandle(temporalClient,
+                                      workflowId,
+                                      workflowChainId,
+                                      serviceInvocationPipeline);
+        }
+
+        #endregion --- Static construction methods ---
+
         private readonly TemporalClient _temporalClient;
 
         private SemaphoreSlim _bindigLock = null;
         private string _workflowChainId;
         private bool _isBound;
 
-        private ITemporalClientInterceptor _serviceInvocationPipeline = null;
+        private ITemporalClientInterceptor _serviceInvocationPipeline;
 
-        internal WorkflowHandle(TemporalClient temporalClient, string workflowId)
-            : this(temporalClient, workflowId, workflowChainId: null)
-        {
-        }
-
-        internal WorkflowHandle(TemporalClient temporalClient, string workflowId, string workflowChainId)
+        private WorkflowHandle(TemporalClient temporalClient,
+                                string workflowId,
+                                string workflowChainId,
+                                ITemporalClientInterceptor serviceInvocationPipeline)
         {
             Validate.NotNull(temporalClient);
             Validate.NotNullOrWhitespace(temporalClient.Namespace);
@@ -38,6 +79,8 @@ namespace Temporal.WorkflowClient
 
             _workflowChainId = workflowChainId;
             _isBound = (workflowChainId != null);
+
+            _serviceInvocationPipeline = serviceInvocationPipeline;
         }
 
         /// <summary>
@@ -137,14 +180,15 @@ namespace Temporal.WorkflowClient
                                                                     : await BeginBindingOperationIfRequiredAsync(cancelToken);
             try
             {
-                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                DescribeWorkflow.Result resDesrc = await invokerPipeline.DescribeWorkflowAsync(
-                                                                    new DescribeWorkflow.Arguments(Namespace,
-                                                                                                   WorkflowId,
-                                                                                                   workflowChainId,
-                                                                                                   WorkflowRunId: null,
-                                                                                                   throwIfWorkflowNotFound,
-                                                                                                   cancelToken));
+                DescribeWorkflow.Arguments opArgs = new(Namespace,
+                                                        WorkflowId,
+                                                        workflowChainId,
+                                                        WorkflowRunId: null,
+                                                        throwIfWorkflowNotFound,
+                                                        cancelToken);
+
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+                DescribeWorkflow.Result resDesrc = await invokerPipeline.DescribeWorkflowAsync(opArgs);
                 TryApplyBindingIfLockIsHeld(bindingLock, resDesrc);
                 return resDesrc;
             }
@@ -183,12 +227,13 @@ namespace Temporal.WorkflowClient
 
                 await _temporalClient.EnsureConnectedAsync(cancelToken);
 
-                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                GetWorkflowChainId.Result resLatestWfChain = await invokerPipeline.GetWorkflowChainIdAsync(
-                                                                                new GetWorkflowChainId.Arguments(Namespace,
-                                                                                                                 WorkflowId,
-                                                                                                                 WorkflowRunId: null,
-                                                                                                                 cancelToken));
+                GetWorkflowChainId.Arguments opArgs = new(Namespace,
+                                                          WorkflowId,
+                                                          WorkflowRunId: null,
+                                                          cancelToken);
+
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+                GetWorkflowChainId.Result resLatestWfChain = await invokerPipeline.GetWorkflowChainIdAsync(opArgs);
 
                 string chainId = resLatestWfChain?.WorkflowChainId;
 
@@ -231,18 +276,18 @@ namespace Temporal.WorkflowClient
             {
                 ValidateIsNotBound();
 
-                workflowConfig = workflowConfig ?? StartWorkflowConfiguration.Default;
+                StartWorkflow.Arguments.StartOnly<TWfArg> opArgs = new(Namespace,
+                                                                       WorkflowId,
+                                                                       workflowTypeName,
+                                                                       taskQueue,
+                                                                       workflowArg,
+                                                                       workflowConfig ?? StartWorkflowConfiguration.Default,
+                                                                       throwIfWorkflowChainAlreadyExists,
+                                                                       cancelToken);
 
-                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                StartWorkflow.Result resStartWf = await invokerPipeline.StartWorkflowAsync(
-                                                            new StartWorkflow.Arguments.StartOnly<TWfArg>(Namespace,
-                                                                                                          WorkflowId,
-                                                                                                          workflowTypeName,
-                                                                                                          taskQueue,
-                                                                                                          workflowArg,
-                                                                                                          workflowConfig,
-                                                                                                          throwIfWorkflowChainAlreadyExists,
-                                                                                                          cancelToken));
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+                StartWorkflow.Result resStartWf = await invokerPipeline.StartWorkflowAsync(opArgs);
+
                 if (resStartWf.TryGetBoundWorkflowChainId(out string boundChainId))
                 {
                     Bind(boundChainId);
@@ -282,19 +327,19 @@ namespace Temporal.WorkflowClient
             {
                 ValidateIsNotBound();
 
-                workflowConfig = workflowConfig ?? StartWorkflowConfiguration.Default;
+                StartWorkflow.Arguments.WithSignal<TWfArg, TSigArg> opArgs = new(Namespace,
+                                                                                 WorkflowId,
+                                                                                 workflowTypeName,
+                                                                                 taskQueue,
+                                                                                 workflowArg,
+                                                                                 signalName,
+                                                                                 signalArg,
+                                                                                 workflowConfig ?? StartWorkflowConfiguration.Default,
+                                                                                 cancelToken);
 
-                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                StartWorkflow.Result resStartWf = await invokerPipeline.StartWorkflowWithSignalAsync(
-                                                            new StartWorkflow.Arguments.WithSignal<TWfArg, TSigArg>(Namespace,
-                                                                                                                    WorkflowId,
-                                                                                                                    workflowTypeName,
-                                                                                                                    taskQueue,
-                                                                                                                    workflowArg,
-                                                                                                                    signalName,
-                                                                                                                    signalArg,
-                                                                                                                    workflowConfig,
-                                                                                                                    cancelToken));
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+                StartWorkflow.Result resStartWf = await invokerPipeline.StartWorkflowWithSignalAsync(opArgs);
+
                 if (resStartWf.TryGetBoundWorkflowChainId(out string boundChainId))
                 {
                     Bind(boundChainId);
@@ -396,13 +441,15 @@ namespace Temporal.WorkflowClient
                                                                     : await BeginBindingOperationIfRequiredAsync(cancelToken);
             try
             {
-                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                IWorkflowRunResult resWfRun = await invokerPipeline.AwaitConclusionAsync(new AwaitConclusion.Arguments(Namespace,
-                                                                                                                       WorkflowId,
-                                                                                                                       workflowChainId,
-                                                                                                                       WorkflowRunId: null,
-                                                                                                                       FollowWorkflowChain: true,
-                                                                                                                       cancelToken));
+                AwaitConclusion.Arguments opArgs = new(Namespace,
+                                                       WorkflowId,
+                                                       workflowChainId,
+                                                       WorkflowRunId: null,
+                                                       FollowWorkflowChain: true,
+                                                       cancelToken);
+
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+                IWorkflowRunResult resWfRun = await invokerPipeline.AwaitConclusionAsync(opArgs);
                 TryApplyBindingIfLockIsHeld(bindingLock, resWfRun);
 
                 if (resWfRun != null && resWfRun is AwaitConclusion.Result resAwaitWfConcl && IsBound)
@@ -448,18 +495,17 @@ namespace Temporal.WorkflowClient
                                                                     : await BeginBindingOperationIfRequiredAsync(cancelToken);
             try
             {
-                signalConfig = signalConfig ?? SignalWorkflowConfiguration.Default;
+                SignalWorkflow.Arguments<TSigArg> opArgs = new(Namespace,
+                                                               WorkflowId,
+                                                               workflowChainId,
+                                                               WorkflowRunId: null,
+                                                               signalName,
+                                                               signalArg,
+                                                               signalConfig ?? SignalWorkflowConfiguration.Default,
+                                                               cancelToken);
 
-                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                SignalWorkflow.Result resSigWf = await invokerPipeline.SignalWorkflowAsync(
-                                                                    new SignalWorkflow.Arguments<TSigArg>(Namespace,
-                                                                                                          WorkflowId,
-                                                                                                          workflowChainId,
-                                                                                                          WorkflowRunId: null,
-                                                                                                          signalName,
-                                                                                                          signalArg,
-                                                                                                          signalConfig,
-                                                                                                          cancelToken));
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+                SignalWorkflow.Result resSigWf = await invokerPipeline.SignalWorkflowAsync(opArgs);
                 TryApplyBindingIfLockIsHeld(bindingLock, resSigWf);
             }
             finally
@@ -495,18 +541,17 @@ namespace Temporal.WorkflowClient
                                                                     : await BeginBindingOperationIfRequiredAsync(cancelToken);
             try
             {
-                queryConfig = queryConfig ?? QueryWorkflowConfiguration.Default;
+                QueryWorkflow.Arguments<TQryArg> opArgs = new(Namespace,
+                                                              WorkflowId,
+                                                              workflowChainId,
+                                                              WorkflowRunId: null,
+                                                              queryName,
+                                                              queryArg,
+                                                              queryConfig ?? QueryWorkflowConfiguration.Default,
+                                                              cancelToken);
 
-                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                QueryWorkflow.Result<TResult> resQryWf = await invokerPipeline.QueryWorkflowAsync<TQryArg, TResult>(
-                                                                    new QueryWorkflow.Arguments<TQryArg>(Namespace,
-                                                                                                         WorkflowId,
-                                                                                                         workflowChainId,
-                                                                                                         WorkflowRunId: null,
-                                                                                                         queryName,
-                                                                                                         queryArg,
-                                                                                                         queryConfig,
-                                                                                                         cancelToken));
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+                QueryWorkflow.Result<TResult> resQryWf = await invokerPipeline.QueryWorkflowAsync<TQryArg, TResult>(opArgs);
                 TryApplyBindingIfLockIsHeld(bindingLock, resQryWf);
                 return resQryWf.Value;
             }
@@ -529,13 +574,14 @@ namespace Temporal.WorkflowClient
                                                                     : await BeginBindingOperationIfRequiredAsync(cancelToken);
             try
             {
-                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                RequestCancellation.Result resReqCnclWf = await invokerPipeline.RequestCancellationAsync(
-                                                                    new RequestCancellation.Arguments(Namespace,
-                                                                                                      WorkflowId,
-                                                                                                      workflowChainId,
-                                                                                                      WorkflowRunId: null,
-                                                                                                      cancelToken));
+                RequestCancellation.Arguments opArgs = new(Namespace,
+                                                           WorkflowId,
+                                                           workflowChainId,
+                                                           WorkflowRunId: null,
+                                                           cancelToken);
+
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+                RequestCancellation.Result resReqCnclWf = await invokerPipeline.RequestCancellationAsync(opArgs);
                 TryApplyBindingIfLockIsHeld(bindingLock, resReqCnclWf);
             }
             finally
@@ -568,15 +614,16 @@ namespace Temporal.WorkflowClient
                                                                     : await BeginBindingOperationIfRequiredAsync(cancelToken);
             try
             {
-                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline();
-                TerminateWorkflow.Result resTermWf = await invokerPipeline.TerminateWorkflowAsync(
-                                                                    new TerminateWorkflow.Arguments<TTermArg>(Namespace,
-                                                                                                              WorkflowId,
-                                                                                                              workflowChainId,
-                                                                                                              WorkflowRunId: null,
-                                                                                                              reason,
-                                                                                                              details,
-                                                                                                              cancelToken));
+                TerminateWorkflow.Arguments<TTermArg> opArgs = new(Namespace,
+                                                                   WorkflowId,
+                                                                   workflowChainId,
+                                                                   WorkflowRunId: null,
+                                                                   reason,
+                                                                   details,
+                                                                   cancelToken);
+
+                ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+                TerminateWorkflow.Result resTermWf = await invokerPipeline.TerminateWorkflowAsync(opArgs);
                 TryApplyBindingIfLockIsHeld(bindingLock, resTermWf);
             }
             finally
@@ -590,52 +637,18 @@ namespace Temporal.WorkflowClient
 
         #region -- Internals --
 
-        internal ITemporalClientInterceptor GetOrCreateServiceInvocationPipeline()
+        internal ITemporalClientInterceptor GetServiceInvocationPipeline()
         {
-
-            ITemporalClientInterceptor pipeline = Volatile.Read(ref _serviceInvocationPipeline);
-
-            if (pipeline == null)
-            {
-                ITemporalClientInterceptor newPipeline = _temporalClient.CreateServiceInvocationPipeline(this);
-                pipeline = Concurrent.TrySetOrGetValue(ref _serviceInvocationPipeline, newPipeline, out bool isNewPipelineSet);
-
-                if (!isNewPipelineSet)
-                {
-                    newPipeline.Dispose();
-                }
-            }
-
-            return pipeline;
+            ValidateIsBound();
+            return _serviceInvocationPipeline;
         }
 
-        /// <summary>
-        /// Binds this chain to the chain-id provided by <c>bindingResult</c> if it can provide the bound chain info.
-        /// Otherwise, does nothing.
-        /// Returns whether the binding was applied.
-        /// <para>
-        /// ATTENTION: Code within this class (<see cref="WorkflowHandle"/>) must only invoke this method via
-        /// <see cref="TryApplyBindingIfLockIsHeld(SemaphoreSlim, IWorkflowChainBindingResult)" /> to make sure that binding races are
-        /// avoided. However, <see cref="WorkflowRunHandle"/>-instances that are not associated with a <see cref="WorkflowHandle"/>
-        /// can create a a chain handle (i.e. an <see cref="WorkflowHandle"/>-instance) for EACH operation in order to access its
-        /// invocation pipeline, until the first binding operation completes, the respective chain handle gets bound, and the run
-        /// handle gets permanenetly associated with that chain handle. In those cases binding races cannot occur and the run handle
-        /// can call this method directly. <br/>
-        /// So, if you invoke this method, be sure that you did not expose this <c>WorkflowHandle</c> instance and that you can
-        /// guarantee that no remote operations are invoked concurrently!</para>
-        /// </summary>        
-        internal bool TryApplyBindingUnsafe(IWorkflowChainBindingResult bindingResult)
-        {
-            if (bindingResult != null && bindingResult.TryGetBoundWorkflowChainId(out string boundChainId))
-            {
-                Bind(boundChainId);
-                return true;
-            }
+        #endregion -- Internals --
 
-            return false;
-        }
 
-        internal void ValidateIsBound()
+        #region -- Privates --
+
+        private void ValidateIsBound()
         {
             if (IsBound)
             {
@@ -655,11 +668,6 @@ namespace Temporal.WorkflowClient
                                               + $" call `{nameof(EnsureBoundAsync)}(..)` or any other API that interacts with a"
                                               + $" particular workflow.");
         }
-
-        #endregion -- Internals --
-
-
-        #region -- Privates --
 
         private void ValidateIsNotBound()
         {
@@ -685,11 +693,19 @@ namespace Temporal.WorkflowClient
             _isBound = true;
         }
 
-        private bool TryApplyBindingIfLockIsHeld(SemaphoreSlim bindingLock, IWorkflowChainBindingResult bindingResult)
+        /// <summary>
+        /// Binds this chain to the chain-id provided by <c>bindingResult</c> if it can provide the bound chain info.
+        /// Otherwise, does nothing.
+        /// Returns whether the binding was applied during this invocation.
+        /// </summary>        
+        private bool TryApplyBindingIfLockIsHeld(SemaphoreSlim bindingLock, IWorkflowOperationResult bindingOperationResult)
         {
-            if (bindingLock != null)
+            if (bindingLock != null
+                    && bindingOperationResult != null
+                    && bindingOperationResult.TryGetBoundWorkflowChainId(out string boundChainId))
             {
-                return TryApplyBindingUnsafe(bindingResult);
+                Bind(boundChainId);
+                return true;
             }
 
             return false;
@@ -730,9 +746,17 @@ namespace Temporal.WorkflowClient
                 }
             }
 
-            // Future: Should we dispose of the `_bindigLock` when we are sure that we no longer need it?
-
             return bindingLock;
+        }
+
+        private ITemporalClientInterceptor GetOrCreateServiceInvocationPipeline(IWorkflowOperationArguments opArgs)
+        {
+            // This method (`GetOrCreateServiceInvocationPipeline`) is only called either DURING the first "binding"
+            // operation or AFTER the first "binding" operation. Either way the `_bindigLock` is already initialized
+            // (i.e., not null). Regardless of the actual semaphone state, we can use that obect to take a local
+            // `pipelineCreationLock` to protect pipeline contruction.
+
+            return _temporalClient.GetOrCreateServiceInvocationPipeline(this, ref _serviceInvocationPipeline, _bindigLock, opArgs);
         }
 
         #endregion -- Privates --

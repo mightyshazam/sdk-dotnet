@@ -5,7 +5,7 @@ using Temporal.WorkflowClient.Interceptors;
 
 namespace Temporal.WorkflowClient
 {
-    public interface IWorkflowRunResult : IWorkflowChainBindingResult
+    public interface IWorkflowRunResult : IWorkflowOperationResult
     {
         string Namespace { get; }
         string WorkflowId { get; }

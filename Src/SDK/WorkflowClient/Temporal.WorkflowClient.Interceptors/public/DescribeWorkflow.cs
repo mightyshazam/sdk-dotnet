@@ -14,9 +14,9 @@ namespace Temporal.WorkflowClient.Interceptors
                                 string WorkflowChainId,
                                 string WorkflowRunId,
                                 bool ThrowIfWorkflowNotFound,
-                                CancellationToken CancelToken);
+                                CancellationToken CancelToken) : IWorkflowOperationArguments;
 
-        public class Result : IWorkflowChainBindingResult
+        public class Result : IWorkflowOperationResult
         {
             public Result(DescribeWorkflowExecutionResponse describeWorkflowExecutionResponse, string workflowChainId)
             {

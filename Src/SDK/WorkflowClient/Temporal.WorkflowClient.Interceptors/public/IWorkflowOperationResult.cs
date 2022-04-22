@@ -1,6 +1,6 @@
 ﻿namespace Temporal.WorkflowClient.Interceptors
 {
-    public interface IWorkflowChainBindingResult
+    public interface IWorkflowOperationResult
     {
         bool TryGetBoundWorkflowChainId(out string workflowChainId);
     }

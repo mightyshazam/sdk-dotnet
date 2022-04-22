@@ -14,7 +14,11 @@ namespace Temporal.WorkflowClient
     {
         private readonly TemporalClient _temporalClient;
 
-        private bool _isOwnerWorkflowExposed;
+        private readonly object _internalInitLock = new object();
+
+        private ITemporalClientInterceptor _serviceInvocationPipeline;
+
+        private string _workflowChainId;
         private WorkflowHandle _ownerWorkflow;
         private Task<IWorkflowHandle> _getOwnerWorkflowCompletion;
 
@@ -29,31 +33,32 @@ namespace Temporal.WorkflowClient
             WorkflowId = workflowId;
             WorkflowRunId = workflowRunId;
 
+            _serviceInvocationPipeline = null;
+
+            _workflowChainId = null;
             _ownerWorkflow = null;
             _getOwnerWorkflowCompletion = null;
-            _isOwnerWorkflowExposed = false;
         }
 
         internal WorkflowRunHandle(WorkflowHandle workflow, string workflowRunId)
         {
             Validate.NotNull(workflow);
-
-            try
-            {
-                workflow.ValidateIsBound();
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException($"{nameof(workflow)} must be bound in order to use it for"
-                                          + $" constructing a {nameof(WorkflowRunHandle)}.",
-                                            ex);
-            }
-
             Validate.NotNull(workflow.TemporalServiceClient);
             Validate.NotNullOrWhitespace(workflow.TemporalServiceClient.Namespace);
             ValidateWorkflowProperty.WorkflowId(workflow.WorkflowId);
-
             ValidateWorkflowProperty.RunId.Specified(workflowRunId);
+
+            try
+            {
+                Validate.NotNull(workflow.GetServiceInvocationPipeline());
+                ValidateWorkflowProperty.ChainId.Bound(workflow.WorkflowChainId);
+            }
+            catch (InvalidOperationException invOpEx)
+            {
+                throw new ArgumentException($"{nameof(workflow)} must be bound in order to use it for"
+                                          + $" constructing a {nameof(WorkflowRunHandle)}.",
+                                            invOpEx);
+            }
 
             if (!workflow.TemporalServiceClient.Namespace.Equals(workflow.Namespace))
             {
@@ -65,9 +70,11 @@ namespace Temporal.WorkflowClient
             WorkflowId = workflow.WorkflowId;
             WorkflowRunId = workflowRunId;
 
+            _serviceInvocationPipeline = workflow.GetServiceInvocationPipeline();
+
+            _workflowChainId = workflow.WorkflowChainId;
             _ownerWorkflow = workflow;
             _getOwnerWorkflowCompletion = Task.FromResult((IWorkflowHandle) workflow);
-            _isOwnerWorkflowExposed = true;
         }
 
         #region --- APIs to access basic workflow run details ---
@@ -79,11 +86,8 @@ namespace Temporal.WorkflowClient
         public Task<IWorkflowHandle> GetOwnerWorkflowAsync(CancellationToken cancelToken = default)
         {
             Task<IWorkflowHandle> getOwnerWorkflowCompletion = _getOwnerWorkflowCompletion;
-
-            // Benign race. Worst case we execute FindOwnerWorkflowAsync(..) multiple times (idempotent).
             if (getOwnerWorkflowCompletion != null)
             {
-                _isOwnerWorkflowExposed = true;
                 return getOwnerWorkflowCompletion;
             }
 
@@ -92,27 +96,34 @@ namespace Temporal.WorkflowClient
 
         private async Task<IWorkflowHandle> FindOwnerWorkflowAsync(CancellationToken cancelToken = default)
         {
+            string workflowChainId = _workflowChainId;
+            if (workflowChainId != null)
+            {
+                return GetOrCreateOwnerWorkflowHandle();
+            }
+
             await _temporalClient.EnsureConnectedAsync(cancelToken);
 
-            WorkflowHandle invokerPipelineProvider = GetOrCreateServiceInvocationPipelineProvider();
-            ITemporalClientInterceptor invokerPipeline = invokerPipelineProvider.GetOrCreateServiceInvocationPipeline();
-            GetWorkflowChainId.Result resLatestWfChain = await invokerPipeline.GetWorkflowChainIdAsync(
-                                                                new GetWorkflowChainId.Arguments(Namespace,
-                                                                                                 WorkflowId,
-                                                                                                 WorkflowRunId,
-                                                                                                 cancelToken));
-            TrySetOwnerWorkflow(invokerPipelineProvider, resLatestWfChain);
+            GetWorkflowChainId.Arguments opArgs = new(Namespace,
+                                                      WorkflowId,
+                                                      WorkflowRunId,
+                                                      cancelToken);
 
-            IWorkflowHandle ownerWorkflow = Volatile.Read(ref _ownerWorkflow);
-            if (ownerWorkflow == null)
+            ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+            GetWorkflowChainId.Result resLatestWfChain = await invokerPipeline.GetWorkflowChainIdAsync(opArgs);
+            TrySetOwnerChainId(resLatestWfChain);
+
+            workflowChainId = Volatile.Read(ref _workflowChainId);
+            if (workflowChainId == null)
             {
                 throw new InvalidOperationException($"Failed to {nameof(FindOwnerWorkflowAsync)}(..)."
                                                       + $" This may be an SDK bug."
                                                       + $" Please report: https://github.com/temporalio/sdk-dotnet/issues.");
             }
-
-            _isOwnerWorkflowExposed = true;
-            return ownerWorkflow;
+            else
+            {
+                return GetOrCreateOwnerWorkflowHandle();
+            }
         }
 
         #endregion --- APIs to access basic workflow run details ---
@@ -162,16 +173,16 @@ namespace Temporal.WorkflowClient
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
 
-            WorkflowHandle invokerPipelineProvider = GetOrCreateServiceInvocationPipelineProvider();
-            ITemporalClientInterceptor invokerPipeline = invokerPipelineProvider.GetOrCreateServiceInvocationPipeline();
-            DescribeWorkflow.Result resDesrc = await invokerPipeline.DescribeWorkflowAsync(
-                                                                new DescribeWorkflow.Arguments(Namespace,
-                                                                                                WorkflowId,
-                                                                                                WorkflowChainId: null,
-                                                                                                WorkflowRunId,
-                                                                                                throwIfWorkflowNotFound,
-                                                                                                cancelToken));
-            TrySetOwnerWorkflow(invokerPipelineProvider, resDesrc);
+            DescribeWorkflow.Arguments opArgs = new(Namespace,
+                                                    WorkflowId,
+                                                    _workflowChainId,
+                                                    WorkflowRunId,
+                                                    throwIfWorkflowNotFound,
+                                                    cancelToken);
+
+            ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+            DescribeWorkflow.Result resDesrc = await invokerPipeline.DescribeWorkflowAsync(opArgs);
+            TrySetOwnerChainId(resDesrc);
             return resDesrc;
         }
 
@@ -190,15 +201,16 @@ namespace Temporal.WorkflowClient
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
 
-            WorkflowHandle invokerPipelineProvider = GetOrCreateServiceInvocationPipelineProvider();
-            ITemporalClientInterceptor invokerPipeline = invokerPipelineProvider.GetOrCreateServiceInvocationPipeline();
-            IWorkflowRunResult resWfRun = await invokerPipeline.AwaitConclusionAsync(new AwaitConclusion.Arguments(Namespace,
-                                                                                                                   WorkflowId,
-                                                                                                                   WorkflowChainId: null,
-                                                                                                                   WorkflowRunId,
-                                                                                                                   FollowWorkflowChain: false,
-                                                                                                                   cancelToken));
-            TrySetOwnerWorkflow(invokerPipelineProvider, resWfRun);
+            AwaitConclusion.Arguments opArgs = new(Namespace,
+                                                   WorkflowId,
+                                                   _workflowChainId,
+                                                   WorkflowRunId,
+                                                   FollowWorkflowChain: false,
+                                                   cancelToken);
+
+            ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+            IWorkflowRunResult resWfRun = await invokerPipeline.AwaitConclusionAsync(opArgs);
+            TrySetOwnerChainId(resWfRun);
 
             if (resWfRun != null && resWfRun is AwaitConclusion.Result resAwaitWfConcl)
             {
@@ -206,7 +218,7 @@ namespace Temporal.WorkflowClient
                 // result's TryGetContinuationRun(..) method can create the respective run-handle using the right chain-handle
                 // and client instances.
 
-                IWorkflowHandle ownerWorkflow = Volatile.Read(ref _ownerWorkflow);
+                IWorkflowHandle ownerWorkflow = _getOwnerWorkflowCompletion?.Result;
                 if (ownerWorkflow != null)
                 {
                     resAwaitWfConcl.WorkflowChain = ownerWorkflow;
@@ -230,20 +242,18 @@ namespace Temporal.WorkflowClient
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
 
-            signalConfig = signalConfig ?? SignalWorkflowConfiguration.Default;
+            SignalWorkflow.Arguments<TSigArg> opArgs = new(Namespace,
+                                                           WorkflowId,
+                                                           _workflowChainId,
+                                                           WorkflowRunId,
+                                                           signalName,
+                                                           signalArg,
+                                                           signalConfig ?? SignalWorkflowConfiguration.Default,
+                                                           cancelToken);
 
-            WorkflowHandle invokerPipelineProvider = GetOrCreateServiceInvocationPipelineProvider();
-            ITemporalClientInterceptor invokerPipeline = invokerPipelineProvider.GetOrCreateServiceInvocationPipeline();
-            SignalWorkflow.Result resSigWf = await invokerPipeline.SignalWorkflowAsync(
-                                                                new SignalWorkflow.Arguments<TSigArg>(Namespace,
-                                                                                                      WorkflowId,
-                                                                                                      WorkflowChainId: null,
-                                                                                                      WorkflowRunId,
-                                                                                                      signalName,
-                                                                                                      signalArg,
-                                                                                                      signalConfig,
-                                                                                                      cancelToken));
-            TrySetOwnerWorkflow(invokerPipelineProvider, resSigWf);
+            ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+            SignalWorkflow.Result resSigWf = await invokerPipeline.SignalWorkflowAsync(opArgs);
+            TrySetOwnerChainId(resSigWf);
         }
 
         public Task<TResult> QueryAsync<TResult>(string queryName,
@@ -261,20 +271,18 @@ namespace Temporal.WorkflowClient
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
 
-            queryConfig = queryConfig ?? QueryWorkflowConfiguration.Default;
+            QueryWorkflow.Arguments<TQryArg> opArgs = new(Namespace,
+                                                          WorkflowId,
+                                                          _workflowChainId,
+                                                          WorkflowRunId,
+                                                          queryName,
+                                                          queryArg,
+                                                          queryConfig ?? QueryWorkflowConfiguration.Default,
+                                                          cancelToken);
 
-            WorkflowHandle invokerPipelineProvider = GetOrCreateServiceInvocationPipelineProvider();
-            ITemporalClientInterceptor invokerPipeline = invokerPipelineProvider.GetOrCreateServiceInvocationPipeline();
-            QueryWorkflow.Result<TResult> resQryWf = await invokerPipeline.QueryWorkflowAsync<TQryArg, TResult>(
-                                                                new QueryWorkflow.Arguments<TQryArg>(Namespace,
-                                                                                                     WorkflowId,
-                                                                                                     WorkflowChainId: null,
-                                                                                                     WorkflowRunId,
-                                                                                                     queryName,
-                                                                                                     queryArg,
-                                                                                                     queryConfig,
-                                                                                                     cancelToken));
-            TrySetOwnerWorkflow(invokerPipelineProvider, resQryWf);
+            ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+            QueryWorkflow.Result<TResult> resQryWf = await invokerPipeline.QueryWorkflowAsync<TQryArg, TResult>(opArgs);
+            TrySetOwnerChainId(resQryWf);
             return resQryWf.Value;
         }
 
@@ -282,15 +290,15 @@ namespace Temporal.WorkflowClient
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
 
-            WorkflowHandle invokerPipelineProvider = GetOrCreateServiceInvocationPipelineProvider();
-            ITemporalClientInterceptor invokerPipeline = invokerPipelineProvider.GetOrCreateServiceInvocationPipeline();
-            RequestCancellation.Result resReqCnclWf = await invokerPipeline.RequestCancellationAsync(
-                                                                new RequestCancellation.Arguments(Namespace,
-                                                                                                  WorkflowId,
-                                                                                                  WorkflowChainId: null,
-                                                                                                  WorkflowRunId,
-                                                                                                  cancelToken));
-            TrySetOwnerWorkflow(invokerPipelineProvider, resReqCnclWf);
+            RequestCancellation.Arguments opArgs = new(Namespace,
+                                                       WorkflowId,
+                                                       _workflowChainId,
+                                                       WorkflowRunId,
+                                                       cancelToken);
+
+            ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+            RequestCancellation.Result resReqCnclWf = await invokerPipeline.RequestCancellationAsync(opArgs);
+            TrySetOwnerChainId(resReqCnclWf);
         }
 
         public Task TerminateAsync(string reason = null,
@@ -305,17 +313,17 @@ namespace Temporal.WorkflowClient
         {
             await _temporalClient.EnsureConnectedAsync(cancelToken);
 
-            WorkflowHandle invokerPipelineProvider = GetOrCreateServiceInvocationPipelineProvider();
-            ITemporalClientInterceptor invokerPipeline = invokerPipelineProvider.GetOrCreateServiceInvocationPipeline();
-            TerminateWorkflow.Result resTermWf = await invokerPipeline.TerminateWorkflowAsync(
-                                                                new TerminateWorkflow.Arguments<TTermArg>(Namespace,
-                                                                                                          WorkflowId,
-                                                                                                          WorkflowChainId: null,
-                                                                                                          WorkflowRunId,
-                                                                                                          reason,
-                                                                                                          details,
-                                                                                                          cancelToken));
-            TrySetOwnerWorkflow(invokerPipelineProvider, resTermWf);
+            TerminateWorkflow.Arguments<TTermArg> opArgs = new(Namespace,
+                                                               WorkflowId,
+                                                               _workflowChainId,
+                                                               WorkflowRunId,
+                                                               reason,
+                                                               details,
+                                                               cancelToken);
+
+            ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
+            TerminateWorkflow.Result resTermWf = await invokerPipeline.TerminateWorkflowAsync(opArgs);
+            TrySetOwnerChainId(resTermWf);
         }
         #endregion --- APIs to interact with the workflow run ---
 
@@ -324,10 +332,6 @@ namespace Temporal.WorkflowClient
         {
             if (disposing)
             {
-                if (!_isOwnerWorkflowExposed)
-                {
-                    _ownerWorkflow?.Dispose();
-                }
             }
         }
 
@@ -346,32 +350,52 @@ namespace Temporal.WorkflowClient
 
         #region --- Privates ---
 
-        private bool TrySetOwnerWorkflow(WorkflowHandle bindingOperatonPipelineProvider, IWorkflowChainBindingResult bindingResult)
+        private bool TrySetOwnerChainId(IWorkflowOperationResult bindingOperationResult)
         {
-            if (bindingOperatonPipelineProvider != null && !bindingOperatonPipelineProvider.IsBound)
+            // A run handle has a fixed run-id. Thus, any potentially binding operation will always yield he same chain-id.
+            // Therefore, the below race is benign.
+            if (_workflowChainId == null
+                    && bindingOperationResult != null
+                    && bindingOperationResult.TryGetBoundWorkflowChainId(out string boundChainId))
             {
-                if (bindingOperatonPipelineProvider.TryApplyBindingUnsafe(bindingResult)
-                        && Concurrent.TrySetIfNull(ref _ownerWorkflow, bindingOperatonPipelineProvider))
-                {
-                    _getOwnerWorkflowCompletion = Task.FromResult((IWorkflowHandle) _ownerWorkflow);
-                    return true;
-                }
-
-                bindingOperatonPipelineProvider.Dispose();
+                ValidateWorkflowProperty.ChainId.Bound(boundChainId);
+                Volatile.Write(ref _workflowChainId, boundChainId);
+                return true;
             }
 
             return false;
         }
 
-        private WorkflowHandle GetOrCreateServiceInvocationPipelineProvider()
+        private WorkflowHandle GetOrCreateOwnerWorkflowHandle()
         {
-            WorkflowHandle ownerWorkflow = Volatile.Read(ref _ownerWorkflow);
+            WorkflowHandle ownerWorkflow = _ownerWorkflow;
             if (ownerWorkflow == null)
             {
-                ownerWorkflow = new WorkflowHandle(_temporalClient, WorkflowId);
+                lock (_internalInitLock)
+                {
+                    ownerWorkflow = _ownerWorkflow;
+
+                    if (ownerWorkflow == null)
+                    {
+                        string workflowChainId = _workflowChainId;
+                        ITemporalClientInterceptor serviceInvocationPipeline = _serviceInvocationPipeline;
+
+                        ownerWorkflow = WorkflowHandle.CreateForRun(_temporalClient, WorkflowId, workflowChainId, serviceInvocationPipeline);
+                        _ownerWorkflow = ownerWorkflow;
+                        _getOwnerWorkflowCompletion = Task.FromResult((IWorkflowHandle) ownerWorkflow);
+                    }
+                }
             }
 
             return ownerWorkflow;
+        }
+
+        private ITemporalClientInterceptor GetOrCreateServiceInvocationPipeline(IWorkflowOperationArguments opArgs)
+        {
+            return _temporalClient.GetOrCreateServiceInvocationPipeline(this,
+                                                                        ref _serviceInvocationPipeline,
+                                                                        _internalInitLock,
+                                                                        opArgs);
         }
 
         #endregion --- Privates ---
