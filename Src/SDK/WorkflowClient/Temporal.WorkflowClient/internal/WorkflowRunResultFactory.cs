@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Common.V1;
 using Temporal.Api.Enums.V1;
 using Temporal.Api.History.V1;
@@ -27,7 +27,7 @@ namespace Temporal.WorkflowClient
             Validate.NotNull(payloadConverter);
             Validate.NotNullOrWhitespace(@namespace);
             Validate.NotNullOrWhitespace(workflowId);
-            WorkflowChain.ValidateWorkflowChainId(workflowChainId);
+            WorkflowHandle.ValidateWorkflowChainId(workflowChainId);
 
             _payloadConverter = payloadConverter;
             _payloadCodec = payloadCodec;  // may be null

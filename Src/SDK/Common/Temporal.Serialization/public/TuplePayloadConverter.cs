@@ -1,5 +1,5 @@
 ﻿using System;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Common.V1;
 
 namespace Temporal.Serialization

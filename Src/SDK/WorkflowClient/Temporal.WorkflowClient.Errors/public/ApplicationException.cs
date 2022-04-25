@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Failure.V1;
 using Temporal.Common.Payloads;
 using Temporal.Serialization;

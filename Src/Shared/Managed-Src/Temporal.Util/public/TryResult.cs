@@ -1,5 +1,4 @@
 ﻿namespace Temporal.Common
-//namespace Candidly.Util
 {
     public struct TryResult<T>
     {

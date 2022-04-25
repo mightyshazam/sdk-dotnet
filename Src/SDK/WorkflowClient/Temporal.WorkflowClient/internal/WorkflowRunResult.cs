@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Common.V1;
 using Temporal.Api.Enums.V1;
 using Temporal.Common;
@@ -38,10 +38,10 @@ namespace Temporal.WorkflowClient
             Validate.NotNullOrWhitespace(workflowId);
             WorkflowId = workflowId;
 
-            WorkflowChain.ValidateWorkflowChainId(workflowChainId);
+            WorkflowHandle.ValidateWorkflowChainId(workflowChainId);
             _workflowChainId = workflowChainId;
 
-            WorkflowRun.ValidateWorkflowRunId(workflowRunId);
+            WorkflowRunHandle.ValidateWorkflowRunId(workflowRunId);
             WorkflowRunId = workflowRunId;
 
             Status = status;
@@ -49,7 +49,7 @@ namespace Temporal.WorkflowClient
 
             _serializedPayloads = serializedPayloads; // may be null
 
-            WorkflowRun.ValidateWorkflowRunId(continuationRunId);
+            WorkflowRunHandle.ValidateWorkflowRunId(continuationRunId);
             _continuationRunId = continuationRunId;
 
             ConclusionEventAttributes = conclusionEventAttributes;
@@ -85,11 +85,11 @@ namespace Temporal.WorkflowClient
             return (continuationRunId != null);
         }
 
-        public bool TryGetContinuationRun(out IWorkflowRun continuationRunHandle)
+        public bool TryGetContinuationRun(out IWorkflowRunHandle continuationRunHandle)
         {
             if (TryGetContinuationRunId(out string continuationRunId) && TemporalClient != null)
             {
-                continuationRunHandle = null; // new WorkflowRun(..);
+                continuationRunHandle = null; // new WorkflowRunHandle(..);
                 throw new NotImplementedException("@ToDo");
             }
 
@@ -99,7 +99,7 @@ namespace Temporal.WorkflowClient
 
         public object ConclusionEventAttributes { get; }
 
-        /// <summary>Throws for any Status except OK. This method backs GetResult(..) on WorkflowChain.</summary>        
+        /// <summary>Throws for any Status except OK. This method backs GetResult(..) on WorkflowHandle.</summary>        
         [SuppressMessage("Style", "IDE0010:Add missing cases", Justification = "Switch on Status groups all non-success cases")]
         public TVal GetValue<TVal>()
         {

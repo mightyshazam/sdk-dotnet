@@ -1,5 +1,5 @@
 ﻿using System;
-using Candidly.Util;
+using Temporal.Util;
 using Google.Protobuf;
 using Temporal.Api.Common.V1;
 using Temporal.Common.Payloads;

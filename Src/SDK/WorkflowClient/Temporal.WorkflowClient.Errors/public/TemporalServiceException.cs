@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Text;
-using Candidly.Util;
+using Temporal.Util;
 
 namespace Temporal.WorkflowClient.Errors
 {

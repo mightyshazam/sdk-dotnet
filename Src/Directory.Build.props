@@ -20,10 +20,12 @@
         <Copyright>(c) Temporal 2022</Copyright>    
     </PropertyGroup>
 
-    <PropertyGroup>       
+    <PropertyGroup>    
         <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net462;netcoreapp3.1;net6.0</TargetFrameworks>
-        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp3.1;net6.0</TargetFrameworks>
-        
+        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp3.1;net6.0</TargetFrameworks>        
+    <!--
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    -->
         <LangVersion>9.0</LangVersion>
     </PropertyGroup>
     
@@ -31,6 +33,6 @@
     
         <Compile Include="$(SharedSrcBaseDir)\System.Runtime.CompilerServices\internal\IsExternalInit.cs" 
                  Link="$(SharedSrcBaseLabel)\System.Runtime.CompilerServices\internal\%(Filename)%(Extension)" />
-  </ItemGroup>
+    </ItemGroup>
 
 </Project>

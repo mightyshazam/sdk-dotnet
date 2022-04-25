@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using Candidly.Util;
+using Temporal.Util;
 using Google.Protobuf;
 using Grpc.Core;
 using Temporal.Api.Common.V1;

@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using Candidly.Util;
+using Temporal.Util;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -77,7 +77,7 @@ namespace Temporal.WorkflowClient
                                                                           string workflowTypeName,
                                                                           string taskQueue,
                                                                           TWfArg workflowArg,
-                                                                          StartWorkflowChainConfiguration workflowConfig,
+                                                                          StartWorkflowConfiguration workflowConfig,
                                                                           bool throwOnAlreadyExists,
                                                                           CancellationToken cancelToken)
         {
@@ -207,7 +207,7 @@ namespace Temporal.WorkflowClient
                                                        + "(..) with HistoryEventFilterType = CloseEvent";
             const string ScenarioDescriptionForDebug = nameof(AwaitConclusionAsync);
 
-            WorkflowRun.ValidateWorkflowRunId(workflowRunId);
+            WorkflowRunHandle.ValidateWorkflowRunId(workflowRunId);
 
             WorkflowRunResultFactory runResultFactory = new WorkflowRunResultFactory(_payloadConverter,
                                                                                      _payloadCodec,

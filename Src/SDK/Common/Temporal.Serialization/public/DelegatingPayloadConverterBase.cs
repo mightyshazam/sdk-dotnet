@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Common.V1;
 
 namespace Temporal.Serialization

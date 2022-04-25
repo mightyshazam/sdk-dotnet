@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Candidly.Util;
+using Temporal.Util;
 
 using Temporal.Common.Payloads;
 

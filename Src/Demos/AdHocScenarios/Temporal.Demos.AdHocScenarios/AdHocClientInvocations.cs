@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
-using Candidly.Util;
+using Temporal.Util;
 using Temporal.Api.Enums.V1;
 using Temporal.Common;
 using Temporal.WorkflowClient;
@@ -32,7 +32,7 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine("Creating a handle to the existing workflow...");
 
             const string demoWfId = "qqq";
-            IWorkflowChain workflow = client.CreateWorkflowHandle(demoWfId);
+            IWorkflowHandle workflow = client.CreateWorkflowHandle(demoWfId);
 
             Console.WriteLine("Created. Info:");
             Console.WriteLine($"    Namespace:       {workflow.Namespace}");
