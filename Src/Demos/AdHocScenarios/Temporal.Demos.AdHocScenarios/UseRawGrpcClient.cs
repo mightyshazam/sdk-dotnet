@@ -10,6 +10,10 @@ using Temporal.Api.History.V1;
 using Temporal.Api.TaskQueue.V1;
 using Temporal.Api.Workflow.V1;
 using Temporal.Api.WorkflowService.V1;
+using System.IO;
+using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 
 #if NETCOREAPP
 using Microsoft.Extensions.Logging;
@@ -19,8 +23,12 @@ namespace Temporal.Demos.AdHocScenarios
 {
     internal class UseRawGrpcClient
     {
-        private const string TemporalServerHost = "localhost";
+        //private const string TemporalServerHost = "localhost";
+        private const string TemporalServerHost = "NAME.XYZ.tmprl.cloud";
         private const int TemporalServerPort = 7233;
+
+        //private const string TestNamespace = "default";
+        private const string TestNamespace = "NAME.temporal-dev";
 
 
         public void Run()
@@ -28,10 +36,10 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine();
 
             //SignalWorkflowAsync().GetAwaiter().GetResult();
-            DescribeWorkflowAsync().GetAwaiter().GetResult();
+            //DescribeWorkflowAsync().GetAwaiter().GetResult();
 
-            //ListWorkflowExecutionsAsync().GetAwaiter().GetResult();
-            //StartWorkflowAsync().GetAwaiter().GetResult();
+            ListWorkflowExecutionsAsync().GetAwaiter().GetResult();
+            StartWorkflowAsync().GetAwaiter().GetResult();
             //WaitForWorkflowAsync().GetAwaiter().GetResult();
 
             Console.WriteLine();
@@ -42,7 +50,24 @@ namespace Temporal.Demos.AdHocScenarios
         private WorkflowService.WorkflowServiceClient CreateClientNetFx()
         {
 #if NETFRAMEWORK
-            Grpc.Core.Channel channel = new Grpc.Core.Channel(TemporalServerHost, TemporalServerPort, ChannelCredentials.Insecure);
+
+            // *** Use this for non-secured connections {
+            //Grpc.Core.Channel channel = new Grpc.Core.Channel(TemporalServerHost, TemporalServerPort, ChannelCredentials.Insecure);
+            // *** }
+
+            // *** Use this for TLS connections {
+            string clientCertData = File.ReadAllText(@"PATH\NAME.crt.pem");
+            string clientKeyData = File.ReadAllText(@"PATH\NAME.key.pem");
+
+            SslCredentials sslCreds = new(rootCertificates: null,
+                                          new KeyCertificatePair(certificateChain: clientCertData,
+                                                                 privateKey: clientKeyData),
+                                          verifyPeerCallback: null);
+
+            Grpc.Core.Channel channel = new Grpc.Core.Channel(TemporalServerHost, TemporalServerPort, sslCreds);
+            // *** }
+
+            Console.WriteLine($"Created a `{channel.GetType().FullName}` to \"{channel.ResolvedTarget}\".");
 
             WorkflowService.WorkflowServiceClient client = new(channel);
             return client;
@@ -70,17 +95,121 @@ namespace Temporal.Demos.AdHocScenarios
                 logBuilder.SetMinimumLevel(LogLevel.Trace);
             });
 
-            Grpc.Net.Client.GrpcChannel channel = Grpc.Net.Client.GrpcChannel.ForAddress($"http://{TemporalServerHost}:{TemporalServerPort}",
+            // *** Use this for non-secured connections {
+            //Grpc.Net.Client.GrpcChannel channel = Grpc.Net.Client.GrpcChannel.ForAddress($"http://{TemporalServerHost}:{TemporalServerPort}",
+            //                                                                             new Grpc.Net.Client.GrpcChannelOptions()
+            //                                                                             {
+            //                                                                                 //LoggerFactory = logFactory
+            //                                                                             });
+            // *** }
+
+            // *** Use this for TLS connections {
+            HttpClientHandler httpClientHandler = new();
+
+            // This may be required for self-signed certs.
+            //httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+
+            string clientCertData = File.ReadAllText(@"PATH\NAME.crt.pem");
+            string clientKeyData = File.ReadAllText(@"PATH\NAME.key.pem");
+
+            X509Certificate2 clientCert = CreateX509CertFromData(clientCertData, clientKeyData);
+            httpClientHandler.ClientCertificates.Add(clientCert);
+
+            Grpc.Net.Client.GrpcChannel channel = Grpc.Net.Client.GrpcChannel.ForAddress($"https://{TemporalServerHost}:{TemporalServerPort}",
                                                                                          new Grpc.Net.Client.GrpcChannelOptions()
                                                                                          {
-                                                                                             //LoggerFactory = logFactory
+                                                                                             //LoggerFactory = logFactory,
+                                                                                             HttpHandler = httpClientHandler,
                                                                                          });
+            // *** }
+
+            Console.WriteLine($"Created a `{channel.GetType().FullName}` to \"{channel.Target}\".");
 
             WorkflowService.WorkflowServiceClient client = new(channel);
             return client;
 #else
             throw new NotSupportedException("This routine is only supported on Net Core and Net 5+.");
 #endif
+        }
+
+        private static X509Certificate2 CreateX509CertFromData(string certMarkedUpData, string keyMarkedUpData)
+        {
+            // Get the ephemeral (in-memory) cert:
+
+            X509Certificate2 ephemeralCert = CreateX509EphemeralCertFromData(certMarkedUpData, keyMarkedUpData);
+
+            // Work around Windows ephemeral bugs:
+            // (https://github.com/natemcmaster/LettuceEncrypt/pull/110)
+            // (https://stackoverflow.com/questions/55456807/create-x509certificate2-from-cert-and-key-without-making-a-pfx-file)
+            // (https://github.com/dotnet/runtime/issues/23749)
+            // @ToDo: Review this for other OSes when supported.
+
+            byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx);
+            X509Certificate2 certificate = new X509Certificate2(ephemeralCertBytes);
+
+            // Done:
+            return certificate;
+        }
+
+        /// <summary>
+        /// The `X509Certificate2.CreateFromPem(..)` API was not available before Net 6.
+        /// This method implements the respective logic for older Framework versions and delegates to the Framework API where possible.
+        /// Inspired by 
+        ///   https://github.com/grpc/grpc-dotnet/blob/dd72d6a38ab2984fd224aa8ed53686dc0153b9da/testassets/InteropTestsClient/InteropClient.cs#L898-L918
+        /// and
+        ///   https://stackoverflow.com/questions/7400500/how-to-get-private-key-from-pem-file/10498045#10498045
+        /// </summary>        
+        private static X509Certificate2 CreateX509EphemeralCertFromData(string certMarkedUpData, string keyMarkedUpData)
+        {
+#if NET6_0_OR_GREATER
+            return X509Certificate2.CreateFromPem(certMarkedUpData, keyMarkedUpData);
+#elif NETCOREAPP3_1_OR_GREATER
+            // Create public cert:
+
+            byte[] certBytes = GetPemSectionContent(certMarkedUpData, "CERTIFICATE");
+            using X509Certificate2 pubCert = new(certBytes);
+
+            // Add private key to get complete cert:
+
+            byte[] keyBytes = GetPemSectionContent(keyMarkedUpData, "PRIVATE KEY");
+            using RSA rsa = RSA.Create();
+            rsa.ImportPkcs8PrivateKey(keyBytes, out _);
+            X509Certificate2 ephemeralCert = pubCert.CopyWithPrivateKey(rsa);
+            // If section "RSA PRIVATE KEY" was present instead, we would need to import it by `rsa.ImportRSAPrivateKey(keyBytes, out _)`.
+
+            return ephemeralCert;
+#else
+            throw new NotSupportedException("This method is not supported under the targeted .NET version.");
+#endif
+        }
+
+        private static byte[] GetPemSectionContent(string markedUpPem, string sectionName)
+        {
+            const string SectionStartMarkerTemplate = "-----BEGIN {0}-----";
+            const string SectionEndMarkerTemplate = "-----END {0}-----";
+
+            string sectionStartMarker = String.Format(SectionStartMarkerTemplate, sectionName);
+            string sectionEndMarker = String.Format(SectionEndMarkerTemplate, sectionName);
+
+            int sectionDataStartIndex = markedUpPem.IndexOf(sectionStartMarker, StringComparison.Ordinal);
+            if (sectionDataStartIndex < 0)
+            {
+                throw new FormatException($"Cannot find the start of the specified section (Marker=\"{sectionStartMarker}\").");
+            }
+
+            sectionDataStartIndex += sectionStartMarker.Length;
+
+            int sectionDataEndIndex = markedUpPem.IndexOf(sectionEndMarker, sectionDataStartIndex, StringComparison.Ordinal)
+                                    - sectionDataStartIndex;
+
+            if (sectionDataEndIndex < 0)
+            {
+                throw new FormatException($"Cannot find the end of the specified section"
+                                        + $" (SearchStartIndex={sectionDataStartIndex}; Marker=\"{sectionEndMarker}\").");
+            }
+
+            string sectionContentEncodedBytes = markedUpPem.Substring(sectionDataStartIndex, sectionDataEndIndex);
+            return Convert.FromBase64String(sectionContentEncodedBytes);
         }
 
         private WorkflowService.WorkflowServiceClient CreateClient()
@@ -98,7 +227,7 @@ namespace Temporal.Demos.AdHocScenarios
 
             ListWorkflowExecutionsRequest reqListExecs = new()
             {
-                Namespace = "default",
+                Namespace = TestNamespace,
             };
 
             ListWorkflowExecutionsResponse resListExecs = await client.ListWorkflowExecutionsAsync(reqListExecs);
@@ -124,7 +253,7 @@ namespace Temporal.Demos.AdHocScenarios
 
             StartWorkflowExecutionRequest reqStartWf = new()
             {
-                Namespace = "default",
+                Namespace = TestNamespace,
                 WorkflowId = "Some-Workflow-Id",
                 WorkflowType = new WorkflowType()
                 {
@@ -186,7 +315,7 @@ namespace Temporal.Demos.AdHocScenarios
 
                 GetWorkflowExecutionHistoryRequest reqGWEHist = new()
                 {
-                    Namespace = "default",
+                    Namespace = TestNamespace,
                     Execution = new WorkflowExecution()
                     {
                         WorkflowId = workflowId,
@@ -267,7 +396,7 @@ namespace Temporal.Demos.AdHocScenarios
 
             DescribeWorkflowExecutionRequest reqDesrcWfExecWf = new()
             {
-                Namespace = "default",
+                Namespace = TestNamespace,
                 Execution = new WorkflowExecution()
                 {
                     WorkflowId = "qqq", // String.Empty,
@@ -302,7 +431,7 @@ namespace Temporal.Demos.AdHocScenarios
 
             SignalWorkflowExecutionRequest reqSignalWf = new()
             {
-                Namespace = "default",
+                Namespace = TestNamespace,
                 WorkflowExecution = new WorkflowExecution()
                 {
                     WorkflowId = "qqq", // String.Empty,
