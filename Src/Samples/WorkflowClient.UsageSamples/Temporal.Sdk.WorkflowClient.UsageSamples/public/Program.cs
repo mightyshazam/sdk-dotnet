@@ -10,6 +10,7 @@ namespace Temporal.Sdk.WorkflowClient.UsageSamples
             Console.WriteLine($"RuntimeEnvironmentInfo: \n{RuntimeEnvironmentInfo.SingletonInstance}");
 
             (new Part1_SimpleClientUsage()).Run();
+            (new Part2_AdvancedClientUsage()).Run();
 
             Console.WriteLine($"\n{typeof(Program).FullName} has finished.\n");
         }
