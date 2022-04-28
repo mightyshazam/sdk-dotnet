@@ -303,14 +303,14 @@ namespace Temporal.WorkflowClient
 
         #endregion StartAsync(..)
 
-        #region StartWithSignalAsync(..)
+        #region SignalWithStartAsync(..)
 
         /// <summary>
         /// See the implemented iface API (
-        /// <see cref="IWorkflowHandle.StartWithSignalAsync{TWfArg, TSigArg}(String, String, TWfArg, String, TSigArg, StartWorkflowConfiguration, CancellationToken)"/>
+        /// <see cref="IWorkflowHandle.SignalWithStartAsync{TWfArg, TSigArg}(String, String, TWfArg, String, TSigArg, StartWorkflowConfiguration, CancellationToken)"/>
         /// ) for a detailed description.
         /// </summary>
-        public async Task<StartWorkflow.Result> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
+        public async Task<StartWorkflow.Result> SignalWithStartAsync<TWfArg, TSigArg>(string workflowTypeName,
                                                                                       string taskQueue,
                                                                                       TWfArg workflowArg,
                                                                                       string signalName,
@@ -338,7 +338,7 @@ namespace Temporal.WorkflowClient
                                                                                  cancelToken);
 
                 ITemporalClientInterceptor invokerPipeline = GetOrCreateServiceInvocationPipeline(opArgs);
-                StartWorkflow.Result resStartWf = await invokerPipeline.StartWorkflowWithSignalAsync(opArgs);
+                StartWorkflow.Result resStartWf = await invokerPipeline.SignalWorkflowWithStartAsync(opArgs);
 
                 if (resStartWf.TryGetBoundWorkflowChainId(out string boundChainId))
                 {
@@ -353,7 +353,7 @@ namespace Temporal.WorkflowClient
             }
         }
 
-        #endregion StartWithSignalAsync(..)
+        #endregion SignalWithStartAsync(..)
 
 
         #region --- GetXxxRunAsync(..) APIs to access a specific run ---

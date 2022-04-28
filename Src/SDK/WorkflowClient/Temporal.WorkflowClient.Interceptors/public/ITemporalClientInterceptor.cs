@@ -9,7 +9,7 @@ namespace Temporal.WorkflowClient.Interceptors
         void Init(ITemporalClientInterceptor nextInterceptor);
 
         Task<StartWorkflow.Result> StartWorkflowAsync<TWfArg>(StartWorkflow.Arguments.StartOnly<TWfArg> opArgs);
-        Task<StartWorkflow.Result> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(StartWorkflow.Arguments.WithSignal<TWfArg, TSigArg> opArgs);
+        Task<StartWorkflow.Result> SignalWorkflowWithStartAsync<TWfArg, TSigArg>(StartWorkflow.Arguments.WithSignal<TWfArg, TSigArg> opArgs);
         Task<IWorkflowRunResult> AwaitConclusionAsync(AwaitConclusion.Arguments opArgs);
         Task<GetWorkflowChainId.Result> GetWorkflowChainIdAsync(GetWorkflowChainId.Arguments opArgs);
         Task<DescribeWorkflow.Result> DescribeWorkflowAsync(DescribeWorkflow.Arguments opArgs);
