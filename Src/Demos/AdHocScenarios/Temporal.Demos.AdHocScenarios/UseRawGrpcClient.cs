@@ -23,12 +23,12 @@ namespace Temporal.Demos.AdHocScenarios
 {
     internal class UseRawGrpcClient
     {
-        //private const string TemporalServerHost = "localhost";
-        private const string TemporalServerHost = "NAME.XYZ.tmprl.cloud";
+        private const string TemporalServerHost = "localhost";
+        //private const string TemporalServerHost = "NAME.ACCNT.tmprl.cloud";
         private const int TemporalServerPort = 7233;
 
-        //private const string TestNamespace = "default";
-        private const string TestNamespace = "NAME.temporal-dev";
+        private const string TestNamespace = "default";
+        //private const string TestNamespace = "NAME.ACCNT";
 
 
         public void Run()
@@ -106,8 +106,11 @@ namespace Temporal.Demos.AdHocScenarios
             // *** Use this for TLS connections {
             HttpClientHandler httpClientHandler = new();
 
-            // This may be required for self-signed certs.
-            //httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+            if (TemporalServerHost.Equals(TemporalServerHost, StringComparison.OrdinalIgnoreCase))
+            {
+                // Required for self-signed certs:
+                httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+            }
 
             string clientCertData = File.ReadAllText(@"PATH\NAME.crt.pem");
             string clientKeyData = File.ReadAllText(@"PATH\NAME.key.pem");
@@ -171,12 +174,42 @@ namespace Temporal.Demos.AdHocScenarios
 
             // Add private key to get complete cert:
 
-            byte[] keyBytes = GetPemSectionContent(keyMarkedUpData, "PRIVATE KEY");
+            ExceptionAggregator exAggr = new();
             using RSA rsa = RSA.Create();
-            rsa.ImportPkcs8PrivateKey(keyBytes, out _);
-            X509Certificate2 ephemeralCert = pubCert.CopyWithPrivateKey(rsa);
-            // If section "RSA PRIVATE KEY" was present instead, we would need to import it by `rsa.ImportRSAPrivateKey(keyBytes, out _)`.
+            bool privKeyLoaded = false;
 
+            try
+            {
+                byte[] keyBytes = GetPemSectionContent(keyMarkedUpData, "PRIVATE KEY");
+                rsa.ImportPkcs8PrivateKey(keyBytes, out _);
+                privKeyLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                exAggr.Add(ex);
+            }
+
+            if (!privKeyLoaded)
+            {
+                try
+                {
+                    byte[] keyBytes = GetPemSectionContent(keyMarkedUpData, "RSA PRIVATE KEY");
+                    rsa.ImportRSAPrivateKey(keyBytes, out _);
+                    privKeyLoaded = true;
+                }
+                catch (Exception ex)
+                {
+                    exAggr.Add(ex);
+                }
+            }
+
+            if (!privKeyLoaded)
+            {
+                exAggr.ThrowIfNotEmpty();
+                throw new InvalidOperationException($"Could not read the private key from {nameof(keyMarkedUpData)}.");
+            }
+
+            X509Certificate2 ephemeralCert = pubCert.CopyWithPrivateKey(rsa);
             return ephemeralCert;
 #else
             throw new NotSupportedException("This method is not supported under the targeted .NET version.");
