@@ -62,16 +62,16 @@ namespace Temporal.WorkflowClient
                                                       CancellationToken cancelToken = default);
         #endregion StartAsync(..)
 
-        #region StartWithSignalAsync(..)
+        #region SignalWithStartAsync(..)
         /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
-        Task<StartWorkflow.Result> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
+        Task<StartWorkflow.Result> SignalWithStartAsync<TWfArg, TSigArg>(string workflowTypeName,
                                                                          string taskQueue,
                                                                          TWfArg workflowArg,
                                                                          string signalName,
                                                                          TSigArg signalArg,
                                                                          StartWorkflowConfiguration workflowConfig = null,
                                                                          CancellationToken cancelToken = default);
-        #endregion StartWithSignalAsync(..)
+        #endregion SignalWithStartAsync(..)
 
         #region --- GetXxxRunAsync(..) APIs to access a specific run ---
 

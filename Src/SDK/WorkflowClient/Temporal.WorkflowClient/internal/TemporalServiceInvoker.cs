@@ -81,7 +81,7 @@ namespace Temporal.WorkflowClient
         public async Task<StartWorkflow.Result> StartWorkflowAsync<TWfArg>(StartWorkflow.Arguments.StartOnly<TWfArg> opArgs)
         {
             // We need to re-validate the arguments because they went through the interceptor pipeline and thus may have
-            // been modified by customer code.
+            // been modified by user code.
 
             Validate.NotNull(opArgs);
             Validate.NotNullOrWhitespace(opArgs.Namespace);
@@ -193,10 +193,10 @@ namespace Temporal.WorkflowClient
             }
         }
 
-        public async Task<StartWorkflow.Result> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(StartWorkflow.Arguments.WithSignal<TWfArg, TSigArg> opArgs)
+        public async Task<StartWorkflow.Result> SignalWorkflowWithStartAsync<TWfArg, TSigArg>(StartWorkflow.Arguments.WithSignal<TWfArg, TSigArg> opArgs)
         {
             // We need to re-validate the arguments because they went through the interceptor pipeline and thus may have
-            // been modified by customer code.
+            // been modified by user code.
 
             Validate.NotNull(opArgs);
             Validate.NotNullOrWhitespace(opArgs.Namespace);
