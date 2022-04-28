@@ -8,6 +8,11 @@ using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.Sdk.WorkflowClient.UsageSamples
 {
+    /// <summary>
+    /// This Part demonstates the most common usages of the Workflow Client SDK.
+    /// </summary>
+    /// <remarks>This class contains usage sample intended for education and API review. It may not actually execute
+    /// successfully because IDs used in these samples may not actually exist on the backing Temporal server.</remarks>
     public class Part1_SimpleClientUsage
     {
         public void Run()
