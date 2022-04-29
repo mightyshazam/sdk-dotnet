@@ -96,7 +96,7 @@ namespace Temporal.WorkflowClient
                     }
                 }
 
-                throw new ArgumentException($"Cannot release this {nameof(channel)} becasue it"
+                throw new ArgumentException($"Cannot release this {nameof(channel)} because it"
                                           + $" is not tracked by this {nameof(GrpcChannelFactory)}.");
             }
         }
