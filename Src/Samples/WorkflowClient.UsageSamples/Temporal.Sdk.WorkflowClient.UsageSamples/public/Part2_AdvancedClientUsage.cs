@@ -5,6 +5,7 @@ using Temporal.Api.WorkflowService.V1;
 using Temporal.Common;
 using Temporal.Util;
 using Temporal.WorkflowClient;
+using Temporal.WorkflowClient.Errors;
 
 namespace Temporal.Sdk.WorkflowClient.UsageSamples
 {
@@ -94,16 +95,60 @@ namespace Temporal.Sdk.WorkflowClient.UsageSamples
         public async Task CheckWorkflowExistsAsync()
         {
             // APIs that interact with a workflow throw a `WorkflowNotFoundException` if a workflow with the specified ID does not exist.
-            // However, users can also check whether a particular workflow exists
-            // without the need to use exceptions to control the program execution flow.
+            // In a cases where it is only neccesary to know whether a particular workflow actually exists (i.e. invoking futher APIs
+            // on that workflow is not required in the same code context) developers can use the `ExistsAsync(..)` method to avoid
+            // using exceptions to control the program execution flow.
+
+            // For example, consider a (simplified) code sub-section of a page controller for a shopping system page where users land
+            // after they just logged on.
+
+            string userName = "Some User-Name";
+            string userId = "Some-User-Id";
+            string shoppingCartWfId = $"ShoppingCart-Wf-|{userId}|";
 
             ITemporalClient client = ObtainClient();
 
-            using IWorkflowHandle workflow = client.CreateWorkflowHandle("Workflow-ID-To-Check");
+            using IWorkflowHandle workflow = client.CreateWorkflowHandle(shoppingCartWfId);
             bool wfExists = await workflow.ExistsAsync();
 
-            Console.WriteLine($"A workflow with id \"{workflow.WorkflowId}\""
-                            + (wfExists ? "EXISTS." : "DOES NOT EXIST."));
+            Console.WriteLine($"Welcome {userName}!");
+
+            if (wfExists)
+            {
+                Console.WriteLine($"Looks like you were shopping before.");
+                Console.WriteLine($"Click <a href='/page/ViewCart?id={shoppingCartWfId}'>here</a> to view your shopping cart.");
+            }
+            else
+            {
+                Console.WriteLine($"We are glad to see you in our store");
+                Console.WriteLine($"Click <a href='/page/Catalogue'>here</a> to view our catalogue.");
+            }
+
+            Console.WriteLine($"Or click <a href='/page/Profile?id={userId}'>here</a> to configure your profile.");
+
+            // Note that it is an anti-pattern to use `ExistsAsync(..)` as a qualifier for another API,
+            // becasue the state on the server can change concurrently. For example the following is
+            // NOT A RECOMMENDED way to use `ExistsAsync(..)`:
+
+            if (!await workflow.ExistsAsync())
+            {
+                await client.StartWorkflowAsync(shoppingCartWfId, "Shopping-Cart-Wf", "Some-Task-Queue");
+            }
+
+            // Here, the even if the initial IF check shows that a workflow did not exist, it may be created concurrently by another
+            // client, and the `StartWorkflowAsync(..)` call may still fail. The correct approach is:
+
+            try
+            {
+                await client.StartWorkflowAsync(shoppingCartWfId, "Shopping-Cart-Wf", "Some-Task-Queue");
+            }
+            catch (WorkflowNotFoundException)
+            {
+                // Process exception...
+            }
+
+            // `ExistsAsync(..)` enables scenarios such as the first example in this method, where LOCAL logic depends on the
+            // exisatance of a remote workflow.
         }
 
         public async Task WaitForWorkflowToFinishAsync()
