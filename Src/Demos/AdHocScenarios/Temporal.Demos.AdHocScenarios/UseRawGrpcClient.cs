@@ -56,8 +56,11 @@ namespace Temporal.Demos.AdHocScenarios
             // *** }
 
             // *** Use this for TLS connections {
-            string clientCertData = File.ReadAllText(@"PATH\NAME.crt.pem");
-            string clientKeyData = File.ReadAllText(@"PATH\NAME.key.pem");
+            //string clientCertData = File.ReadAllText(@"PATH\NAME.crt.pem");
+            //string clientKeyData = File.ReadAllText(@"PATH\NAME.key.pem");
+
+            string clientCertData = File.ReadAllText(@"PATH\client.pem");
+            string clientKeyData = File.ReadAllText(@"PATH\client.key");
 
             SslCredentials sslCreds = new(rootCertificates: null,
                                           new KeyCertificatePair(certificateChain: clientCertData,
@@ -109,14 +112,19 @@ namespace Temporal.Demos.AdHocScenarios
             if (TemporalServerHost.Equals(TemporalServerHost, StringComparison.OrdinalIgnoreCase))
             {
                 // Required for self-signed certs:
-                httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;            
             }
 
-            string clientCertData = File.ReadAllText(@"PATH\NAME.crt.pem");
-            string clientKeyData = File.ReadAllText(@"PATH\NAME.key.pem");
+            // Required only for mTLS {
+            //string clientCertData = File.ReadAllText(@"PATH\NAME.crt.pem");
+            //string clientKeyData = File.ReadAllText(@"PATH\NAME.key.pem");
+
+            string clientCertData = File.ReadAllText(@"PATH\client.pem");
+            string clientKeyData = File.ReadAllText(@"PATH\client.key");
 
             X509Certificate2 clientCert = CreateX509CertFromData(clientCertData, clientKeyData);
             httpClientHandler.ClientCertificates.Add(clientCert);
+            // } Required only for mTLS
 
             Grpc.Net.Client.GrpcChannel channel = Grpc.Net.Client.GrpcChannel.ForAddress($"https://{TemporalServerHost}:{TemporalServerPort}",
                                                                                          new Grpc.Net.Client.GrpcChannelOptions()
