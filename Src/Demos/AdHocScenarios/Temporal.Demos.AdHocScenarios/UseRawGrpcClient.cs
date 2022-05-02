@@ -141,7 +141,7 @@ namespace Temporal.Demos.AdHocScenarios
 
             X509Certificate2 ephemeralCert = CreateX509EphemeralCertFromData(certMarkedUpData, keyMarkedUpData);
 
-            // Work around Windows ephemeral bugs:
+            // Work around Windows ephemeral cert bugs:
             // (https://github.com/natemcmaster/LettuceEncrypt/pull/110)
             // (https://stackoverflow.com/questions/55456807/create-x509certificate2-from-cert-and-key-without-making-a-pfx-file)
             // (https://github.com/dotnet/runtime/issues/23749)
