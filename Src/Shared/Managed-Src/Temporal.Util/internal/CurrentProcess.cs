@@ -83,6 +83,17 @@ namespace Temporal.Util
                 machineName = currentProcess.MachineName;
                 processId = currentProcess.Id;
             }
+
+            // `Process.MachineName` can return "." for local processes.
+            // In that case, do a best effort to use an alternative source for that info.
+            if (String.IsNullOrWhiteSpace(machineName) || machineName.Equals(".", StringComparison.Ordinal))
+            {
+                try
+                {
+                    machineName = Environment.MachineName;
+                }
+                catch { }
+            }
         }
 
         /// <summary>

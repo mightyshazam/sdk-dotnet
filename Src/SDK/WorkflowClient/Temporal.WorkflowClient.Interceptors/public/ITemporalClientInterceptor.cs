@@ -8,24 +8,14 @@ namespace Temporal.WorkflowClient.Interceptors
     {
         void Init(ITemporalClientInterceptor nextInterceptor);
 
-        Task<StartWorkflowResult> StartWorkflowAsync<TWfArg>(string @namespace,
-                                                             string workflowId,
-                                                             string workflowTypeName,
-                                                             string taskQueue,
-                                                             TWfArg workflowArg,
-                                                             StartWorkflowConfiguration workflowConfig,
-                                                             bool throwOnAlreadyExists,
-                                                             CancellationToken cancelToken);
-
-        Task<IWorkflowRunResult> AwaitConclusionAsync(string @namespace,
-                                                      string workflowId,
-                                                      string workflowChainId,
-                                                      string workflowRunId,
-                                                      bool followChain,
-                                                      CancellationToken cancelToken);
-
-        Task<string> GetLatestWorkflowChainId(string @namespace,
-                                              string workflowId,
-                                              CancellationToken cancelToken);
+        Task<StartWorkflow.Result> StartWorkflowAsync<TWfArg>(StartWorkflow.Arguments.StartOnly<TWfArg> opArgs);
+        Task<StartWorkflow.Result> SignalWorkflowWithStartAsync<TWfArg, TSigArg>(StartWorkflow.Arguments.WithSignal<TWfArg, TSigArg> opArgs);
+        Task<IWorkflowRunResult> AwaitConclusionAsync(AwaitConclusion.Arguments opArgs);
+        Task<GetWorkflowChainId.Result> GetWorkflowChainIdAsync(GetWorkflowChainId.Arguments opArgs);
+        Task<DescribeWorkflow.Result> DescribeWorkflowAsync(DescribeWorkflow.Arguments opArgs);
+        Task<SignalWorkflow.Result> SignalWorkflowAsync<TSigArg>(SignalWorkflow.Arguments<TSigArg> opArgs);
+        Task<QueryWorkflow.Result<TResult>> QueryWorkflowAsync<TQryArg, TResult>(QueryWorkflow.Arguments<TQryArg> opArgs);
+        Task<RequestCancellation.Result> RequestCancellationAsync(RequestCancellation.Arguments opArgs);
+        Task<TerminateWorkflow.Result> TerminateWorkflowAsync<TTermArg>(TerminateWorkflow.Arguments<TTermArg> opArgs);
     }
 }

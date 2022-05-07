@@ -27,9 +27,12 @@ namespace Temporal.Demos.AdHocScenarios
         {
             Console.WriteLine();
 
-            ListWorkflowExecutionsAsync().GetAwaiter().GetResult();
-            StartWorkflowAsync().GetAwaiter().GetResult();
-            WaitForWorkflowAsync().GetAwaiter().GetResult();
+            //SignalWorkflowAsync().GetAwaiter().GetResult();
+            DescribeWorkflowAsync().GetAwaiter().GetResult();
+
+            //ListWorkflowExecutionsAsync().GetAwaiter().GetResult();
+            //StartWorkflowAsync().GetAwaiter().GetResult();
+            //WaitForWorkflowAsync().GetAwaiter().GetResult();
 
             Console.WriteLine();
             Console.WriteLine("Done. Press Enter.");
@@ -254,6 +257,74 @@ namespace Temporal.Demos.AdHocScenarios
                                                                     $"Unexpected History EventType (\"{historyEvent.EventType}\")");
                 }
             }  // while(true)
+        }
+
+        public async Task DescribeWorkflowAsync()
+        {
+            Console.WriteLine("\n----------- Workflow DescribeWorkflowAsync { ----------- -----------\n");
+
+            WorkflowService.WorkflowServiceClient client = CreateClient();
+
+            DescribeWorkflowExecutionRequest reqDesrcWfExecWf = new()
+            {
+                Namespace = "default",
+                Execution = new WorkflowExecution()
+                {
+                    WorkflowId = "qqq", // String.Empty,
+                    RunId = "f47f5aa0-8740-4c40-b4df-b40c44c5f068",
+                }
+            };
+
+            DescribeWorkflowExecutionResponse resDesrcWfExecWf;
+            try
+            {
+                resDesrcWfExecWf = await client.DescribeWorkflowExecutionAsync(reqDesrcWfExecWf);
+                Console.WriteLine($"Workflow Execution Described.");
+            }
+            catch (RpcException rpcEx)
+            {
+                Console.WriteLine($"Could not Describe Workflow Execution. {rpcEx}");
+                return;
+            }
+
+            Console.WriteLine($"WorkflowId: \"{resDesrcWfExecWf.WorkflowExecutionInfo.Execution.WorkflowId}\".");
+            Console.WriteLine($"RunId: \"{resDesrcWfExecWf.WorkflowExecutionInfo.Execution.RunId}\".");
+            Console.WriteLine($"TypeName: \"{resDesrcWfExecWf.WorkflowExecutionInfo.Type.Name}\".");
+
+            Console.WriteLine("\n----------- } Workflow DescribeWorkflowAsync ----------- -----------\n");
+        }
+
+        public async Task SignalWorkflowAsync()
+        {
+            Console.WriteLine("\n----------- Workflow SignalWorkflowAsync { ----------- -----------\n");
+
+            WorkflowService.WorkflowServiceClient client = CreateClient();
+
+            SignalWorkflowExecutionRequest reqSignalWf = new()
+            {
+                Namespace = "default",
+                WorkflowExecution = new WorkflowExecution()
+                {
+                    WorkflowId = "qqq", // String.Empty,
+                    RunId = "f47f5aa0-8740-4c40-b4df-b40c44c5f068",
+                },
+                SignalName = "Dummy-Signal",
+                RequestId = Guid.NewGuid().ToString(),
+            };
+
+            SignalWorkflowExecutionResponse resSignalWf;
+            try
+            {
+                resSignalWf = await client.SignalWorkflowExecutionAsync(reqSignalWf);
+                Console.WriteLine($"Workflow Signalled.");
+            }
+            catch (RpcException rpcEx)
+            {
+                Console.WriteLine($"Could not Signal Workflow Execution. {rpcEx}");
+                return;
+            }
+
+            Console.WriteLine("\n----------- } Workflow SignalWorkflowAsync ----------- -----------\n");
         }
 
         public class UnexpectedServerResponseException : Exception

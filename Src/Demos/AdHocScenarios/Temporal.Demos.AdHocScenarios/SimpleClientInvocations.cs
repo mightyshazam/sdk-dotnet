@@ -6,6 +6,7 @@ using Temporal.Common;
 using Temporal.WorkflowClient;
 using Temporal.WorkflowClient.Errors;
 using Temporal.WorkflowClient.Interceptors;
+using System.Threading;
 
 namespace Temporal.Demos.AdHocScenarios
 {
@@ -40,7 +41,7 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine($"    WorkflowChainId: {workflow.WorkflowChainId}");
 
             Console.WriteLine();
-            Console.WriteLine("Starting again...");
+            Console.WriteLine("Attempting to start a workflow with the same WorkflowId...");
             Console.WriteLine();
 
             try
@@ -64,6 +65,7 @@ namespace Temporal.Demos.AdHocScenarios
 
             Console.WriteLine();
             Console.WriteLine("Creating a handle to the existing workflow...");
+            Console.WriteLine();
 
             IWorkflowHandle workflow2 = client.CreateWorkflowHandle(demoWfId);
 
@@ -92,13 +94,141 @@ namespace Temporal.Demos.AdHocScenarios
             }
 
             Console.WriteLine();
+            Console.WriteLine("Obtaining Workflow Type Name...");
+            Console.WriteLine();
+
+            string workflowTypeName = await workflow2.GetWorkflowTypeNameAsync();
+
+            Console.WriteLine($"Obtained. {nameof(workflowTypeName)}={workflowTypeName.QuoteOrNull()}.");
+            Console.WriteLine("Updated handle info:");
+            Console.WriteLine($"    IsBound:         {workflow2.IsBound}");
+            Console.WriteLine($"    WorkflowChainId: {workflow2.WorkflowChainId}");
+
+            Console.WriteLine();
+            Console.WriteLine("Sending signal to a workflow...");
+            Console.WriteLine();
+
+            await workflow.SignalAsync("Some-Signal-01", "Some-Signal-Argument");
+
+            Console.WriteLine("Signal sent. Look for it in the workflow history.");
+
+            Console.WriteLine();
+            Console.WriteLine("Sending query to a workflow...");
+
+            try
+            {
+                TimeSpan delayQueryCancel = TimeSpan.FromSeconds(2);
+                Console.WriteLine($"The workflow was not designed for queries,"
+                                + $" so we will cancel the wait for query completion after '{delayQueryCancel}'.");
+                Console.WriteLine();
+
+                using CancellationTokenSource query01CancelControl = new(delayQueryCancel);
+                object resQuery01 = await workflow.QueryAsync<object, string>("Some-Query-01",
+                                                                              "Some-Query-Argument",
+                                                                              cancelToken: query01CancelControl.Token);
+
+                Console.WriteLine("Query sent. Look for it in the workflow history.");
+                Console.WriteLine($"Query result: |{Format.QuoteIfString(resQuery01)}|.");
+            }
+            catch (OperationCanceledException opCncldEx)
+            {
+                Console.WriteLine("Received expected exception.");
+                Console.WriteLine(opCncldEx.TypeAndMessage());
+
+                Exception innerEx = opCncldEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n  Inner --> " + innerEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Sending cancellation request to a workflow...");
+            Console.WriteLine();
+
+            await workflow.RequestCancellationAsync();
+
+            Console.WriteLine("Cancellation requested. However, it the workflow was not designed to honor it, so it will remain ignored. Look for the request in the workflow history.");
+            Console.WriteLine("Look for the request in the workflow history.");
+
+            Console.WriteLine();
+            Console.WriteLine("Getting LatestRun of the workflow...");
+
+            IWorkflowRunHandle latestRun = await workflow.GetLatestRunAsync();
+
+            Console.WriteLine("Got the latest run. Calling Getting LatestRun of the workflow...");
+            Console.WriteLine($"    Namespace:       {latestRun.Namespace}");
+            Console.WriteLine($"    WorkflowId:      {latestRun.WorkflowId}");
+            Console.WriteLine($"    WorkflowRunId:   {latestRun.WorkflowRunId}");
+
+            Console.WriteLine();
+            Console.WriteLine("Sending signal to a run...");
+            Console.WriteLine();
+
+            await latestRun.SignalAsync("Some-Signal-02", Payload.Unnamed(42, DateTimeOffset.Now, "Last-Signal-Argument-Value"));
+
+            Console.WriteLine("Signal sent to run. Look for it in the run history.");
+
+            Console.WriteLine();
+            Console.WriteLine("Creating an independent workflow run handle...");
+
+            IWorkflowRunHandle run2 = client.CreateWorkflowRunHandle(latestRun.WorkflowId, latestRun.WorkflowRunId);
+
+            Console.WriteLine("Independent run handle created.");
+            Console.WriteLine($"    Namespace:       {latestRun.Namespace}");
+            Console.WriteLine($"    WorkflowId:      {latestRun.WorkflowId}");
+            Console.WriteLine($"    WorkflowRunId:   {latestRun.WorkflowRunId}");
+
+            Console.WriteLine();
+            Console.WriteLine("Obtaining owner workflow of independent run handle...");
+            Console.WriteLine();
+
+            IWorkflowHandle ownerWorkflow = await run2.GetOwnerWorkflowAsync();
+
+            Console.WriteLine("Owner workflow obtained.");
+            Console.WriteLine($"    Namespace:       {ownerWorkflow.Namespace}");
+            Console.WriteLine($"    WorkflowId:      {ownerWorkflow.WorkflowId}");
+            Console.WriteLine($"    IsBound:         {ownerWorkflow.IsBound}");
+            Console.WriteLine($"    WorkflowChainId: {ownerWorkflow.WorkflowChainId}");
+
+            Console.WriteLine();
+            Console.WriteLine($"Owner-workflow-handle and the Original-workflow refer to the same chain (TRUE expected):"
+                            + $" {ownerWorkflow.WorkflowChainId.Equals(workflow.WorkflowChainId)}");
+
+            Console.WriteLine($"Owner-workflow-handle and the Original-workflow are the same instance (FALSE expected):"
+                            + $" {Object.ReferenceEquals(ownerWorkflow, workflow)}");
+
+            Console.WriteLine();
+            Console.WriteLine("Sending four signals to a run using independent handle...");
+            Console.WriteLine();
+
+            object[] signal3Inputvalues = new object[] { 42, new { Custom = "Foo", Datatype = 18 } };
+            await latestRun.SignalAsync("Some-Signal-03a", Payload.Unnamed(signal3Inputvalues));
+            await latestRun.SignalAsync("Some-Signal-03b", Payload.Unnamed<object[]>(signal3Inputvalues));
+            await latestRun.SignalAsync("Some-Signal-03c", Payload.Unnamed(42, 43, 44));
+            await latestRun.SignalAsync("Some-Signal-03d", Payload.Unnamed<int[]>(new[] { 42, 43, 44 }));
+
+            Console.WriteLine("Signasl sent via intependent run handle. Look for them in the run history.");
+
+            _ = Task.Run(async () =>
+                {
+                    TimeSpan delayTermination = TimeSpan.FromSeconds(2);
+                    Console.WriteLine($"Started automatic termination invoker with a delay of '{delayTermination}'.");
+
+                    await Task.Delay(delayTermination);
+                    Console.WriteLine($"Delay of {delayTermination} elapsed. Terminating workflow...");
+
+                    await workflow.TerminateAsync("Good-reason-for-termination", details: DateTimeOffset.Now);
+                    Console.WriteLine($"Workflow terminated.");
+                });
+
+            Console.WriteLine();
             Console.WriteLine("Waiting for result...");
             Console.WriteLine();
 
             try
             {
-                // At this point, we expect the user to manually terminate the workflow via the UI
-                // (or course, manual interventions need to be removed in the mid-term).
                 await workflow.GetResultAsync<object>();
 
                 throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
@@ -127,7 +257,59 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine($"    IsBound:         {workflow3.IsBound}");
 
             Console.WriteLine();
-            Console.WriteLine("Waiting for result on a non-existing workflow...");
+            Console.WriteLine("Verifying existence...");
+            Console.WriteLine();
+
+            bool wfExists = await workflow3.ExistsAsync();
+
+            Console.WriteLine($"Verified. {nameof(wfExists)}={wfExists}.");
+            Console.WriteLine("Updated handle info:");
+            Console.WriteLine($"    IsBound:         {workflow3.IsBound}");
+
+            try
+            {
+                Console.WriteLine($"    WorkflowChainId: {workflow3.WorkflowChainId}");
+
+                throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
+            }
+            catch (InvalidOperationException invOpEx)
+            {
+                Console.WriteLine($"    Expected exception while getting {nameof(workflow3.WorkflowChainId)}:");
+                Console.WriteLine($"    --> {invOpEx.TypeAndMessage()}");
+
+                Exception innerEx = invOpEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n      Inner --> " + invOpEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Sending signal to a non-existing workflow...");
+            Console.WriteLine();
+
+            try
+            {
+                await workflow3.SignalAsync("Some-Signal-04");
+
+                throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
+            }
+            catch (WorkflowNotFoundException wnfEx)
+            {
+                Console.WriteLine("Received expected exception.");
+                Console.WriteLine(wnfEx.TypeAndMessage());
+
+                Exception innerEx = wnfEx.InnerException;
+                while (innerEx != null)
+                {
+                    Console.WriteLine("\n  Inner --> " + innerEx.TypeAndMessage());
+                    innerEx = innerEx.InnerException;
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Waiting for result of a non-existing workflow...");
             Console.WriteLine();
 
             try

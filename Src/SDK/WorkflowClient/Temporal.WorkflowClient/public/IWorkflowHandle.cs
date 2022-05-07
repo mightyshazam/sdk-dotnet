@@ -5,6 +5,7 @@ using Temporal.Api.Enums.V1;
 using Temporal.Api.WorkflowService.V1;
 using Temporal.Common;
 using Temporal.WorkflowClient.Interceptors;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {
@@ -24,8 +25,7 @@ namespace Temporal.WorkflowClient
 
         Task<WorkflowExecutionStatus> GetStatusAsync(CancellationToken cancelToken = default);
 
-        /// <summary>Should this be called TryDescribeAsync?</summary>        
-        Task<TryResult<DescribeWorkflowExecutionResponse>> CheckExistsAsync(CancellationToken cancelToken = default);
+        Task<bool> ExistsAsync(CancellationToken cancelToken = default);
 
         Task<DescribeWorkflowExecutionResponse> DescribeAsync(CancellationToken cancelToken = default);
 
@@ -54,31 +54,35 @@ namespace Temporal.WorkflowClient
 
         #region StartAsync(..)
         /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
-        Task<StartWorkflowResult> StartAsync<TWfArg>(string workflowTypeName,
-                                                     string taskQueue,
-                                                     TWfArg workflowArg,
-                                                     StartWorkflowConfiguration workflowConfig = null,
-                                                     bool throwIfWorkflowChainAlreadyExists = true,
-                                                     CancellationToken cancelToken = default);
+        Task<StartWorkflow.Result> StartAsync<TWfArg>(string workflowTypeName,
+                                                      string taskQueue,
+                                                      TWfArg workflowArg,
+                                                      StartWorkflowConfiguration workflowConfig = null,
+                                                      bool throwIfWorkflowChainAlreadyExists = true,
+                                                      CancellationToken cancelToken = default);
         #endregion StartAsync(..)
 
-        #region StartWithSignalAsync(..)
+        #region SignalWithStartAsync(..)
         /// <summary>If already bound - fail. Otherwise, start and bind to result.</summary>        
-        Task<StartWorkflowResult> StartWithSignalAsync<TWfArg, TSigArg>(string workflowTypeName,
-                                                                        string taskQueue,
-                                                                        TWfArg workflowArg,
-                                                                        string signalName,
-                                                                        TSigArg signalArg,
-                                                                        StartWorkflowConfiguration workflowConfig = null,
-                                                                        CancellationToken cancelToken = default);
-        #endregion StartWithSignalAsync(..)
+        Task<StartWorkflow.Result> SignalWithStartAsync<TWfArg, TSigArg>(string workflowTypeName,
+                                                                         string taskQueue,
+                                                                         TWfArg workflowArg,
+                                                                         string signalName,
+                                                                         TSigArg signalArg,
+                                                                         StartWorkflowConfiguration workflowConfig = null,
+                                                                         CancellationToken cancelToken = default);
+        #endregion SignalWithStartAsync(..)
 
         #region --- GetXxxRunAsync(..) APIs to access a specific run ---
 
-        /// <summary>Get the run with the specified run-id, if such run exists within THIS workflow chain.
-        /// Return false if not found.</summary>
-        Task<TryResult<IWorkflowRunHandle>> TryGetRunAsync(string workflowRunId,
-                                                     CancellationToken cancelToken = default);
+        /// <summary>
+        /// Gets a handle for a workflow run, within thew workflow chain represented by this handle.
+        /// The created run handle uses the WorkflowId of this chain.
+        /// This method does not validate whehter the run with the specified <c>workflowRunId</c> actually exists
+        /// within the chain represented by this handle.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">If this handle is not bound.</exception>
+        IWorkflowRunHandle CreateRunHandle(string workflowRunId);
 
         /// <summary>Get the first / initial run in this chain.</summary>
         Task<IWorkflowRunHandle> GetFirstRunAsync(CancellationToken cancelToken = default);
@@ -111,17 +115,21 @@ namespace Temporal.WorkflowClient
         Task<IWorkflowRunResult> AwaitConclusionAsync(CancellationToken cancelToken = default);
 
         Task SignalAsync(string signalName,
+                         SignalWorkflowConfiguration signalConfig = null,
                          CancellationToken cancelToken = default);
 
         Task SignalAsync<TSigArg>(string signalName,
                                   TSigArg signalArg,
+                                  SignalWorkflowConfiguration signalConfig = null,
                                   CancellationToken cancelToken = default);
 
         Task<TResult> QueryAsync<TResult>(string queryName,
+                                          QueryWorkflowConfiguration queryConfig = null,
                                           CancellationToken cancelToken = default);
 
         Task<TResult> QueryAsync<TQryArg, TResult>(string queryName,
                                                    TQryArg queryArg,
+                                                   QueryWorkflowConfiguration queryConfig = null,
                                                    CancellationToken cancelToken = default);
 
         Task RequestCancellationAsync(CancellationToken cancelToken = default);

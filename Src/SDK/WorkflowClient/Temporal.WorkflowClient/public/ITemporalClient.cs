@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Temporal.Common;
 using Temporal.WorkflowClient.Interceptors;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {
@@ -34,16 +35,16 @@ namespace Temporal.WorkflowClient
         #endregion StartWorkflowAsync(..)
 
 
-        #region StartWorkflowWithSignalAsync(..)
+        #region SignalWorkflowWithStartAsync(..)
 
-        Task<IWorkflowHandle> StartWorkflowWithSignalAsync(string workflowId,
+        Task<IWorkflowHandle> SignalWorkflowWithStartAsync(string workflowId,
                                                            string workflowTypeName,
                                                            string taskQueue,
                                                            string signalName,
                                                            StartWorkflowConfiguration workflowConfig = null,
                                                            CancellationToken cancelToken = default);
 
-        Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TSigArg>(string workflowId,
+        Task<IWorkflowHandle> SignalWorkflowWithStartAsync<TSigArg>(string workflowId,
                                                                     string workflowTypeName,
                                                                     string taskQueue,
                                                                     string signalName,
@@ -51,7 +52,7 @@ namespace Temporal.WorkflowClient
                                                                     StartWorkflowConfiguration workflowConfig = null,
                                                                     CancellationToken cancelToken = default);
 
-        Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TWfArg>(string workflowId,
+        Task<IWorkflowHandle> SignalWorkflowWithStartAsync<TWfArg>(string workflowId,
                                                                    string workflowTypeName,
                                                                    string taskQueue,
                                                                    TWfArg workflowArg,
@@ -59,7 +60,7 @@ namespace Temporal.WorkflowClient
                                                                    StartWorkflowConfiguration workflowConfig = null,
                                                                    CancellationToken cancelToken = default);
 
-        Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
+        Task<IWorkflowHandle> SignalWorkflowWithStartAsync<TWfArg, TSigArg>(string workflowId,
                                                                             string workflowTypeName,
                                                                             string taskQueue,
                                                                             TWfArg workflowArg,
@@ -68,7 +69,7 @@ namespace Temporal.WorkflowClient
                                                                             StartWorkflowConfiguration workflowConfig = null,
                                                                             CancellationToken cancelToken = default);
 
-        #endregion StartWorkflowWithSignalAsync(..)
+        #endregion SignalWorkflowWithStartAsync(..)
 
 
         #region CreateWorkflowHandle(..)        

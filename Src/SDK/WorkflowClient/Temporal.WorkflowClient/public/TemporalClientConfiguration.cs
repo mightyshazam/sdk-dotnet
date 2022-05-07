@@ -7,12 +7,13 @@ namespace Temporal.WorkflowClient
 {
     public class TemporalClientConfiguration
     {
+        #region Static APIs
+
         /// <summary>
         /// Creates a new <c>TemporalClientConfiguration</c> initialized with default settings for use with
         /// a local Temporal server installation.<br/>
         /// To create a <c>TemporalClientConfiguration</c> with custom settings, use the ctor.
         /// </summary>
-        /// <returns></returns>
         public static TemporalClientConfiguration ForLocalHost()
         {
             return new TemporalClientConfiguration();
@@ -33,7 +34,8 @@ namespace Temporal.WorkflowClient
                 ServiceHost = "???",
                 ServicePort = -1,
                 IsHttpsEnabled = true,
-                Namespace = @namespace
+                Namespace = @namespace,
+                ClientIdentity = null
             };
         }
 
@@ -48,7 +50,15 @@ namespace Temporal.WorkflowClient
                 throw new ArgumentException($"{nameof(config)}.{nameof(config.ServicePort)} must be a posivite"
                                           + $" value, but {config.ServicePort} was specified.");
             }
+
+            if (config.ClientIdentity != null && String.IsNullOrWhiteSpace(config.ClientIdentity))
+            {
+                throw new ArgumentException($"{nameof(config)}.{nameof(config.ClientIdentity)} must be either not set (=null) or it"
+                                          + $" must be a non-whitespace-only string, however, \"{config.ClientIdentity}\" was specified.");
+            }
         }
+
+        #endregion Static APIs
 
         public TemporalClientConfiguration()
         {
@@ -56,24 +66,26 @@ namespace Temporal.WorkflowClient
             ServicePort = 7233;
             IsHttpsEnabled = false;
             Namespace = "default";
+            ClientIdentity = null;
         }
 
         public string ServiceHost { get; init; }
         public int ServicePort { get; init; }
         public bool IsHttpsEnabled { get; init; }
         public string Namespace { get; init; }
+        public string ClientIdentity { get; init; }
 
         /// <summary>
         /// Factory receives the `IWorkflowHandle` for which the payload converter is being constructed and returns
         /// a new non-null data converter to be applied to all calls made by the client for the specific `IWorkflowHandle` instance.
         /// </summary>
-        public Func<ITemporalClient, IWorkflowHandle, IPayloadConverter> PayloadConverterFactory { get; init; }
+        public Func<ServiceInvocationPipelineItemFactoryArguments, IPayloadConverter> PayloadConverterFactory { get; init; }
 
         /// <summary>
         /// Factory receives the `IWorkflowHandle` for which the payload codec is being constructed and returns
         /// a new non-null payload converter to be applied to all calls made by the client for the specific `IWorkflowHandle` instance.
         /// </summary>
-        public Func<ITemporalClient, IWorkflowHandle, IPayloadCodec> PayloadCodecFactory { get; init; }
+        public Func<ServiceInvocationPipelineItemFactoryArguments, IPayloadCodec> PayloadCodecFactory { get; init; }
 
 
         /// <summary>
@@ -86,7 +98,7 @@ namespace Temporal.WorkflowClient
         /// the aforementioned sink) or adding new interceptors before or after.
         /// Nulls must not be added to the list.
         /// </summary>
-        public Action<ITemporalClient, IWorkflowHandle, IList<ITemporalClientInterceptor>> ClientInterceptorFactory { get; init; }
+        public Action<ServiceInvocationPipelineItemFactoryArguments, IList<ITemporalClientInterceptor>> ClientInterceptorFactory { get; init; }
 
         // . . .
     }

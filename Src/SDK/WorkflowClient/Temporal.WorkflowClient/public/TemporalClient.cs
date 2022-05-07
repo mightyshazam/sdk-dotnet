@@ -7,6 +7,7 @@ using Grpc.Core;
 using Temporal.Common;
 using Temporal.Serialization;
 using Temporal.WorkflowClient.Interceptors;
+using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {
@@ -15,6 +16,7 @@ namespace Temporal.WorkflowClient
         #region -- Static APIs --
 
         private static int s_identityMarkersCount = 0;
+        private static string s_processDescriptor = null;
 
         /// <summary>
         /// </summary>
@@ -26,6 +28,42 @@ namespace Temporal.WorkflowClient
             return client;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static string CreateProcessDescriptor()
+        {
+            try
+            {
+                CurrentProcess.GetIdentityInfo(out string processName, out string machineName, out int processId);
+                return $"{machineName}/{processName}/{processId}";
+            }
+            catch
+            {
+                return Guid.NewGuid().ToString("D");
+            }
+        }
+
+        private static string GetProcessDescriptor()
+        {
+            string processDescriptor = s_processDescriptor;
+            if (processDescriptor == null)
+            {
+                try
+                {
+                    processDescriptor = CreateProcessDescriptor();
+                }
+                catch { }
+
+                if (processDescriptor == null)
+                {
+                    processDescriptor = Guid.NewGuid().ToString("D");
+                }
+
+                s_processDescriptor = processDescriptor;  // benign race
+            }
+
+            return processDescriptor;
+        }
+
         private static string CreateIdentityMarker()
         {
             int identityMarkersIndex;
@@ -34,15 +72,7 @@ namespace Temporal.WorkflowClient
                 identityMarkersIndex = Interlocked.Increment(ref s_identityMarkersCount);
             }
 
-            try
-            {
-                CurrentProcess.GetIdentityInfo(out string processName, out string machineName, out int processId);
-                return $"{machineName}/{processName}/{processId}/{identityMarkersIndex}";
-            }
-            catch
-            {
-                return $"{Guid.NewGuid().ToString("D")}/{identityMarkersIndex}";
-            }
+            return $"{GetProcessDescriptor()}/{identityMarkersIndex}";
         }
 
         #endregion -- Static APIs --
@@ -65,7 +95,7 @@ namespace Temporal.WorkflowClient
             Configuration = config;
 
             _grpcChannel = GrpcChannelFactory.SingletonInstance.GetOrCreateChannel(config);
-            _identityMarker = CreateIdentityMarker();
+            _identityMarker = config.ClientIdentity ?? CreateIdentityMarker();
         }
 
         public TemporalClientConfiguration Configuration { get; }
@@ -108,16 +138,16 @@ namespace Temporal.WorkflowClient
         #endregion StartWorkflowAsync(..)
 
 
-        #region StartWorkflowWithSignalAsync(..)
+        #region SignalWorkflowWithStartAsync(..)
 
-        public Task<IWorkflowHandle> StartWorkflowWithSignalAsync(string workflowId,
+        public Task<IWorkflowHandle> SignalWorkflowWithStartAsync(string workflowId,
                                                                  string workflowTypeName,
                                                                  string taskQueue,
                                                                  string signalName,
                                                                  StartWorkflowConfiguration workflowConfig = null,
                                                                  CancellationToken cancelToken = default)
         {
-            return StartWorkflowWithSignalAsync<IPayload.Void, IPayload.Void>(workflowId,
+            return SignalWorkflowWithStartAsync<IPayload.Void, IPayload.Void>(workflowId,
                                                                               workflowTypeName,
                                                                               taskQueue,
                                                                               workflowArg: Payload.Void,
@@ -127,7 +157,7 @@ namespace Temporal.WorkflowClient
                                                                               cancelToken);
         }
 
-        public Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TSigArg>(string workflowId,
+        public Task<IWorkflowHandle> SignalWorkflowWithStartAsync<TSigArg>(string workflowId,
                                                                           string workflowTypeName,
                                                                           string taskQueue,
                                                                           string signalName,
@@ -135,7 +165,7 @@ namespace Temporal.WorkflowClient
                                                                           StartWorkflowConfiguration workflowConfig = null,
                                                                           CancellationToken cancelToken = default)
         {
-            return StartWorkflowWithSignalAsync<IPayload.Void, TSigArg>(workflowId,
+            return SignalWorkflowWithStartAsync<IPayload.Void, TSigArg>(workflowId,
                                                                         workflowTypeName,
                                                                         taskQueue,
                                                                         workflowArg: Payload.Void,
@@ -145,7 +175,7 @@ namespace Temporal.WorkflowClient
                                                                         cancelToken);
         }
 
-        public Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TWfArg>(string workflowId,
+        public Task<IWorkflowHandle> SignalWorkflowWithStartAsync<TWfArg>(string workflowId,
                                                                          string workflowTypeName,
                                                                          string taskQueue,
                                                                          TWfArg workflowArg,
@@ -153,7 +183,7 @@ namespace Temporal.WorkflowClient
                                                                          StartWorkflowConfiguration workflowConfig = null,
                                                                          CancellationToken cancelToken = default)
         {
-            return StartWorkflowWithSignalAsync<TWfArg, IPayload.Void>(workflowId,
+            return SignalWorkflowWithStartAsync<TWfArg, IPayload.Void>(workflowId,
                                                                        workflowTypeName,
                                                                        taskQueue,
                                                                        workflowArg,
@@ -163,17 +193,17 @@ namespace Temporal.WorkflowClient
                                                                        cancelToken);
         }
 
-        public async Task<IWorkflowHandle> StartWorkflowWithSignalAsync<TWfArg, TSigArg>(string workflowId,
-                                                                                        string workflowTypeName,
-                                                                                        string taskQueue,
-                                                                                        TWfArg workflowArg,
-                                                                                        string signalName,
-                                                                                        TSigArg signalArg,
-                                                                                        StartWorkflowConfiguration workflowConfig = null,
-                                                                                        CancellationToken cancelToken = default)
+        public async Task<IWorkflowHandle> SignalWorkflowWithStartAsync<TWfArg, TSigArg>(string workflowId,
+                                                                                         string workflowTypeName,
+                                                                                         string taskQueue,
+                                                                                         TWfArg workflowArg,
+                                                                                         string signalName,
+                                                                                         TSigArg signalArg,
+                                                                                         StartWorkflowConfiguration workflowConfig = null,
+                                                                                         CancellationToken cancelToken = default)
         {
             IWorkflowHandle workflow = CreateWorkflowHandle(workflowId);
-            await workflow.StartWithSignalAsync<TWfArg, TSigArg>(workflowTypeName, taskQueue,
+            await workflow.SignalWithStartAsync<TWfArg, TSigArg>(workflowTypeName, taskQueue,
                                                                  workflowArg,
                                                                  signalName,
                                                                  signalArg,
@@ -181,7 +211,7 @@ namespace Temporal.WorkflowClient
                                                                  cancelToken);
             return workflow;
         }
-        #endregion StartWorkflowWithSignalAsync(..)
+        #endregion SignalWorkflowWithStartAsync(..)
 
 
         #region CreateWorkflowHandle(..)        
@@ -193,7 +223,7 @@ namespace Temporal.WorkflowClient
         /// </summary>
         public IWorkflowHandle CreateWorkflowHandle(string workflowId)
         {
-            return new WorkflowHandle(this, workflowId);
+            return WorkflowHandle.CreateUnbound(this, workflowId);
         }
 
         /// <summary>
@@ -203,9 +233,9 @@ namespace Temporal.WorkflowClient
         /// <param name="workflowChainId">The workflow-run-id of the <em>first workflow run</em> of the <em>workflow chain</em> represented
         /// by the newly created handle.</param>
         public IWorkflowHandle CreateWorkflowHandle(string workflowId,
-                                                   string workflowChainId)
+                                                    string workflowChainId)
         {
-            throw new NotImplementedException("@ToDo");
+            return WorkflowHandle.CreateBound(this, workflowId, workflowChainId);
         }
         #endregion CreateWorkflowHandle(..)
 
@@ -216,9 +246,9 @@ namespace Temporal.WorkflowClient
         /// Create an workflow run handle that represents a workflow run with the specified <c>workflowId</c> and <c>workflowRunId</c>.
         /// </summary>
         public IWorkflowRunHandle CreateWorkflowRunHandle(string workflowId,
-                                                    string workflowRunId)
+                                                          string workflowRunId)
         {
-            throw new NotImplementedException("@ToDo");
+            return new WorkflowRunHandle(this, workflowId, workflowRunId);
         }
         #endregion CreateWorkflowRunHandle(..)
 
@@ -279,22 +309,52 @@ namespace Temporal.WorkflowClient
         #region -- Service invocation pipeline management --
 
         /// <summary>
-        /// <c>WorkflowHandle</c> instances call this to create the invocation pipelie for themselves.
-        /// During races, this mthod may be called several times for a given chain, but only the pipeline returned
-        /// by the first completing invocation will atomically set, others will be discarded.
-        /// </summary>        
-        internal ITemporalClientInterceptor CreateServiceInvocationPipeline(IWorkflowHandle workflowHandle)
+        /// <c>WorkflowHandle</c> and <c>WorkflowRunHandle</c> instances call this to create the invocation pipelie for themselves.        
+        /// </summary>
+        internal ITemporalClientInterceptor GetOrCreateServiceInvocationPipeline(object initialPipelineInvoker,
+                                                                                 ref ITemporalClientInterceptor pipelineStorageRef,
+                                                                                 object pipelineCreationLock,
+                                                                                 IWorkflowOperationArguments initialOperationArguments)
+        {
+
+            ITemporalClientInterceptor pipeline = pipelineStorageRef;
+
+            if (pipeline == null)
+            {
+                lock (pipelineCreationLock)
+                {
+                    pipeline = pipelineStorageRef;
+
+                    if (pipeline == null)
+                    {
+                        pipeline = CreateServiceInvocationPipeline(initialPipelineInvoker, initialOperationArguments);
+                        pipelineStorageRef = pipeline;
+                    }
+                }
+            }
+
+            return pipeline;
+        }
+
+        private ITemporalClientInterceptor CreateServiceInvocationPipeline(object initialPipelineInvoker,
+                                                                           IWorkflowOperationArguments initialOperationArguments)
         {
             // Create default interceptor pipelie for all workflows (tracing etc..):
 
-            List<ITemporalClientInterceptor> pipeline = CreateDefaultServiceInvocationPipeline(workflowHandle);
+            List<ITemporalClientInterceptor> pipeline = CreateDefaultServiceInvocationPipeline();
+
+            // Construct the property bag used for passing information to pipeline item factories:
+
+            ServiceInvocationPipelineItemFactoryArguments pipelineItemFactoryArguments = new(this,
+                                                                                             initialPipelineInvoker,
+                                                                                             initialOperationArguments);
 
             // Apply custom interceptor factory:
 
-            Action<ITemporalClient, IWorkflowHandle, IList<ITemporalClientInterceptor>> customInterceptorFactory = Configuration.ClientInterceptorFactory;
+            Action<ServiceInvocationPipelineItemFactoryArguments, IList<ITemporalClientInterceptor>> customInterceptorFactory = Configuration.ClientInterceptorFactory;
             if (customInterceptorFactory != null)
             {
-                customInterceptorFactory(this, workflowHandle, pipeline);
+                customInterceptorFactory(pipelineItemFactoryArguments, pipeline);
             }
 
             // Now we need to add the final interceptor, aka the "sink".
@@ -302,10 +362,10 @@ namespace Temporal.WorkflowClient
             // Create the payload converter for the sink:
 
             IPayloadConverter payloadConverter = null;
-            Func<ITemporalClient, IWorkflowHandle, IPayloadConverter> customPayloadConverterFactory = Configuration.PayloadConverterFactory;
+            Func<ServiceInvocationPipelineItemFactoryArguments, IPayloadConverter> customPayloadConverterFactory = Configuration.PayloadConverterFactory;
             if (customPayloadConverterFactory != null)
             {
-                payloadConverter = customPayloadConverterFactory(this, workflowHandle);
+                payloadConverter = customPayloadConverterFactory(pipelineItemFactoryArguments);
             }
 
             if (payloadConverter == null)
@@ -316,10 +376,10 @@ namespace Temporal.WorkflowClient
             // Create the payload codec for the sink:
 
             IPayloadCodec payloadCodec = null;
-            Func<ITemporalClient, IWorkflowHandle, IPayloadCodec> customPayloadCodecFactory = Configuration.PayloadCodecFactory;
+            Func<ServiceInvocationPipelineItemFactoryArguments, IPayloadCodec> customPayloadCodecFactory = Configuration.PayloadCodecFactory;
             if (customPayloadCodecFactory != null)
             {
-                payloadCodec = customPayloadCodecFactory(this, workflowHandle);
+                payloadCodec = customPayloadCodecFactory(pipelineItemFactoryArguments);
             }
 
             // Create the sink:
@@ -346,7 +406,7 @@ namespace Temporal.WorkflowClient
             return downstream;
         }
 
-        private List<ITemporalClientInterceptor> CreateDefaultServiceInvocationPipeline(IWorkflowHandle _)
+        private List<ITemporalClientInterceptor> CreateDefaultServiceInvocationPipeline()
         {
             List<ITemporalClientInterceptor> pipeline = new List<ITemporalClientInterceptor>();
             return pipeline;
