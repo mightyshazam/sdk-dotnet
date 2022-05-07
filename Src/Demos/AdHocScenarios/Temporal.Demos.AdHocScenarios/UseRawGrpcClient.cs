@@ -14,6 +14,7 @@ using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
+using System.Net.Security;
 
 #if NETCOREAPP
 using Microsoft.Extensions.Logging;
@@ -59,15 +60,28 @@ namespace Temporal.Demos.AdHocScenarios
             //string clientCertData = File.ReadAllText(@"PATH\NAME.crt.pem");
             //string clientKeyData = File.ReadAllText(@"PATH\NAME.key.pem");
 
-            string clientCertData = File.ReadAllText(@"PATH\client.pem");
-            string clientKeyData = File.ReadAllText(@"PATH\client.key");
+            // For mTLS:
+            //SslCredentials sslCreds = new(rootCertificates: null,
+            //                              new KeyCertificatePair(certificateChain: clientCertData,
+            //                                                     privateKey: clientKeyData),
+            //                              verifyPeerCallback: VerifyPeerCallback);
 
-            SslCredentials sslCreds = new(rootCertificates: null,
-                                          new KeyCertificatePair(certificateChain: clientCertData,
-                                                                 privateKey: clientKeyData),
+            //string clientCertData = File.ReadAllText(@"PATH\client.pem");
+            //string clientKeyData = File.ReadAllText(@"PATH\client.key");
+
+            string serverCertData = File.ReadAllText(@"c:\00\Code\GitHubTmp\Docker\samples-server\tls\tls-simple\certs\ca - Copy.cert.crt");
+            //string serverCertData = File.ReadAllText(@"c:\00\Code\GitHubTmp\Docker\samples-server\tls\tls-simple\certs-Copy\ca - Copy.cert.crt");
+
+            SslCredentials sslCreds = new(serverCertData,
+                                          keyCertificatePair: null,
                                           verifyPeerCallback: null);
 
-            Grpc.Core.Channel channel = new Grpc.Core.Channel(TemporalServerHost, TemporalServerPort, sslCreds);
+            ChannelOption[] channelOptions = new ChannelOption[]
+            {
+                //new ChannelOption(ChannelOptions.SslTargetNameOverride, "tls-sample"),
+            };
+
+            Grpc.Core.Channel channel = new Grpc.Core.Channel(TemporalServerHost, TemporalServerPort, sslCreds, channelOptions);
             // *** }
 
             Console.WriteLine($"Created a `{channel.GetType().FullName}` to \"{channel.ResolvedTarget}\".");
@@ -77,6 +91,15 @@ namespace Temporal.Demos.AdHocScenarios
 #else
             throw new NotSupportedException("This routine is only supported on Net Fx.");
 #endif
+        }
+
+        private static bool VerifyPeerCallback(VerifyPeerContext context)
+        {
+            Console.WriteLine($"Invoked {nameof(VerifyPeerCallback)}(..):");
+            Console.WriteLine($"    {nameof(VerifyPeerCallback)}.TargetName:{Format.QuoteOrNull(context?.TargetName)}");
+            Console.WriteLine($"    {nameof(VerifyPeerCallback)}.PeerPem:{Format.QuoteOrNull(context?.PeerPem)}");
+
+            return true;
         }
 
         private WorkflowService.WorkflowServiceClient CreateClientNetCore()
@@ -112,18 +135,19 @@ namespace Temporal.Demos.AdHocScenarios
             if (TemporalServerHost.Equals(TemporalServerHost, StringComparison.OrdinalIgnoreCase))
             {
                 // Required for self-signed certs:
-                httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;            
+                //httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                httpClientHandler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidationCallback;
             }
 
             // Required only for mTLS {
             //string clientCertData = File.ReadAllText(@"PATH\NAME.crt.pem");
             //string clientKeyData = File.ReadAllText(@"PATH\NAME.key.pem");
 
-            string clientCertData = File.ReadAllText(@"PATH\client.pem");
-            string clientKeyData = File.ReadAllText(@"PATH\client.key");
+            //string clientCertData = File.ReadAllText(@"PATH\client.pem");
+            //string clientKeyData = File.ReadAllText(@"PATH\client.key");
 
-            X509Certificate2 clientCert = CreateX509CertFromData(clientCertData, clientKeyData);
-            httpClientHandler.ClientCertificates.Add(clientCert);
+            //httpClientHandler.ClientCertificates.Add(clientCert);
+
             // } Required only for mTLS
 
             Grpc.Net.Client.GrpcChannel channel = Grpc.Net.Client.GrpcChannel.ForAddress($"https://{TemporalServerHost}:{TemporalServerPort}",
@@ -143,11 +167,74 @@ namespace Temporal.Demos.AdHocScenarios
 #endif
         }
 
+        private static bool ServerCertificateCustomValidationCallback(HttpRequestMessage httpRequestMessage,
+                                                                      X509Certificate2 cert,
+                                                                      X509Chain chain,
+                                                                      SslPolicyErrors policyErrors)
+        {
+            Console.WriteLine($"Invoked {nameof(ServerCertificateCustomValidationCallback)}(..):");
+            Console.WriteLine($"    {nameof(policyErrors)}={policyErrors}");
+
+            //string caCertData = File.ReadAllText(@"c:\00\Code\GitHubTmp\Docker\samples-server\tls\tls-simple\certs\ca - Copy.cert.crt");
+            string caCertData = File.ReadAllText(@"c:\00\Code\GitHubTmp\Docker\samples-server\tls\tls-simple\certs-Copy\ca - Copy.cert.crt");
+            X509Certificate2 caCert = CreateX509CertFromData(caCertData, keyMarkedUpData: null);
+
+            chain = chain ?? new X509Chain();
+
+            chain.ChainPolicy.ExtraStore.Add(caCert);
+
+            chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+            chain.ChainPolicy.VerificationFlags |= X509VerificationFlags.AllowUnknownCertificateAuthority;
+
+            bool IsValidBuild = chain.Build(cert);
+            Console.WriteLine($"    {nameof(IsValidBuild)}={IsValidBuild}");
+
+            if (!IsValidBuild)
+            {
+                return false;
+            }
+
+            X509Certificate2 chainEnd = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
+
+            bool caMatch = DataEqual(caCert.RawData, chainEnd.RawData);
+            Console.WriteLine($"    {nameof(caMatch)}={caMatch}");
+
+            return caMatch;
+        }
+
+        private static bool DataEqual(byte[] data1, byte[] data2)
+        {
+            if (Object.ReferenceEquals(data1, data2))
+            {
+                return true;
+            }
+
+            if (data1 == null || data2 == null)
+            {
+                return false;
+            }
+
+            if (data1.Length != data2.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < data1.Length; i++)
+            {
+                if (data1[i] != data2[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private static X509Certificate2 CreateX509CertFromData(string certMarkedUpData, string keyMarkedUpData)
         {
             // Get the ephemeral (in-memory) cert:
 
-            X509Certificate2 ephemeralCert = CreateX509EphemeralCertFromData(certMarkedUpData, keyMarkedUpData);
+            using X509Certificate2 ephemeralCert = CreateX509EphemeralCertFromData(certMarkedUpData, keyMarkedUpData);
 
             // Work around Windows ephemeral cert bugs:
             // (https://github.com/natemcmaster/LettuceEncrypt/pull/110)
@@ -155,10 +242,18 @@ namespace Temporal.Demos.AdHocScenarios
             // (https://github.com/dotnet/runtime/issues/23749)
             // @ToDo: Review this for other OSes when supported.
 
-            byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx);
-            X509Certificate2 certificate = new X509Certificate2(ephemeralCertBytes);
+            //X509KeyStorageFlags keyStorageFlags = X509KeyStorageFlags.Exportable;
+            X509KeyStorageFlags keyStorageFlags = X509KeyStorageFlags.DefaultKeySet;
+#if NETCOREAPP3_1_OR_GREATER
+            keyStorageFlags |= X509KeyStorageFlags.EphemeralKeySet;
+#endif
 
-            // Done:
+            byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx);
+            X509Certificate2 certificate = new X509Certificate2(rawData: ephemeralCertBytes,
+                                                                password: (string) null,
+                                                                keyStorageFlags: keyStorageFlags);
+
+            // Done:    
             return certificate;
         }
 
@@ -172,53 +267,67 @@ namespace Temporal.Demos.AdHocScenarios
         /// </summary>        
         private static X509Certificate2 CreateX509EphemeralCertFromData(string certMarkedUpData, string keyMarkedUpData)
         {
-#if NET6_0_OR_GREATER
-            return X509Certificate2.CreateFromPem(certMarkedUpData, keyMarkedUpData);
+#if NET6_0_OR_GREATER            
+            return (keyMarkedUpData == null)
+                        ? X509Certificate2.CreateFromPem(certMarkedUpData)
+                        : X509Certificate2.CreateFromPem(certMarkedUpData, keyMarkedUpData);
 #elif NETCOREAPP3_1_OR_GREATER
             // Create public cert:
 
             byte[] certBytes = GetPemSectionContent(certMarkedUpData, "CERTIFICATE");
-            using X509Certificate2 pubCert = new(certBytes);
+            X509Certificate2 pubCert = new(certBytes);
+
+            if (keyMarkedUpData == null)
+            {
+                return pubCert;
+            }
 
             // Add private key to get complete cert:
 
-            ExceptionAggregator exAggr = new();
-            using RSA rsa = RSA.Create();
-            bool privKeyLoaded = false;
-
             try
             {
-                byte[] keyBytes = GetPemSectionContent(keyMarkedUpData, "PRIVATE KEY");
-                rsa.ImportPkcs8PrivateKey(keyBytes, out _);
-                privKeyLoaded = true;
-            }
-            catch (Exception ex)
-            {
-                exAggr.Add(ex);
-            }
+                ExceptionAggregator exAggr = new();
+                using RSA rsa = RSA.Create();
+                bool privKeyLoaded = false;
 
-            if (!privKeyLoaded)
-            {
                 try
                 {
-                    byte[] keyBytes = GetPemSectionContent(keyMarkedUpData, "RSA PRIVATE KEY");
-                    rsa.ImportRSAPrivateKey(keyBytes, out _);
+                    byte[] keyBytes = GetPemSectionContent(keyMarkedUpData, "PRIVATE KEY");
+                    rsa.ImportPkcs8PrivateKey(keyBytes, out _);
                     privKeyLoaded = true;
                 }
                 catch (Exception ex)
                 {
                     exAggr.Add(ex);
                 }
-            }
 
-            if (!privKeyLoaded)
+                if (!privKeyLoaded)
+                {
+                    try
+                    {
+                        byte[] keyBytes = GetPemSectionContent(keyMarkedUpData, "RSA PRIVATE KEY");
+                        rsa.ImportRSAPrivateKey(keyBytes, out _);
+                        privKeyLoaded = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        exAggr.Add(ex);
+                    }
+                }
+
+                if (!privKeyLoaded)
+                {
+                    exAggr.ThrowIfNotEmpty();
+                    throw new InvalidOperationException($"Could not read the private key from {nameof(keyMarkedUpData)}.");
+                }
+
+                X509Certificate2 ephemeralCert = pubCert.CopyWithPrivateKey(rsa);
+                return ephemeralCert;
+            }
+            finally
             {
-                exAggr.ThrowIfNotEmpty();
-                throw new InvalidOperationException($"Could not read the private key from {nameof(keyMarkedUpData)}.");
+                pubCert.Dispose();
             }
-
-            X509Certificate2 ephemeralCert = pubCert.CopyWithPrivateKey(rsa);
-            return ephemeralCert;
 #else
             throw new NotSupportedException("This method is not supported under the targeted .NET version.");
 #endif
