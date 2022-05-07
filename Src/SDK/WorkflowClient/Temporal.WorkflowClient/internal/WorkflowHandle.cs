@@ -655,7 +655,7 @@ namespace Temporal.WorkflowClient
                 return;
             }
 
-            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowHandle)} instance"
+            throw new InvalidOperationException($"Cannot perform this operation because this {nameof(IWorkflowHandle)} instance"
                                               + $" is not bound to a particular workflow chain. An \"unbound\""
                                               + $" {nameof(IWorkflowHandle)} represents the last (aka most recent) workflow chain"
                                               + $" with the given {nameof(WorkflowId)}. An {nameof(IWorkflowHandle)} gets bound"
@@ -676,7 +676,7 @@ namespace Temporal.WorkflowClient
                 return;
             }
 
-            throw new InvalidOperationException($"Cannot perform this operation becasue this {nameof(IWorkflowHandle)} instance"
+            throw new InvalidOperationException($"Cannot perform this operation because this {nameof(IWorkflowHandle)} instance"
                                               + $" is already bound to a particular workflow chain. A \"bound\" {nameof(IWorkflowHandle)}"
                                               + $" instance represents a particular workflow chain with a particular {nameof(WorkflowId)}"
                                               + $" and a particular {nameof(WorkflowChainId)} (aka the {nameof(IWorkflowRunHandle.WorkflowRunId)}"

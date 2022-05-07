@@ -174,7 +174,7 @@ namespace Temporal.WorkflowClient.Interceptors
                     return value;
                 }
 
-                throw new InvalidOperationException($"Cannot {nameof(GetValue)}<{typeof(TVal).Name}>() becasue this {this.GetType().Name}"
+                throw new InvalidOperationException($"Cannot {nameof(GetValue)}<{typeof(TVal).Name}>() because this {this.GetType().Name}"
                                                   + $" does not represent any serialized value payloads.");
             }
 
