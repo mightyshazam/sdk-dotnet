@@ -85,7 +85,7 @@ namespace Temporal.Sdk.WorkflowClient.UsageSamples
                 TemporalClientConfiguration clientConfig = new()
                 {
                     Namespace = "SomeNamespace",
-                    ServiceConnection = TemporalClientConfiguration.Connection.TlsDisabled("some-domain.com", 1234),
+                    ServiceConnection = TemporalClientConfiguration.Connection.TlsDisabled("some-domain.com"),
                 };
 
                 ITemporalClient workflowClient = await TemporalClient.ConnectAsync(clientConfig);
@@ -97,7 +97,7 @@ namespace Temporal.Sdk.WorkflowClient.UsageSamples
                 TemporalClientConfiguration clientConfig = new()
                 {
                     Namespace = "SomeNamespace",
-                    ServiceConnection = TemporalClientConfiguration.Connection.TlsEnabled("some-domain.com", 1234) with
+                    ServiceConnection = TemporalClientConfiguration.Connection.TlsEnabled("some-domain.com") with
                     {
                         ServerCertAuthority = TemporalClientConfiguration.TlsCertificate.FromPemFile(@"PATH\ca.crt.pem")
                     }
