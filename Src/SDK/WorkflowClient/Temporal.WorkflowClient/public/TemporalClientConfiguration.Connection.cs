@@ -17,23 +17,20 @@ namespace Temporal.WorkflowClient
 
             internal static class Defaults
             {
-                public static class Local
-                {
-                    public const string ServerHost = "127.0.0.1";  // Do not use "localhost" to avoid the IPv4 resolution wait
-                    public const int ServerPort = 7233;
-                }
+                public const string LocalHost = "127.0.0.1";  // Do not use "localhost" to avoid the IPv4 resolution wait
+                public const string CloudHostTemplate = "{0}.tmprl.cloud";
+                public const int ServerPort = 7233;
 
-                public static class TemporalCloud
+                public static string CloudHost(string @namespace)
                 {
-                    public const string ServerHostTemplate = "{0}.tmprl.cloud";
-                    public const int ServerPort = 7233;
-
-                    public static string ServerHost(string @namespace)
-                    {
-                        Temporal.Util.Validate.NotNullOrWhitespace(@namespace);
-                        return String.Format(ServerHostTemplate, @namespace);
-                    }
+                    Temporal.Util.Validate.NotNullOrWhitespace(@namespace);
+                    return String.Format(CloudHostTemplate, @namespace);
                 }
+            }
+
+            public static TemporalClientConfiguration.Connection TlsDisabled(string serverHost)
+            {
+                return TlsDisabled(serverHost, Defaults.ServerPort);
             }
 
             public static TemporalClientConfiguration.Connection TlsDisabled(string serverHost, int serverPort)
@@ -41,6 +38,11 @@ namespace Temporal.WorkflowClient
                 return new TemporalClientConfiguration.Connection(serverHost,
                                                                   serverPort,
                                                                   isTlsEnabled: false);
+            }
+
+            public static TemporalClientConfiguration.Connection TlsEnabled(string serverHost)
+            {
+                return TlsEnabled(serverHost, Defaults.ServerPort);
             }
 
             public static TemporalClientConfiguration.Connection TlsEnabled(string serverHost, int serverPort)
@@ -60,8 +62,8 @@ namespace Temporal.WorkflowClient
                                                                                   string clientCertPemFilePath,
                                                                                   string clientKeyPemFilePath)
             {
-                return TemporalClientConfiguration.Connection.TlsEnabled(Defaults.TemporalCloud.ServerHost(@namespace),
-                                                                         Defaults.TemporalCloud.ServerPort) with
+                return TemporalClientConfiguration.Connection.TlsEnabled(Defaults.CloudHost(@namespace),
+                                                                         Defaults.ServerPort) with
                 {
                     ClientIdentityCert = TemporalClientConfiguration.TlsCertificate.FromPemFile(clientCertPemFilePath, clientKeyPemFilePath)
                 };
@@ -76,8 +78,8 @@ namespace Temporal.WorkflowClient
             /// </remarks>
             public static TemporalClientConfiguration.Connection ForTemporalCloud(string @namespace, X509Certificate2 clientCert)
             {
-                return TemporalClientConfiguration.Connection.TlsEnabled(Defaults.TemporalCloud.ServerHost(@namespace),
-                                                                         Defaults.TemporalCloud.ServerPort) with
+                return TemporalClientConfiguration.Connection.TlsEnabled(Defaults.CloudHost(@namespace),
+                                                                         Defaults.ServerPort) with
                 {
                     ClientIdentityCert = TemporalClientConfiguration.TlsCertificate.FromX509Cert(clientCert)
                 };
@@ -109,8 +111,8 @@ namespace Temporal.WorkflowClient
             #endregion Static APIs
 
             public Connection()
-                : this(Defaults.Local.ServerHost,
-                       Defaults.Local.ServerPort,
+                : this(Defaults.LocalHost,
+                       Defaults.ServerPort,
                        IsTlsEnabled: false,
                        ClientIdentityCert: null,
                        SkipServerCertValidation: false,
