@@ -72,14 +72,20 @@ namespace Temporal.Sdk.WorkflowClient.UsageSamples
             }
 
             // For Temporal cloud:
-            // @ToDo.
+            {
+                ITemporalClient workflowClient = await TemporalClient.ConnectAsync(
+                                                            TemporalClientConfiguration.ForTemporalCloud(@"SomeNamespace",
+                                                                                                         @"PATH\NAME.crt.pem",
+                                                                                                         @"PATH\NAME.key.pem"));
+                UseClient(workflowClient);
+            }
 
             // For hosted cluster (unsecured):
             {
                 TemporalClientConfiguration clientConfig = new()
                 {
                     Namespace = "SomeNamespace",
-                    ServiceHost = "some.host.name",
+                    ServiceConnection = TemporalClientConfiguration.Connection.TlsDisabled("some-domain.com", 1234),
                 };
 
                 ITemporalClient workflowClient = await TemporalClient.ConnectAsync(clientConfig);
@@ -87,7 +93,19 @@ namespace Temporal.Sdk.WorkflowClient.UsageSamples
             }
 
             // For hosted cluster (TLS):
-            // @ToDo.
+            {
+                TemporalClientConfiguration clientConfig = new()
+                {
+                    Namespace = "SomeNamespace",
+                    ServiceConnection = TemporalClientConfiguration.Connection.TlsEnabled("some-domain.com", 1234) with
+                    {
+                        ServerCertAuthority = TemporalClientConfiguration.TlsCertificate.FromPemFile(@"PATH\ca.crt.pem")
+                    }
+                };
+
+                ITemporalClient workflowClient = await TemporalClient.ConnectAsync(clientConfig);
+                UseClient(workflowClient);
+            }
         }
 
         public void CreateUnconnectedWorkflowClient()
@@ -102,14 +120,20 @@ namespace Temporal.Sdk.WorkflowClient.UsageSamples
             }
 
             // For Temporal cloud:
-            // @ToDo.
+            {
+                ITemporalClient workflowClient = new TemporalClient(
+                                                            TemporalClientConfiguration.ForTemporalCloud(@"SomeNamespace",
+                                                                                                         @"PATH\NAME.crt.pem",
+                                                                                                         @"PATH\NAME.key.pem"));
+                UseClient(workflowClient);
+            }
 
             // For hosted cluster (unsecured):
             {
                 TemporalClientConfiguration clientConfig = new()
                 {
                     Namespace = "SomeNamespace",
-                    ServiceHost = "some.host.name",
+                    ServiceConnection = TemporalClientConfiguration.Connection.TlsDisabled("some-domain.com", 1234),
                 };
 
                 ITemporalClient workflowClient = new TemporalClient(clientConfig);
@@ -117,7 +141,19 @@ namespace Temporal.Sdk.WorkflowClient.UsageSamples
             }
 
             // For hosted cluster (TLS):
-            // @ToDo.
+            {
+                TemporalClientConfiguration clientConfig = new()
+                {
+                    Namespace = "SomeNamespace",
+                    ServiceConnection = TemporalClientConfiguration.Connection.TlsEnabled("some-domain.com", 1234) with
+                    {
+                        ServerCertAuthority = TemporalClientConfiguration.TlsCertificate.FromPemFile(@"PATH\ca.crt.pem")
+                    }
+                };
+
+                ITemporalClient workflowClient = new TemporalClient(clientConfig);
+                UseClient(workflowClient);
+            }
         }
 
         public record SomeWorkflowInput();
