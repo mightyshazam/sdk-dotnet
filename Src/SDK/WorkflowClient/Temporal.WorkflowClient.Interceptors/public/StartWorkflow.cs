@@ -54,13 +54,13 @@ namespace Temporal.WorkflowClient.Interceptors
                                                       TSigArg SignalArg,
                                                       StartWorkflowConfiguration WorkflowConfig,
                                                       CancellationToken CancelToken)
-        : Base<TWfArg>(Namespace,
-                               WorkflowId,
-                               WorkflowTypeName,
-                               TaskQueue,
-                               WorkflowArg,
-                               WorkflowConfig,
-                               CancelToken);
+                : Base<TWfArg>(Namespace,
+                                       WorkflowId,
+                                       WorkflowTypeName,
+                                       TaskQueue,
+                                       WorkflowArg,
+                                       WorkflowConfig,
+                                       CancelToken);
         }
 
         public class Result : IWorkflowOperationResult

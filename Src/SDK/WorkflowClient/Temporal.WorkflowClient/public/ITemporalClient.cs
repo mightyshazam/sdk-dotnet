@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Temporal.Common;
-using Temporal.WorkflowClient.Interceptors;
 using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.WorkflowClient
 {
-    public interface ITemporalClient
+    public interface ITemporalClient : IDisposable
     {
         #region -- Common properties --
 
