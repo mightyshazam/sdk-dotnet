@@ -71,11 +71,9 @@ namespace Temporal.WorkflowClient
 
             return new TemporalClientConfiguration()
             {
-                ServiceConnection = TemporalClientConfiguration.Connection.TlsEnabled(Connection.Defaults.TemporalCloud.ServerHost,
-                                                                                      Connection.Defaults.TemporalCloud.ServerPort) with
-                {
-                    ClientIdentityCert = TemporalClientConfiguration.TlsCertificate.FromPemData(clientCertPemFilePath, clientKeyPemFilePath)
-                },
+                ServiceConnection = TemporalClientConfiguration.Connection.ForTemporalCloud(@namespace,
+                                                                                            clientCertPemFilePath,
+                                                                                            clientKeyPemFilePath),
                 Namespace = @namespace,
                 ClientIdentityMarker = null
             };
@@ -97,11 +95,7 @@ namespace Temporal.WorkflowClient
 
             return new TemporalClientConfiguration()
             {
-                ServiceConnection = TemporalClientConfiguration.Connection.TlsEnabled(Connection.Defaults.TemporalCloud.ServerHost,
-                                                                                      Connection.Defaults.TemporalCloud.ServerPort) with
-                {
-                    ClientIdentityCert = TemporalClientConfiguration.TlsCertificate.FromX509Cert(clientCert)
-                },
+                ServiceConnection = TemporalClientConfiguration.Connection.ForTemporalCloud(@namespace, clientCert),
                 Namespace = @namespace,
                 ClientIdentityMarker = null
             };

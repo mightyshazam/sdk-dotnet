@@ -10,9 +10,11 @@ namespace Temporal.WorkflowClient
                                  int ServerPort,
                                  bool IsTlsEnabled,
                                  TemporalClientConfiguration.TlsCertificate ClientIdentityCert,
-                                 bool SkipServerValidation,
+                                 bool SkipServerCertValidation,
                                  TemporalClientConfiguration.TlsCertificate ServerCertAuthority)
         {
+            #region Static APIs
+
             internal static class Defaults
             {
                 public static class Local
@@ -23,8 +25,14 @@ namespace Temporal.WorkflowClient
 
                 public static class TemporalCloud
                 {
-                    public const string ServerHost = "???";
-                    public const int ServerPort = -1;
+                    public const string ServerHostTemplate = "{0}.tmprl.cloud";
+                    public const int ServerPort = 7233;
+
+                    public static string ServerHost(string @namespace)
+                    {
+                        Temporal.Util.Validate.NotNullOrWhitespace(@namespace);
+                        return String.Format(ServerHostTemplate, @namespace);
+                    }
                 }
             }
 
@@ -41,6 +49,40 @@ namespace Temporal.WorkflowClient
                                                                   serverPort,
                                                                   isTlsEnabled: true);
             }
+
+            /// <summary>
+            /// </summary>
+            /// <remarks>
+            /// This overload is only available on Net Core and Net 5+. See <see cref="TemporalClientConfiguration.TlsCertificate"/>
+            /// for details on this topic.
+            /// </remarks>
+            public static TemporalClientConfiguration.Connection ForTemporalCloud(string @namespace,
+                                                                                  string clientCertPemFilePath,
+                                                                                  string clientKeyPemFilePath)
+            {
+                return TemporalClientConfiguration.Connection.TlsEnabled(Defaults.TemporalCloud.ServerHost(@namespace),
+                                                                         Defaults.TemporalCloud.ServerPort) with
+                {
+                    ClientIdentityCert = TemporalClientConfiguration.TlsCertificate.FromPemFile(clientCertPemFilePath, clientKeyPemFilePath)
+                };
+            }
+
+#if NETCOREAPP3_1_OR_GREATER
+            /// <summary>
+            /// </summary>
+            /// <remarks>
+            /// This overload is only available on Net Core and Net 5+. See <see cref="TemporalClientConfiguration.TlsCertificate"/>
+            /// for details on this topic.
+            /// </remarks>
+            public static TemporalClientConfiguration.Connection ForTemporalCloud(string @namespace, X509Certificate2 clientCert)
+            {
+                return TemporalClientConfiguration.Connection.TlsEnabled(Defaults.TemporalCloud.ServerHost(@namespace),
+                                                                         Defaults.TemporalCloud.ServerPort) with
+                {
+                    ClientIdentityCert = TemporalClientConfiguration.TlsCertificate.FromX509Cert(clientCert)
+                };
+            }
+#endif
 
             public static void Validate(TemporalClientConfiguration.Connection configServiceConnection)
             {
@@ -64,12 +106,14 @@ namespace Temporal.WorkflowClient
                 }
             }
 
+            #endregion Static APIs
+
             public Connection()
                 : this(Defaults.Local.ServerHost,
                        Defaults.Local.ServerPort,
                        IsTlsEnabled: false,
                        ClientIdentityCert: null,
-                       SkipServerValidation: false,
+                       SkipServerCertValidation: false,
                        ServerCertAuthority: null)
             {
             }
@@ -79,7 +123,7 @@ namespace Temporal.WorkflowClient
                        serverPort,
                        isTlsEnabled,
                        ClientIdentityCert: null,
-                       SkipServerValidation: false,
+                       SkipServerCertValidation: false,
                        ServerCertAuthority: null)
             {
             }
@@ -118,7 +162,7 @@ namespace Temporal.WorkflowClient
                     return true;
                 }
 
-                if (SkipServerValidation != other.SkipServerValidation)
+                if (SkipServerCertValidation != other.SkipServerCertValidation)
                 {
                     return false;
                 }

@@ -15,9 +15,9 @@ namespace Temporal.WorkflowClient
     /// 
     /// </summary>
     /// <remarks>
-    /// <para>On the classic Net Fx, a <see cref="PlatformNotSupportedException"/> may be thrown if <c>SkipServerValidation</c> is set for the
-    /// respective configuration. This is because on Net Fx, we use <c>Grpc.Core.Channel</c> which is based on the gRPC Core C-Lib.
-    /// <c>SkipServerValidation</c> requires custom code to run for server cert validation, but that gRPC library only allows such
+    /// <para>On the classic Net Fx, a <see cref="PlatformNotSupportedException"/> may be thrown if <c>SkipServerCertValidation</c> is set
+    /// for the respective configuration. This is because on Net Fx, we use <c>Grpc.Core.Channel</c> which is based on the gRPC Core C-Lib.
+    /// <c>SkipServerCertValidation</c> requires custom code to run for server cert validation, but that gRPC library only allows such
     /// custom code to run AFTER server validation has been performed.</para>
     /// <para>This goes in tandem with the fact that on some exotic platforms running Net Core, providing a custom <c>ServerCertAuthority</c>
     /// may also result in a <see cref="PlatformNotSupportedException"/>. That is because that feature requires setting
@@ -150,9 +150,9 @@ namespace Temporal.WorkflowClient
                 return plainChannel;
             }
 
-            if (config.SkipServerValidation)
+            if (config.SkipServerCertValidation)
             {
-                throw new PlatformNotSupportedException($"{nameof(config.SkipServerValidation)} is not supported on Net Fx."
+                throw new PlatformNotSupportedException($"{nameof(config.SkipServerCertValidation)} is not supported on Net Fx."
                                 + $" (Background: On the classic Net Fx we use `Grpc.Core.Channel` for gRPC connections,"
                                 + $" which is based on the gRPC C-Lib. That only allows executing a custom"
                                 + $" `VerifyPeerCallback` AFTER a successfull CA validation.)");
@@ -231,7 +231,7 @@ namespace Temporal.WorkflowClient
 
             HttpClientHandler httpClientHandler = new();
 
-            if (config.SkipServerValidation)
+            if (config.SkipServerCertValidation)
             {
                 httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
             }

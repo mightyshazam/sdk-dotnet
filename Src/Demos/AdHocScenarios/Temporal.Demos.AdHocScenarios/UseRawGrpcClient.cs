@@ -69,8 +69,7 @@ namespace Temporal.Demos.AdHocScenarios
             //string clientCertData = File.ReadAllText(@"PATH\client.pem");
             //string clientKeyData = File.ReadAllText(@"PATH\client.key");
 
-            string serverCertData = File.ReadAllText(@"c:\00\Code\GitHubTmp\Docker\samples-server\tls\tls-simple\certs\ca - Copy.cert.crt");
-            //string serverCertData = File.ReadAllText(@"c:\00\Code\GitHubTmp\Docker\samples-server\tls\tls-simple\certs-Copy\ca - Copy.cert.crt");
+            string serverCertData = File.ReadAllText(@"PATH\ca - Copy.cert.crt");
 
             SslCredentials sslCreds = new(serverCertData,
                                           keyCertificatePair: null,
@@ -175,8 +174,7 @@ namespace Temporal.Demos.AdHocScenarios
             Console.WriteLine($"Invoked {nameof(ServerCertificateCustomValidationCallback)}(..):");
             Console.WriteLine($"    {nameof(policyErrors)}={policyErrors}");
 
-            //string caCertData = File.ReadAllText(@"c:\00\Code\GitHubTmp\Docker\samples-server\tls\tls-simple\certs\ca - Copy.cert.crt");
-            string caCertData = File.ReadAllText(@"c:\00\Code\GitHubTmp\Docker\samples-server\tls\tls-simple\certs-Copy\ca - Copy.cert.crt");
+            string caCertData = File.ReadAllText(@"PATH\ca - Copy.cert.crt");
             X509Certificate2 caCert = CreateX509CertFromData(caCertData, keyMarkedUpData: null);
 
             chain = chain ?? new X509Chain();
