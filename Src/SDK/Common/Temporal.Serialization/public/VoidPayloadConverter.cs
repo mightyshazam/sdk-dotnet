@@ -21,7 +21,7 @@ namespace Temporal.Serialization
             }
 
             item = default(T);
-            return true;
+            return false;
         }
 
         public bool TrySerialize<T>(T item, Payloads serializedDataAccumulator)

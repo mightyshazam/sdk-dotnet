@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Temporal.Util;
 using Grpc.Core;
+using Temporal.Api.WorkflowService.V1;
 using Temporal.Common;
 using Temporal.Serialization;
 using Temporal.WorkflowClient.Interceptors;
@@ -297,7 +298,6 @@ namespace Temporal.WorkflowClient
         private Task ConnectAndValidateAsync(CancellationToken cancelToken)
         {
             // @ToDo: Call server to get capabilities
-
             cancelToken.ThrowIfCancellationRequested();
             IsConnected = true;
             return Task.CompletedTask;
