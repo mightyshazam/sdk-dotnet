@@ -11,16 +11,14 @@ namespace Temporal.Serialization
     {
         public static IList<IPayloadConverter> CreateDefaultConverters()
         {
-            List<IPayloadConverter> converters = new List<IPayloadConverter>(capacity: 4)
+            List<IPayloadConverter> converters = new List<IPayloadConverter>(capacity: 6)
             {
                 new VoidPayloadConverter(),
                 new NullPayloadConverter(),
                 new RawMemoryPayloadConverter(),
                 new UnnamedContainerPayloadConverter(),
                 new ProtobufJsonPayloadConverter(),
-                new NewtonsoftJsonPayloadConverter(),
-                new CatchAllPayloadConverter(),
-                //@ToDo
+                new NewtonsoftJsonPayloadConverter()
             };
 
             return converters;
