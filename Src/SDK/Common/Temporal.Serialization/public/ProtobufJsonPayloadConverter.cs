@@ -79,6 +79,7 @@ namespace Temporal.Serialization
         public bool TryDeserialize<T>(Payloads serializedData, out T item)
         {
             if (SerializationUtil.TryGetSinglePayload(serializedData, out Payload serializedItem)
+                    && typeof(IMessage).IsAssignableFrom(typeof(T))
                     && serializedItem.Metadata.TryGetValue(PayloadConverter.PayloadMetadataEncodingKey, out ByteString encodingBytes)
                     && PayloadMetadataEncodingValueBytes.Equals(encodingBytes)
                     && TryGetMessageDescriptor<T>(out MessageDescriptor messageDescriptor))
