@@ -15,8 +15,10 @@ namespace Temporal.Serialization
             {
                 new VoidPayloadConverter(),
                 new NullPayloadConverter(),
+                new RawMemoryPayloadConverter(),
                 new UnnamedContainerPayloadConverter(),
                 new ProtobufJsonPayloadConverter(),
+                new NewtonsoftJsonPayloadConverter(),
                 new CatchAllPayloadConverter(),
                 //@ToDo
             };
