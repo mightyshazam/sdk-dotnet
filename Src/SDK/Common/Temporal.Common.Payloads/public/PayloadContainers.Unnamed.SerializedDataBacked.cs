@@ -119,7 +119,8 @@ namespace Temporal.Common.Payloads
                         return canDeserialize;
                     }
 
-                    throw CreateNoSuchIndexException(index, Count);
+                    value = default(TVal);
+                    return false;
                 }
 
                 public IEnumerable<PayloadContainers.UnnamedEntry> Values
