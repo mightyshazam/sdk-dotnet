@@ -403,11 +403,11 @@ namespace Temporal.WorkflowClient
             if (status.IsTerminal())
             {
                 IWorkflowRunHandle finalRun = CreateRunHandle(resDescrWf.WorkflowExecutionInfo.Execution.RunId);
-                return new TryResult<IWorkflowRunHandle>(finalRun);
+                return TryResult.ForSuccess(finalRun);
             }
             else
             {
-                return new TryResult<IWorkflowRunHandle>(isSuccess: false, null);
+                return TryResult.ForFailure<IWorkflowRunHandle>();
             }
         }
 
