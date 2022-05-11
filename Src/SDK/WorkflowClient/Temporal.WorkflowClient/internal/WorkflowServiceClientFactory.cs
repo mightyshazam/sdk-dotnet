@@ -73,6 +73,14 @@ namespace Temporal.WorkflowClient
                         continue;
                     }
 
+                    // Possibly the client was already released, but the GC did not yet collect it, so instance is still available.
+                    // In that case we still need to remove it:
+                    if (client.IsLastRefReleased)
+                    {
+                        _existingClients.RemoveAt(i);
+                        continue;
+                    }
+
                     if (client.ConnectionConfig.IsEquivalent(connectionConfig))
                     {
                         return true;

@@ -44,6 +44,11 @@ namespace Temporal.WorkflowClient
             get { return _connectionConfig; }
         }
 
+        public bool IsLastRefReleased
+        {
+            get { return (_refCount < 0); }
+        }
+
         public void Release()
         {
             bool lastRefReleased;
@@ -70,7 +75,7 @@ namespace Temporal.WorkflowClient
         {
             lock (_refCountLock)
             {
-                if (_refCount < 0)
+                if (IsLastRefReleased)
                 {
                     return false;
                 }
