@@ -16,8 +16,10 @@ namespace Temporal.WorkflowClient
         private readonly ChannelBase _grpcChannel;
         private readonly TemporalClientConfiguration.Connection _connectionConfig;
 
-        private readonly object _refCountLock = new();  // Held for very short periods and relatively seldom.
+        // The the detailed deascription of the `WorkflowServiceClientFactory` class for context on why we are
+        // doing ref-counting here, instead of just relying on the GC.
 
+        private readonly object _refCountLock = new();  // Held for very short periods and relatively seldom.
         private int _refCount = 0;
 
         public WorkflowServiceClientEnvelope(WorkflowService.WorkflowServiceClient grpcWorkflowServiceClient)
@@ -42,6 +44,11 @@ namespace Temporal.WorkflowClient
         public TemporalClientConfiguration.Connection ConnectionConfig
         {
             get { return _connectionConfig; }
+        }
+
+        public bool IsLastRefReleased
+        {
+            get { return (_refCount < 0); }
         }
 
         public void Release()
@@ -70,7 +77,7 @@ namespace Temporal.WorkflowClient
         {
             lock (_refCountLock)
             {
-                if (_refCount < 0)
+                if (IsLastRefReleased)
                 {
                     return false;
                 }
