@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using Temporal.Util;
 
 using Temporal.Common.Payloads;
-using System.IO;
 using System.Runtime.InteropServices;
+using System.Collections;
 
 namespace Temporal.Common
 {
@@ -61,6 +61,17 @@ namespace Temporal.Common
         }
 
         #endregion Unnamed(..)
+
+
+        #region Enumerable(..)
+
+        public static PayloadContainers.Unnamed.EnumerableInstanceBacked Enumerable<TEnum>(TEnum enumerable) where TEnum : IEnumerable
+        {
+            return new PayloadContainers.Unnamed.EnumerableInstanceBacked(enumerable);
+        }
+
+        #endregion Enumerable(..)
+
 
         #region Raw(..)
 

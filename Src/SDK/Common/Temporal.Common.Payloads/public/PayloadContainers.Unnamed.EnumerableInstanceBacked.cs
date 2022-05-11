@@ -7,32 +7,27 @@ namespace Temporal.Common.Payloads
 {
     public static partial class PayloadContainers
     {
-        /// <summary>
-        /// <c>PayloadContainers.IUnnamed</c> implementation backed by actual values (rather than a raw payload).
-        /// </summary>
         public static partial class Unnamed
         {
-            public struct InstanceBacked<T> : PayloadContainers.IUnnamed, IPayload
+            public struct EnumerableInstanceBacked : PayloadContainers.IUnnamed, IPayload
             {
-                private readonly IReadOnlyList<T> _values;
+                private readonly IEnumerable _value;
 
-                public InstanceBacked(IReadOnlyList<T> values)
+                public EnumerableInstanceBacked(IEnumerable value)
                 {
-                    Validate.NotNull(values);
-
-                    _values = values;
+                    _value = value;
                 }
 
                 public int Count
                 {
-                    get { return _values.Count; }
+                    get { return (_value == null) ? 0 : 1; }
                 }
 
                 public TVal GetValue<TVal>(int index)
                 {
                     if (index >= 0 && index < Count)
                     {
-                        return _values[index].Cast<T, TVal>();
+                        return _value.Cast<IEnumerable, TVal>();
                     }
 
                     throw PayloadContainers.Util.CreateNoSuchIndexException(index, Count, this);
@@ -42,7 +37,7 @@ namespace Temporal.Common.Payloads
                 {
                     if (index >= 0 && index < Count)
                     {
-                        return _values[index].TryCast<T, TVal>(out value);
+                        return _value.TryCast<IEnumerable, TVal>(out value);
                     }
 
                     throw PayloadContainers.Util.CreateNoSuchIndexException(index, Count, this);
@@ -52,10 +47,20 @@ namespace Temporal.Common.Payloads
                 {
                     if (index >= 0 && index < Count)
                     {
-                        return _values[index].TypeOf();
+                        return _value.TypeOf();
                     }
 
                     throw PayloadContainers.Util.CreateNoSuchIndexException(index, Count, this);
+                }
+
+                public IEnumerable GetEnumerable()
+                {
+                    return GetEnumerable<IEnumerable>();
+                }
+
+                public TVal GetEnumerable<TVal>() where TVal : IEnumerable
+                {
+                    return GetValue<TVal>(0);
                 }
 
                 public IEnumerable<PayloadContainers.UnnamedEntry> Values

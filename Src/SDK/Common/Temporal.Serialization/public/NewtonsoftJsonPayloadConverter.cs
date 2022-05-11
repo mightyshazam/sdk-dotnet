@@ -2,6 +2,9 @@
 using Google.Protobuf;
 using Newtonsoft.Json;
 using Temporal.Api.Common.V1;
+using Temporal.Util;
+using PayloadContainers = Temporal.Common.Payloads.PayloadContainers;
+using PayloadCtors = Temporal.Common.Payload;
 
 namespace Temporal.Serialization
 {
@@ -28,11 +31,22 @@ namespace Temporal.Serialization
         public bool TryDeserialize<T>(Payloads serializedData, out T item)
         {
             if (SerializationUtil.TryGetSinglePayload(serializedData, out Payload serializedItem)
+                    && !PayloadConverter.IsNormalEnumerable<T>()
                     && serializedItem.Metadata.TryGetValue(PayloadConverter.PayloadMetadataEncodingKey, out ByteString encodingBytes)
                     && PayloadMetadataEncodingValueBytes.Equals(encodingBytes))
             {
                 string itemJson = serializedItem.Data.ToStringUtf8();
-                item = JsonConvert.DeserializeObject<T>(itemJson, s_jsonSerializerSettings);
+
+                if (typeof(PayloadContainers.Unnamed.EnumerableInstanceBacked) == (typeof(T)))
+                {
+                    object[] arr = JsonConvert.DeserializeObject<object[]>(itemJson, s_jsonSerializerSettings);
+                    item = PayloadCtors.Enumerable(arr).Cast<PayloadContainers.Unnamed.EnumerableInstanceBacked, T>();
+                }
+                else
+                {
+                    item = JsonConvert.DeserializeObject<T>(itemJson, s_jsonSerializerSettings);
+                }
+
                 return true;
             }
 
@@ -42,9 +56,18 @@ namespace Temporal.Serialization
 
         public bool TrySerialize<T>(T item, Payloads serializedDataAccumulator)
         {
-            if (item != null)
+            if (item != null && !PayloadConverter.IsNormalEnumerable(item))
             {
-                string itemJson = JsonConvert.SerializeObject(item, Formatting.Indented, s_jsonSerializerSettings);
+                string itemJson;
+
+                if (item is PayloadContainers.Unnamed.EnumerableInstanceBacked enumerableContainerItem)
+                {
+                    itemJson = JsonConvert.SerializeObject(enumerableContainerItem.GetEnumerable(), s_jsonSerializerSettings);
+                }
+                else
+                {
+                    itemJson = JsonConvert.SerializeObject(item, s_jsonSerializerSettings);
+                }
 
                 Payload serializedItemData = new();
                 serializedItemData.Metadata.Add(PayloadConverter.PayloadMetadataEncodingKey, PayloadMetadataEncodingValueBytes);

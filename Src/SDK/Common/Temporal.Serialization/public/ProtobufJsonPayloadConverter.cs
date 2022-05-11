@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Google.Protobuf;
 using Google.Protobuf.Reflection;
@@ -42,7 +43,7 @@ namespace Temporal.Serialization
                 JsonFormatter formatter = _formatter;
                 if (formatter == null)
                 {
-                    _formatter = new JsonFormatter(new JsonFormatter.Settings(formatDefaultValues: true));
+                    formatter = new JsonFormatter(new JsonFormatter.Settings(formatDefaultValues: true));
                     _formatter = formatter;  // Benign race. Formatter is not disposable.
                 }
 
@@ -80,6 +81,7 @@ namespace Temporal.Serialization
         {
             if (SerializationUtil.TryGetSinglePayload(serializedData, out Payload serializedItem)
                     && typeof(IMessage).IsAssignableFrom(typeof(T))
+                    && !PayloadConverter.IsNormalEnumerable<T>()
                     && serializedItem.Metadata.TryGetValue(PayloadConverter.PayloadMetadataEncodingKey, out ByteString encodingBytes)
                     && PayloadMetadataEncodingValueBytes.Equals(encodingBytes)
                     && TryGetMessageDescriptor<T>(out MessageDescriptor messageDescriptor))
@@ -97,8 +99,7 @@ namespace Temporal.Serialization
 
         public bool TrySerialize<T>(T item, Payloads serializedDataAccumulator)
         {
-            if (item != null
-                && item is IMessage messageItem)
+            if (item != null && item is IMessage messageItem && !PayloadConverter.IsNormalEnumerable(item))
             {
                 string itemJsonStr = Formatter.Format(messageItem);
 
