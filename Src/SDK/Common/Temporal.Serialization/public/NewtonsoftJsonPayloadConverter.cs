@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Google.Protobuf;
 using Newtonsoft.Json;
 using Temporal.Api.Common.V1;
@@ -37,17 +38,41 @@ namespace Temporal.Serialization
             {
                 string itemJson = serializedItem.Data.ToStringUtf8();
 
-                if (typeof(PayloadContainers.Unnamed.EnumerableInstanceBacked) == (typeof(T)))
+                Type itemType = typeof(T);
+                if (typeof(PayloadContainers.Enumerable).IsAssignableFrom(itemType))
                 {
-                    object[] arr = JsonConvert.DeserializeObject<object[]>(itemJson, s_jsonSerializerSettings);
-                    item = PayloadCtors.Enumerable(arr).Cast<PayloadContainers.Unnamed.EnumerableInstanceBacked, T>();
+                    // T is any sub-type of `PayloadContainers.Enumerable`.
+
+                    if (itemType.IsGenericType && typeof(PayloadContainers.Enumerable<>) == itemType.GetGenericTypeDefinition())
+                    {
+                        // T is `PayloadContainers.Enumerable<TElem>` for some `TElem`.
+
+                        Type itemElementType = itemType.GetGenericArguments()[0];
+                        Type itemElementArrayType = itemElementType.MakeArrayType();
+                        object itemArray = JsonConvert.DeserializeObject(itemJson, itemElementArrayType, s_jsonSerializerSettings);
+
+                        object itemObj = Activator.CreateInstance(itemType, args: new object[] { itemArray });
+                        item = (T) itemObj;
+
+                        return true;
+                    }
+                    else
+                    {
+                        // T is any sub-type of `PayloadContainers.Enumerable`,
+                        // but T is NOT `PayloadContainers.Enumerable<TElem>` for some `TElem`.
+
+                        object[] arr = JsonConvert.DeserializeObject<object[]>(itemJson, s_jsonSerializerSettings);
+                        PayloadContainers.Enumerable container = PayloadCtors.Enumerable((IEnumerable) arr);
+                        item = container.Cast<PayloadContainers.Enumerable, T>();
+
+                        return true;
+                    }
                 }
-                else
+                else  // T is NOT a sub-type of `PayloadContainers.Enumerable`:
                 {
                     item = JsonConvert.DeserializeObject<T>(itemJson, s_jsonSerializerSettings);
+                    return true;
                 }
-
-                return true;
             }
 
             item = default(T);
@@ -60,14 +85,7 @@ namespace Temporal.Serialization
             {
                 string itemJson;
 
-                if (item is PayloadContainers.Unnamed.EnumerableInstanceBacked enumerableContainerItem)
-                {
-                    itemJson = JsonConvert.SerializeObject(enumerableContainerItem.GetEnumerable(), s_jsonSerializerSettings);
-                }
-                else
-                {
-                    itemJson = JsonConvert.SerializeObject(item, s_jsonSerializerSettings);
-                }
+                itemJson = JsonConvert.SerializeObject(item, s_jsonSerializerSettings);
 
                 Payload serializedItemData = new();
                 serializedItemData.Metadata.Add(PayloadConverter.PayloadMetadataEncodingKey, PayloadMetadataEncodingValueBytes);

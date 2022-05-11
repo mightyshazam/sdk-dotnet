@@ -41,8 +41,9 @@ namespace Temporal.Serialization
 
             if (item != null)
             {
-                if (item is PayloadContainers.IUnnamed      // Wrapped in Container => False
-                        || item is string)                  // String => False
+                if (item is PayloadContainers.IUnnamed                  // Wrapped in Container => False
+                        || item is PayloadContainers.Enumerable         // Wrapped in Enumerable Container => False
+                        || item is string)                              // String => False
                 {
                     return false;
                 }
@@ -67,8 +68,9 @@ namespace Temporal.Serialization
             Type checkedType = typeof(T);
 
             // If Wrapped in Container => False:
-            if (typeof(PayloadContainers.IUnnamed).IsAssignableFrom(checkedType)    // Wrapped in Container => False
-                    || typeof(string).IsAssignableFrom(checkedType))                // String => False
+            if (typeof(PayloadContainers.IUnnamed).IsAssignableFrom(checkedType)            // Wrapped in IUnnamed Container => False
+                    || typeof(PayloadContainers.Enumerable).IsAssignableFrom(checkedType)   // Wrapped in Enumerable Container => False
+                    || typeof(string).IsAssignableFrom(checkedType))                        // String => False
             {
                 return false;
             }

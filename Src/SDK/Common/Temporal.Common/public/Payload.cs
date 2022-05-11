@@ -65,9 +65,18 @@ namespace Temporal.Common
 
         #region Enumerable(..)
 
-        public static PayloadContainers.Unnamed.EnumerableInstanceBacked Enumerable<TEnum>(TEnum enumerable) where TEnum : IEnumerable
+        public static PayloadContainers.Enumerable Enumerable(IEnumerable enumerable)
         {
-            return new PayloadContainers.Unnamed.EnumerableInstanceBacked(enumerable);
+            return (enumerable is PayloadContainers.Enumerable alreadyWrapped)
+                        ? alreadyWrapped
+                        : new PayloadContainers.Enumerable(enumerable);
+        }
+
+        public static PayloadContainers.Enumerable<TElem> Enumerable<TElem>(IEnumerable<TElem> enumerable)
+        {
+            return (enumerable is PayloadContainers.Enumerable<TElem> alreadyWrapped)
+                        ? alreadyWrapped
+                        : new PayloadContainers.Enumerable<TElem>(enumerable);
         }
 
         #endregion Enumerable(..)

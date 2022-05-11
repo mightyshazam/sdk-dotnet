@@ -100,9 +100,11 @@ namespace Temporal.Demos.AdHocScenarios
                                                                                   "two",
                                                                                   new List<double>() { 31, 3.2 },
                                                                                   this,
+                                                                                  null,
+                                                                                  Payload.Void,
                                                                                   Payload.Enumerable(new char[] { 'z', 'x', 'y' }),
                                                                                   Payload.Unnamed<char>('c', 'b', 'a'),
-                                                                                  Payload.Unnamed<char[]>(new[] { 'q', 'w', 'e' }),
+                                                                                  Payload.Unnamed<char[]>(new[] { 'q', 'w', 'E' }, new[] { '*', 'x' }),
                                                                                   Payload.Unnamed(new[] { 'r', 't', 'y' })));
 
             await workflow.SignalAsync("Signal-Enumerable1", Payload.Enumerable(new char[] { 'z', 'p', 's' }));

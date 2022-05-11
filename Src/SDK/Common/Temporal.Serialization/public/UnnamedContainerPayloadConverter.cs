@@ -5,6 +5,7 @@ using System.Collections;
 using Temporal.Common;
 
 using SerializedPayloads = Temporal.Api.Common.V1.Payloads;
+using System.Linq;
 
 namespace Temporal.Serialization
 {
@@ -38,13 +39,6 @@ namespace Temporal.Serialization
 
             if (item != null && item is PayloadContainers.IUnnamed itemsContainer)
             {
-                if (item is PayloadContainers.Unnamed.EnumerableInstanceBacked)
-                {
-                    // @ToDo: Does `PayloadContainers.Unnamed.EnumerableInstanceBacked` need to implement `PayloadContainers.IUnnamed`?
-                    // Should it be directly in `PayloadContainers`?
-                    return false;
-                }
-
                 Validate.NotNull(serializedDataAccumulator);
 
                 for (int i = 0; i < itemsContainer.Count; i++)
@@ -53,14 +47,23 @@ namespace Temporal.Serialization
                     {
                         object contVal = itemsContainer.GetValue<object>(i);
 
-                        //if (PayloadConverter.IsNormalEnumerable(contVal, out IEnumerable enumblVal))
-                        if (contVal is IEnumerable enumblVal)
+                        if (PayloadConverter.IsNormalEnumerable(contVal, out IEnumerable enumblVal))
                         {
-                            PayloadConverter.Serialize(DelegateConvertersContainer, Payload.Enumerable(enumblVal), serializedDataAccumulator);
+                            PayloadConverter.Serialize(DelegateConvertersContainer,
+                                                       Payload.Enumerable(enumblVal),
+                                                       serializedDataAccumulator);
+                        }
+                        else if (contVal is PayloadContainers.IUnnamed subCont)
+                        {
+                            PayloadConverter.Serialize(DelegateConvertersContainer,
+                                                       new PayloadContainers.Unnamed.ValuesSerializationContainer(subCont),
+                                                       serializedDataAccumulator);
                         }
                         else
                         {
-                            PayloadConverter.Serialize(DelegateConvertersContainer, contVal, serializedDataAccumulator);
+                            PayloadConverter.Serialize(DelegateConvertersContainer,
+                                                       contVal,
+                                                       serializedDataAccumulator);
                         }
                     }
                     catch (Exception ex)
