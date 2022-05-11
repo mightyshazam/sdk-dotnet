@@ -12,7 +12,37 @@ using System.Net.Security;
 namespace Temporal.WorkflowClient
 {
     /// <summary>
-    /// 
+    /// The factory is responsible for creation of gRPC channels based on settings provided via
+    /// <see cref="TemporalClientConfiguration.Connection"/>.
+    /// <para>
+    /// The conceptual layering is:<br />
+    /// <code>
+    ///     [User-facing Temporal workflow client (`Temporal.WorkflowClient . TemporalClient`)]
+    ///             ^
+    ///             |
+    ///     [Raw gRPC service client (`Temporal.Api.WorkflowService.V1 . WorkflowService.WorkflowServiceClient`)]
+    ///             ^
+    ///             |
+    ///     [gRPC channel (`Grpc.Core . ChannelBase`)] 
+    /// </code>
+    /// The raw gRPC is a very lightweight object.
+    /// The Temporal workflow client encapsulates a few more objects (e.g., the service invocation pipeline with all
+    /// the Temporal interceptors, Payload Converters, etc.). However, it is still leightweight and does not directly
+    /// use any significant ressources.
+    /// But, the gRPC channel is a heavyweight object: it encapsulates the underlying network connection.
+    /// </para>
+    /// <para>
+    /// To accouhnt for that, when a client is created, it will ask this factory to for an underlying channel (except
+    /// if the user provided a channel they constructed explicitly). The factory will check whether is already has a
+    /// channel that is compatible with the settings of the client. If yes, it will return the existing channel.
+    /// Otherwise, it will construct a new channel, add it to an internal list, and return it to the client.
+    /// </para>
+    /// <para>
+    /// To make sure what channels are discarded as soon as they are no longer needed, they are wrapped into instances
+    /// of <see cref="WorkflowServiceClientEnvelope"/> (along with the raw gRPC service clients for convenience).
+    /// The <c>WorkflowServiceClientEnvelope</c> relies on ref counting to know when it is used and when it can safely
+    /// dispose the underlying channel.
+    /// </para>
     /// </summary>
     /// <remarks>
     /// <para>On the classic Net Fx, a <see cref="PlatformNotSupportedException"/> may be thrown if <c>SkipServerCertValidation</c> is set
@@ -68,6 +98,14 @@ namespace Temporal.WorkflowClient
 
                     // If the client is no longer available, we can remove its entry from the list.
                     if (!clientRef.TryGetTarget(out client))
+                    {
+                        _existingClients.RemoveAt(i);
+                        continue;
+                    }
+
+                    // Possibly the client was already released, but the GC did not yet collect it, so instance is still available.
+                    // In that case we still need to remove it:
+                    if (client.IsLastRefReleased)
                     {
                         _existingClients.RemoveAt(i);
                         continue;
