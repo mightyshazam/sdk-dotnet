@@ -30,6 +30,12 @@
     
     <Compile Include="$(SharedSrcBaseDir)\Temporal.Util\internal\Format.cs"
              Link="$(SharedSrcBaseLabel)\Temporal.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Temporal.Util\internal\ExceptionAggregator.cs"
+             Link="$(SharedSrcBaseLabel)\Temporal.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Temporal.Util\internal\ExceptionExtensions.cs"
+             Link="$(SharedSrcBaseLabel)\Temporal.Util\internal\%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

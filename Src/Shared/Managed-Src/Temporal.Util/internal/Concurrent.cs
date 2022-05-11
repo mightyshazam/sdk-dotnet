@@ -36,7 +36,7 @@ namespace Temporal.Util
         /// otherwise keeps the previous contents (in an atomic, thread-safe manner). 
         /// Returns the contents of <c>storageLocation</c> after the operation.
         /// <c>valueIsAtStorageLocation</c> indicates whether the specified <c>value</c> is stored
-        /// at the specified at the specified <c>storageLocation</c> after this operation completes.
+        /// at the specified <c>storageLocation</c> after this operation completes.
         /// </summary>
         /// <typeparam name="T">The type of <c>value</c> (must be a class type).</typeparam>
         /// <param name="storageLocation"></param>

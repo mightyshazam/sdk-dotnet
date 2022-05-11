@@ -21,22 +21,26 @@ namespace Temporal.WorkflowClient
 {
     internal class TemporalServiceInvoker : ITemporalClientInterceptor
     {
-        private readonly WorkflowService.WorkflowServiceClient _grpcServiceClient;
+        private int _isDisposed = 0;  // Int simulating bool so that it can be used with Interlocked
+
+        private readonly WorkflowServiceClientEnvelope _grpcServiceClientEnvelope;
         private readonly string _clientIdentityMarker;
         private readonly IPayloadConverter _payloadConverter;
         private readonly IPayloadCodec _payloadCodec;
 
-        public TemporalServiceInvoker(ChannelBase grpcChannel,
+        public TemporalServiceInvoker(WorkflowServiceClientEnvelope grpcClientEnvelope,
                                       string clientIdentityMarker,
                                       IPayloadConverter payloadConverter,
                                       IPayloadCodec payloadCodec)
         {
-            Validate.NotNull(grpcChannel);
+            Validate.NotNull(grpcClientEnvelope);
             Validate.NotNullOrWhitespace(clientIdentityMarker);
             Validate.NotNull(payloadConverter);
             // Note: payloadCodec may be null
 
-            _grpcServiceClient = new WorkflowService.WorkflowServiceClient(grpcChannel);
+            grpcClientEnvelope.AddRef();
+
+            _grpcServiceClientEnvelope = grpcClientEnvelope;
             _clientIdentityMarker = clientIdentityMarker;
             _payloadConverter = payloadConverter;
             _payloadCodec = payloadCodec;
@@ -44,6 +48,11 @@ namespace Temporal.WorkflowClient
 
         public void Init(ITemporalClientInterceptor _)
         {
+        }
+
+        private WorkflowService.WorkflowServiceClient GrpcServiceClient
+        {
+            get { return _grpcServiceClientEnvelope.GrpcWorkflowServiceClient; }
         }
 
         #region -- Dispose --
@@ -55,25 +64,64 @@ namespace Temporal.WorkflowClient
             GC.SuppressFinalize(this);
         }
 
-        // Uncomment finalizer IFF `Dispose(bool disposing)` has code for freeing unmanaged resources.
-        // ~TemporalServiceInvoker()
-        // {
-        //     Dispose(disposing: false);
-        // }
+        ~TemporalServiceInvoker()
+        {
+            Dispose(disposing: false);
+        }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (_payloadConverter is IDisposable disposablePayloadConverter)
+            // Only dispose once:
+            int isDisposedPrev = Interlocked.Exchange(ref _isDisposed, 1);
+            if (isDisposedPrev != 0)
             {
-                disposablePayloadConverter.Dispose();
+                return;
             }
 
-            if (_payloadCodec != null && _payloadCodec is IDisposable disposablePayloadCodec)
+            // If one of items throws during disposing, still dispose other items:
+            ExceptionAggregator exAgg = new();
+            try
             {
-                disposablePayloadCodec.Dispose();
+                if (_payloadConverter is IDisposable disposablePayloadConverter)
+                {
+                    disposablePayloadConverter.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                exAgg.Add(ex);
             }
 
-            // @ToDo: handle _grpcServiceClient.
+            try
+            {
+                if (_payloadCodec != null && _payloadCodec is IDisposable disposablePayloadCodec)
+                {
+                    disposablePayloadCodec.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                exAgg.Add(ex);
+            }
+
+            try
+            {
+                if (_grpcServiceClientEnvelope != null)
+                {
+                    _grpcServiceClientEnvelope.Release();
+                }
+            }
+            catch (Exception ex)
+            {
+                exAgg.Add(ex);
+            }
+
+            // Only rethrow if not on finalizer thread.
+            // @ToDo: once we have logging, log if on finalizer thread.
+            if (disposing)
+            {
+                exAgg.ThrowIfNotEmpty();
+            }
         }
 
         #endregion -- Dispose --
@@ -163,10 +211,10 @@ namespace Temporal.WorkflowClient
                     {
                         try
                         {
-                            return await _grpcServiceClient.StartWorkflowExecutionAsync(reqStartWf,
-                                                                                        headers: null,
-                                                                                        deadline: null,
-                                                                                        cancelCallToken);
+                            return await GrpcServiceClient.StartWorkflowExecutionAsync(reqStartWf,
+                                                                                       headers: null,
+                                                                                       deadline: null,
+                                                                                       cancelCallToken);
                         }
                         catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.AlreadyExists && !opArgs.ThrowIfWorkflowChainAlreadyExists)
                         {
@@ -277,10 +325,10 @@ namespace Temporal.WorkflowClient
                     opArgs.WorkflowId,
                     workflowRunId: null,
                     opArgs.CancelToken,
-                    (cancelCallToken) => _grpcServiceClient.SignalWithStartWorkflowExecutionAsync(reqSigWithStartWf,
-                                                                                                  headers: null,
-                                                                                                  deadline: null,
-                                                                                                  cancelCallToken));
+                    (cancelCallToken) => GrpcServiceClient.SignalWithStartWorkflowExecutionAsync(reqSigWithStartWf,
+                                                                                                 headers: null,
+                                                                                                 deadline: null,
+                                                                                                 cancelCallToken));
 
             return new StartWorkflow.Result(resSigWithStartWf.RunId);
         }
@@ -288,7 +336,7 @@ namespace Temporal.WorkflowClient
         [SuppressMessage("Style", "IDE0010:Add missing cases", Justification = "Switch on `historyEvent.EventType` only needs to process terminal events.")]
         public async Task<IWorkflowRunResult> AwaitConclusionAsync(AwaitConclusion.Arguments opArgs)
         {
-            const string ServerCallDescriptionForDebug = nameof(_grpcServiceClient.GetWorkflowExecutionHistoryAsync)
+            const string ServerCallDescriptionForDebug = nameof(GrpcServiceClient.GetWorkflowExecutionHistoryAsync)
                                                        + "(..) with HistoryEventFilterType = CloseEvent";
             const string ScenarioDescriptionForDebug = nameof(AwaitConclusionAsync);
 
@@ -344,10 +392,10 @@ namespace Temporal.WorkflowClient
                         opArgs.WorkflowId,
                         workflowRunId,
                         opArgs.CancelToken,
-                        (cancelCallToken) => _grpcServiceClient.GetWorkflowExecutionHistoryAsync(reqGetWfExHist,
-                                                                                                 headers: null,
-                                                                                                 deadline: null,
-                                                                                                 cancelCallToken));
+                        (cancelCallToken) => GrpcServiceClient.GetWorkflowExecutionHistoryAsync(reqGetWfExHist,
+                                                                                                headers: null,
+                                                                                                deadline: null,
+                                                                                                cancelCallToken));
 
                 // IF we receive no history events AND a non-empty NextPageToken THEN Repeate the call:
                 if (resGetWfExHist.History.Events.Count == 0 && resGetWfExHist.NextPageToken != null && resGetWfExHist.NextPageToken.Length > 0)
@@ -462,7 +510,7 @@ namespace Temporal.WorkflowClient
 
         public async Task<GetWorkflowChainId.Result> GetWorkflowChainIdAsync(GetWorkflowChainId.Arguments opArgs)
         {
-            const string ServerCallDescriptionForDebug = nameof(_grpcServiceClient.GetWorkflowExecutionHistoryAsync)
+            const string ServerCallDescriptionForDebug = nameof(GrpcServiceClient.GetWorkflowExecutionHistoryAsync)
                                                        + "(..) with HistoryEventFilterType = AllEvent";
             const string ScenarioDescriptionForDebug = nameof(GetWorkflowChainIdAsync);
 
@@ -494,10 +542,10 @@ namespace Temporal.WorkflowClient
                         opArgs.WorkflowId,
                         opArgs.WorkflowRunId,
                         opArgs.CancelToken,
-                        (cancelCallToken) => _grpcServiceClient.GetWorkflowExecutionHistoryAsync(reqGetWfExHist,
-                                                                                                 headers: null,
-                                                                                                 deadline: null,
-                                                                                                 cancelCallToken));
+                        (cancelCallToken) => GrpcServiceClient.GetWorkflowExecutionHistoryAsync(reqGetWfExHist,
+                                                                                                headers: null,
+                                                                                                deadline: null,
+                                                                                                cancelCallToken));
 
                 if (resGetWfExHist.History.Events.Count < 1)
                 {
@@ -586,10 +634,10 @@ namespace Temporal.WorkflowClient
                         {
                             try
                             {
-                                return await _grpcServiceClient.DescribeWorkflowExecutionAsync(reqDescrWfExec,
-                                                                                               headers: null,
-                                                                                               deadline: null,
-                                                                                               cancelCallToken);
+                                return await GrpcServiceClient.DescribeWorkflowExecutionAsync(reqDescrWfExec,
+                                                                                              headers: null,
+                                                                                              deadline: null,
+                                                                                              cancelCallToken);
                             }
                             catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.NotFound && !opArgs.ThrowIfWorkflowNotFound)
                             {
@@ -688,10 +736,10 @@ namespace Temporal.WorkflowClient
                     opArgs.WorkflowId,
                     workflowRunId,
                     opArgs.CancelToken,
-                    (cancelCallToken) => _grpcServiceClient.SignalWorkflowExecutionAsync(reqSigWf,
-                                                                                         headers: null,
-                                                                                         deadline: null,
-                                                                                         cancelCallToken));
+                    (cancelCallToken) => GrpcServiceClient.SignalWorkflowExecutionAsync(reqSigWf,
+                                                                                        headers: null,
+                                                                                        deadline: null,
+                                                                                        cancelCallToken));
 
             return new SignalWorkflow.Result(workflowChainId);
         }
@@ -757,10 +805,10 @@ namespace Temporal.WorkflowClient
                     {
                         try
                         {
-                            return await _grpcServiceClient.QueryWorkflowAsync(reqQryWf,
-                                                                               headers: null,
-                                                                               deadline: null,
-                                                                               cancelCallToken);
+                            return await GrpcServiceClient.QueryWorkflowAsync(reqQryWf,
+                                                                              headers: null,
+                                                                              deadline: null,
+                                                                              cancelCallToken);
                         }
                         catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.InvalidArgument)
                         {
@@ -855,10 +903,10 @@ namespace Temporal.WorkflowClient
                     opArgs.WorkflowId,
                     workflowRunId,
                     opArgs.CancelToken,
-                    (cancelCallToken) => _grpcServiceClient.RequestCancelWorkflowExecutionAsync(reqReqCnclWf,
-                                                                                                headers: null,
-                                                                                                deadline: null,
-                                                                                                cancelCallToken));
+                    (cancelCallToken) => GrpcServiceClient.RequestCancelWorkflowExecutionAsync(reqReqCnclWf,
+                                                                                               headers: null,
+                                                                                               deadline: null,
+                                                                                               cancelCallToken));
 
             return new RequestCancellation.Result(workflowChainId);
         }
@@ -909,10 +957,10 @@ namespace Temporal.WorkflowClient
                     opArgs.WorkflowId,
                     workflowRunId,
                     opArgs.CancelToken,
-                    (cancelCallToken) => _grpcServiceClient.TerminateWorkflowExecutionAsync(reqTermWf,
-                                                                                            headers: null,
-                                                                                            deadline: null,
-                                                                                            cancelCallToken));
+                    (cancelCallToken) => GrpcServiceClient.TerminateWorkflowExecutionAsync(reqTermWf,
+                                                                                           headers: null,
+                                                                                           deadline: null,
+                                                                                           cancelCallToken));
 
             return new TerminateWorkflow.Result(workflowChainId);
         }
