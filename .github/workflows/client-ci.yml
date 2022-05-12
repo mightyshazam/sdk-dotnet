@@ -67,7 +67,7 @@ jobs:
     - name: Restore Packages (Net Framework)
       run: nuget restore sdk-dotnet\Src\Temporal.Sdk.sln
     - name: Msbuild Restore
-      run: msbuild.exe /t:Restore sdk-dotnet\Src\Temporal.Sdk.sln
+      run: msbuild.exe /t:Restore /p:configuration="Release" sdk-dotnet\Src\Temporal.Sdk.sln
     - name: Build Solution (Net Framework)
       run: |
         msbuild.exe -m /nologo  /p:configuration="Release" sdk-dotnet\Src\Temporal.Sdk.sln
