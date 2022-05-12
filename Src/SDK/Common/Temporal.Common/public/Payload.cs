@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Temporal.Util;
+
+#if NETCOREAPP3_1_OR_GREATER
+using System.Runtime.InteropServices;
+#endif
 
 using Temporal.Common.Payloads;
-using System.Runtime.InteropServices;
-using System.Collections;
+using Temporal.Util;
 
 namespace Temporal.Common
 {

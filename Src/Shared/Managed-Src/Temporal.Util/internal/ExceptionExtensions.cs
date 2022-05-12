@@ -20,7 +20,7 @@ namespace Temporal.Util
         ///       throw ex.Rethrow();
         ///   }
         /// </code>
-        /// The throwing actually happens inside of the <c>Rethrow<.c> method. However, this syntaxt allows the compiler to know that 
+        /// The throwing actually happens inside of the <c>Rethrow</c> method. However, this syntaxt allows the compiler to know that 
         /// an exception will occur at that line. This prevents incorrect code analysis warnings/end errors such as 'missing return value',
         /// 'missing initialization' and similar.
         /// </summary>

@@ -10,7 +10,7 @@ namespace Temporal.Serialization
     /// For now, we keep it here to exemplify custom <c>IPayloadConverter</c> implementation.
     /// </para>
     /// The "build-in" payload converters can only de-/serialize a <see cref="Payloads"/>-collections with a
-    /// single <see cref="Payload"/>-entry, with the exception of <see cref="UnnamedValuesContainerPayloadConverter"/>,
+    /// single <see cref="Payload"/>-entry, with the exception of <see cref="UnnamedContainerPayloadConverter"/>,
     /// which can deal with any number of <see cref="Payload"/>-entries, but can only de-/serialize to and from 
     /// an <see cref="Temporal.Common.Payloads.PayloadContainers.IUnnamed"/>. Such container offers strongly-typed lazy
     /// access to the underlying data. Hopwever, users may provide their own implementations of <see cref="IPayloadConverter"/> that

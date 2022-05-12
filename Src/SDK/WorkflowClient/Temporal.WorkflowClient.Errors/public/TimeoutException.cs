@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Temporal.Util;
+
 using Temporal.Api.Enums.V1;
 using Temporal.Api.Failure.V1;
 using Temporal.Common.Payloads;

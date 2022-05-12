@@ -65,9 +65,9 @@ namespace Temporal.Util
             {
                 Assembly objectTypeAssembly = (new object()).GetType().Assembly;
                 string objectTypeAssemblyName = objectTypeAssembly.GetName()?.Name ?? UnknownMoniker;
-                var coreAssembyInfo = new CoreAssemblyInformation(isMscorlib: CoreLibName_Mscorlib.Equals(objectTypeAssemblyName, StringComparison.OrdinalIgnoreCase),
-                                                                  isSysPrivCoreLib: CoreLibName_CoreLib.Equals(objectTypeAssemblyName, StringComparison.OrdinalIgnoreCase),
-                                                                  name: objectTypeAssemblyName);
+                CoreAssemblyInformation coreAssembyInfo = new(isMscorlib: CoreLibName_Mscorlib.Equals(objectTypeAssemblyName, StringComparison.OrdinalIgnoreCase),
+                                                              isSysPrivCoreLib: CoreLibName_CoreLib.Equals(objectTypeAssemblyName, StringComparison.OrdinalIgnoreCase),
+                                                              name: objectTypeAssemblyName);
 
                 string runtimeName = GetRuntimeName(coreAssembyInfo);
                 string runtimeVersion = GetRuntimeVersion(coreAssembyInfo, objectTypeAssembly);

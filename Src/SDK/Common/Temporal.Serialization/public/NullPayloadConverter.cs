@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using Temporal.Util;
 using Google.Protobuf;
+
 using Temporal.Api.Common.V1;
 
 namespace Temporal.Serialization

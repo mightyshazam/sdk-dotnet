@@ -11,7 +11,7 @@ namespace Temporal.Serialization
     {
         public static IList<IPayloadConverter> CreateDefaultConverters()
         {
-            List<IPayloadConverter> converters = new List<IPayloadConverter>(capacity: 6)
+            List<IPayloadConverter> converters = new(capacity: 6)
             {
                 new VoidPayloadConverter(),
                 new NullPayloadConverter(),
