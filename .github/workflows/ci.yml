@@ -65,7 +65,7 @@ jobs:
     - name: Setup VSTest Path
       uses: darenm/Setup-VSTest@v1
     - name: Restore Packages (Net Framework)
-      run: nuget restore Src\Temporal.Sdk.sln
+      run: nuget restore sdk-dotnet\Src\Temporal.Sdk.sln
     - name: Build Solution (Net Framework)
       run: |
         msbuild.exe sdk-dotnet\Src\Temporal.Sdk.sln /nologo /nr:false /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:DeleteExistingFiles=True /p:platform="Any CPU" /p:configuration="Release"
