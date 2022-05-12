@@ -14,9 +14,9 @@ jobs:
       fail-fast: true
       matrix:
         os:
-        - macos-latest
+#        - macos-latest
         - unbuntu-latest
-        - windows-latest
+#        - windows-latest
         dotnet-version:
         - '3.1.x'
         - '6.0.x'
@@ -68,8 +68,8 @@ jobs:
       run: nuget restore Src\Temporal.Sdk.sln
     - name: Build Solution (Net Framework)
       run: |
-        msbuild.exe Src\Temporal.Sdk.sln /nologo /nr:false /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:DeleteExistingFiles=True /p:platform="Any CPU" /p:configuration="Release"
+        msbuild.exe sdk-dotnet\Src\Temporal.Sdk.sln /nologo /nr:false /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:DeleteExistingFiles=True /p:platform="Any CPU" /p:configuration="Release"
     - name: VSTest
-      run: vstest.console.exe  Src\Temporal.Sdk.sln
+      run: vstest.console.exe  sdk-dotnet\Src\Temporal.Sdk.sln
 
     
