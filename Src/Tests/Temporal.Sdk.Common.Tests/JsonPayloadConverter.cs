@@ -1,6 +1,6 @@
 using System;
-using System.Text.Json;
 using Google.Protobuf;
+using Newtonsoft.Json;
 using Temporal.Serialization;
 using Payload = Temporal.Api.Common.V1.Payload;
 
@@ -10,10 +10,7 @@ namespace Temporal.Sdk.Common.Tests
     {
         public bool TryDeserialize<T>(Api.Common.V1.Payloads serializedData, out T item)
         {
-            item = JsonSerializer.Deserialize<T>(serializedData.Payloads_[0].Data.Span, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-            });
+            item = JsonConvert.DeserializeObject<T>(serializedData.Payloads_[0].Data.ToStringUtf8());
             return true;
         }
 
@@ -27,7 +24,7 @@ namespace Temporal.Sdk.Common.Tests
             serializedDataAccumulator.Payloads_.Add(
                 new Payload
                 {
-                    Data = ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(item)),
+                    Data = ByteString.CopyFromUtf8(JsonConvert.SerializeObject(item)),
                 });
 
             return true;

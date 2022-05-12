@@ -1,9 +1,7 @@
-using System;
-using System.Text.Json;
 using Google.Protobuf;
+using Newtonsoft.Json;
 using Temporal.Api.Common.V1;
 using Temporal.Common.Payloads;
-using Temporal.Serialization;
 using Xunit;
 
 namespace Temporal.Sdk.Common.Tests
@@ -42,7 +40,7 @@ namespace Temporal.Sdk.Common.Tests
                 {
                     new Payload
                     {
-                        Data = ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(ConvertedClass.Default)),
+                        Data = ByteString.CopyFromUtf8(JsonConvert.SerializeObject(ConvertedClass.Default)),
                     },
                 },
             };
