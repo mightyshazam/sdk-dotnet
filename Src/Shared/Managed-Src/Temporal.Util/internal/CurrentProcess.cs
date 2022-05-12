@@ -165,9 +165,6 @@ namespace Temporal.Util
         /// This wrapper, when called from within a try-catch block, allows catching the exception.
         /// </para>
         /// </summary>
-        /// <param name="userProcessorTime">CPU time in user mode.</param>
-        /// <param name="privilegedProcessorTime">CPU time in kernel mode.</param>
-        /// <param name="totalProcessorTime">Total CPU time.</param>
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void GetMemoryUsage(out long nonpagedSystemMemorySize,
                                           out long pagedMemorySize,

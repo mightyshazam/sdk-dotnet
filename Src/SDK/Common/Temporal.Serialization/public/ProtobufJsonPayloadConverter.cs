@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using Google.Protobuf;
 using Google.Protobuf.Reflection;
+
 using Temporal.Api.Common.V1;
 
 namespace Temporal.Serialization

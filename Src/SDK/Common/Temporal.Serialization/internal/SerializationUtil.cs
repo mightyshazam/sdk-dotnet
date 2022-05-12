@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Temporal.Util;
+﻿using System.Collections.Generic;
 using Google.Protobuf.Collections;
+
 using Temporal.Api.Common.V1;
+using Temporal.Util;
 
 namespace Temporal.Serialization
 {

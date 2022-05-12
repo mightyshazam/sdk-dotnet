@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using Temporal.Util;
+
 using Grpc.Core;
+
 using Temporal.Api.WorkflowService.V1;
+
+#if NETCOREAPP
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
+using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
-using System.Net.Security;
+using Temporal.Util;
+#endif
 
 namespace Temporal.WorkflowClient
 {
@@ -57,7 +62,7 @@ namespace Temporal.WorkflowClient
     /// </remarks>
     internal class WorkflowServiceClientFactory
     {
-        public static WorkflowServiceClientFactory SingletonInstance = new WorkflowServiceClientFactory();
+        public static WorkflowServiceClientFactory SingletonInstance = new();
 
         private readonly List<WeakReference<WorkflowServiceClientEnvelope>> _existingClients = new(capacity: 1);
 
@@ -174,17 +179,12 @@ namespace Temporal.WorkflowClient
 #endif
         }
 
-#if !NETFRAMEWORK
-        [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Only invoked for some targets.")]
-#endif
+#if NETFRAMEWORK
         private ChannelBase CreateNewChannelNetFx(TemporalClientConfiguration.Connection config)
         {
-#if !NETFRAMEWORK
-            throw new PlatformNotSupportedException("This routine is only supported on Net Fx.");
-#else
             if (!config.IsTlsEnabled)
             {
-                Grpc.Core.Channel plainChannel = new Grpc.Core.Channel(config.ServerHost, config.ServerPort, ChannelCredentials.Insecure);
+                Grpc.Core.Channel plainChannel = new(config.ServerHost, config.ServerPort, ChannelCredentials.Insecure);
                 return plainChannel;
             }
 
@@ -227,17 +227,14 @@ namespace Temporal.WorkflowClient
             }
 
             SslCredentials sslCreds = new(rootCertsData, clientIdentity);
-            Grpc.Core.Channel sslChannel = new Grpc.Core.Channel(config.ServerHost, config.ServerPort, sslCreds);
+            Grpc.Core.Channel sslChannel = new(config.ServerHost, config.ServerPort, sslCreds);
             return sslChannel;
-#endif
         }
+#endif  // #if NETFRAMEWORK
 
-#if !NETCOREAPP
-        [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Only invoked for some targets.")]
-#endif
+#if !NETFRAMEWORK
         private ChannelBase CreateNewChannelNetCore(TemporalClientConfiguration.Connection config)
         {
-#if NETCOREAPP
             // On Net Core 3, it was required to set this flag to make unsecured GRPC connections:
             if (config.IsTlsEnabled == false && RuntimeEnvironmentInfo.SingletonInstance.RuntimeVersion.StartsWith("3"))
             {
@@ -346,13 +343,11 @@ namespace Temporal.WorkflowClient
 
             Grpc.Net.Client.GrpcChannel sslChannel = Grpc.Net.Client.GrpcChannel.ForAddress(sslAddress, sslChannelOptions);
             return sslChannel;
-#else
-            throw new NotSupportedException("This routine is only supported on Net Core and Net 5+.");
-#endif
         }
+#endif  // #if !NETFRAMEWORK
 
         #region class CustomServerCertificateValidator
-#if NETCOREAPP
+#if !NETFRAMEWORK
         private class CustomServerCertificateValidator : IDisposable
         {
             private X509Certificate2 _caCert;
@@ -441,7 +436,7 @@ namespace Temporal.WorkflowClient
                 return caMatch;
             }
         }
-#endif
+#endif  // #if !NETFRAMEWORK
         #endregion class CustomServerCertificateValidator
     }
 }

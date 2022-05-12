@@ -201,7 +201,7 @@ namespace Temporal.WorkflowClient
         /// <summary>
         /// See the implemented iface API (<see cref="IWorkflowHandle.EnsureBoundAsync(CancellationToken)"/>) for a
         /// detailed description.
-        /// (Design note/future: If not bound && the WorkflowChainBindingPolicy REQUIRES starting new chain - fail telling to use the other overload.)
+        /// (Design note/future: If not bound AND the WorkflowChainBindingPolicy REQUIRES starting new chain - fail telling to use the other overload.)
         /// </summary>        
         public Task EnsureBoundAsync(CancellationToken cancelToken)
         {
@@ -430,7 +430,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowHandle.AwaitConclusionAync(CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.AwaitConclusionAsync(CancellationToken)"/>) for a detailed description.
         /// </summary>
         public async Task<IWorkflowRunResult> AwaitConclusionAsync(CancellationToken cancelToken)
         {
@@ -470,7 +470,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowHandle.SignalAsync(String, CancellationToken)"/>) for a detailed description.
+        /// See the implemented iface API (<see cref="IWorkflowHandle.SignalAsync(String, SignalWorkflowConfiguration, CancellationToken)"/>) for a detailed description.
         /// </summary>
         public Task SignalAsync(string signalName,
                                 SignalWorkflowConfiguration signalConfig = null,
@@ -480,7 +480,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowHandle.SignalAsync{TSigArg}(String, TSigArg, CancellationToken)"/>)
+        /// See the implemented iface API (<see cref="IWorkflowHandle.SignalAsync{TSigArg}(String, TSigArg, SignalWorkflowConfiguration, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
         public async Task SignalAsync<TSigArg>(string signalName,
@@ -515,7 +515,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowHandle.QueryAsync{TResult}(String, CancellationToken)"/>)
+        /// See the implemented iface API (<see cref="IWorkflowHandle.QueryAsync{TResult}(String, QueryWorkflowConfiguration, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
         public Task<TResult> QueryAsync<TResult>(string queryName,
@@ -526,7 +526,7 @@ namespace Temporal.WorkflowClient
         }
 
         /// <summary>
-        /// See the implemented iface API (<see cref="IWorkflowHandle.QueryAsync{TQryArg, TResult}(String, TQryArg, CancellationToken)"/>)
+        /// See the implemented iface API (<see cref="IWorkflowHandle.QueryAsync{TQryArg, TResult}(String, TQryArg, QueryWorkflowConfiguration, CancellationToken)"/>)
         /// for a detailed description.
         /// </summary>
         public async Task<TResult> QueryAsync<TQryArg, TResult>(string queryName,

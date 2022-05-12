@@ -118,7 +118,7 @@ namespace Temporal.Util
 
         public static string ToStringWithCode(UInt32 hr)
         {
-            var s = new StringBuilder(ToString(hr));
+            StringBuilder s = new(ToString(hr));
             s.Append(" (0x");
             s.Append(hr.ToString("X8"));
             s.Append(')');

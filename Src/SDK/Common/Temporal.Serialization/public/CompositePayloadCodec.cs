@@ -12,7 +12,7 @@ namespace Temporal.Serialization
     {
         public static IList<IPayloadCodec> CreateDefaultCodecs()
         {
-            List<IPayloadCodec> converters = new List<IPayloadCodec>(capacity: 0)
+            List<IPayloadCodec> converters = new(capacity: 0)
             {
                 // No default codecs
             };

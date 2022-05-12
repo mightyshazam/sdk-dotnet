@@ -111,7 +111,7 @@ namespace Temporal.WorkflowClient
         /// <para>The default implementation of this iface (<see cref="TemporalClient" />) has a factory method that created a client
         /// instace with a readily initialized connection (<see cref="TemporalClient.ConnectAsync" />). However, implementations
         /// of this iface may choose not to provide such a factory method. Users of such implementations can use this API to
-        /// pro-actively initialize the server connection.<br .>
+        /// pro-actively initialize the server connection.<br/>
         /// This method must be a no-op, if the connection is already initialized.</para>
         /// <para>Implementations that use the Temporal server need to initialize the underlying connection by executing
         /// GetSystemInfo(..) to check the server health and get server capabilities. This API will explicitly perform that.
