@@ -12,7 +12,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Fact]
         public void Test_VoidPayloadConverter_Empty_Payload()
         {
-            var converter = new VoidPayloadConverter();
+            VoidPayloadConverter converter = new VoidPayloadConverter();
             Assert.True(converter.TryDeserialize<IPayload.Void>(new Payloads(), out IPayload.Void value));
             Assert.NotNull(value);
         }
@@ -20,8 +20,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Fact]
         public void Test_VoidPayloadConverter_Nonempty_Payload()
         {
-            var converter = new VoidPayloadConverter();
-            var payloads = new Payloads
+            VoidPayloadConverter converter = new VoidPayloadConverter();
+            Payloads payloads = new Payloads
             {
                 Payloads_ = { { new Payload { Data = ByteString.CopyFromUtf8("hello"), } } }
             };
@@ -32,8 +32,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Fact]
         public void Test_VoidPayloadConverter_Roundtrip()
         {
-            var converter = new VoidPayloadConverter();
-            var p = new Payloads();
+            VoidPayloadConverter converter = new VoidPayloadConverter();
+            Payloads p = new Payloads();
             Assert.True(converter.TrySerialize(new IPayload.Void(), p));
             Assert.Empty(p.Payloads_);
             Assert.True(converter.TryDeserialize(p, out IPayload.Void item));

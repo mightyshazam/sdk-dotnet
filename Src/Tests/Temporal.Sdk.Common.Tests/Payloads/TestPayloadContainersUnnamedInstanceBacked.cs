@@ -14,7 +14,7 @@ namespace Temporal.Sdk.Common.Tests
         [Fact]
         public void Test_Payload_Containers_Unnamed_Instance_Backed_Type_Conversion()
         {
-            var instance = new PayloadContainers.Unnamed.InstanceBacked<string>(new[] { DefaultValue });
+            PayloadContainers.Unnamed.InstanceBacked<string> instance = new PayloadContainers.Unnamed.InstanceBacked<string>(new[] { DefaultValue });
             string value = instance.GetValue<string>(0);
             Assert.Equal(DefaultValue, value);
             Assert.True(instance.TryGetValue(0, out value));

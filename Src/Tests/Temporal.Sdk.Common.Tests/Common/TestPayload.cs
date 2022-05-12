@@ -24,7 +24,7 @@ namespace Temporal.Sdk.Common.Tests
         [Fact]
         public void Test_Payload_Unnamed_With_Array_Arguments()
         {
-            Temporal.Common.Payloads.PayloadContainers.Unnamed.InstanceBacked<int> payload = Payload.Unnamed(new[] { 1, 2, 3});
+            Temporal.Common.Payloads.PayloadContainers.Unnamed.InstanceBacked<int> payload = Payload.Unnamed(new[] { 1, 2, 3 });
             AssertUnnamedCorrectness(3, payload);
         }
 

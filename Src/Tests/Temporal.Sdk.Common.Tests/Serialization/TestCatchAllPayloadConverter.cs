@@ -1,5 +1,3 @@
-using Google.Protobuf.Reflection;
-
 namespace Temporal.Sdk.Common.Tests.Serialization
 {
     // Currently used for debug/dev

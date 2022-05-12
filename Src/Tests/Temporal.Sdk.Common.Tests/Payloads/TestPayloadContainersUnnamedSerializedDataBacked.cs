@@ -19,7 +19,8 @@ namespace Temporal.Sdk.Common.Tests
         public void Test_Payload_Containers_Unnamed_Instance_Backed_Type_Conversion()
         {
             ConvertedClass defaultValue = ConvertedClass.Default;
-            var instance = new PayloadContainers.Unnamed.SerializedDataBacked(CreateDefaultPayloads(), new JsonPayloadConverter());
+            PayloadContainers.Unnamed.SerializedDataBacked instance =
+                new PayloadContainers.Unnamed.SerializedDataBacked(CreateDefaultPayloads(), new JsonPayloadConverter());
             ConvertedClass value = instance.GetValue<ConvertedClass>(0);
             AssertWellFormed(defaultValue, value);
             Assert.True(instance.TryGetValue(0, out value));
@@ -52,7 +53,14 @@ namespace Temporal.Sdk.Common.Tests
 
             public int Value { get; set; }
 
-            public static ConvertedClass Default => new ConvertedClass { Name = "Test", Value = 1 };
+            public static ConvertedClass Default
+            {
+
+                get
+                {
+                    return new ConvertedClass { Name = "Test", Value = 1, };
+                }
+            }
         }
     }
 }
