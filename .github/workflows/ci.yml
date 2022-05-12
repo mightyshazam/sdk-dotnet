@@ -1,0 +1,63 @@
+name: Continuous Integration
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+    - main
+#    - feature/github-actions-ci
+jobs:
+  build-and-test-net-core:
+    name: build-and-test-${{matrix.os}}-${{ matrix.dotnet-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+        - macos-latest
+        - unbuntu-latest
+        - windows-latest
+        dotnet-version:
+        - '3.1.x'
+        - '6.0.x'
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        path: sdk-dotnet
+    - uses: actions/checkout@v3
+      with:
+        repository: temporalio/api
+        path: api
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    - name: Build Solution (Net Core)
+      run: dotnet build -c Release sdk-dotnet\Src\Temporal.Sdk.sln
+    - name: Build Solution (Net Core)
+      run: dotnet test -c Release sdk-dotnet\Src\Temporal.Sdk.sln
+    - name: Upload dotnet test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: dotnet-results-${{matrix.os}}-${{ matrix.dotnet-version }}
+        path: TestResults-${{matrix.os}}-${{ matrix.dotnet-version }}
+      # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}
+  build-and-test-net-fx:
+    runs-on: windows-latest
+    steps:
+    - name: Setup MSBuild (Net Framework)
+      uses: microsoft/setup-msbuild@v1
+    - name: Setup NuGet (Net Framework)
+      uses: NuGet/setup-nuget@v1.0.2
+    - name: Setup VSTest Path
+      uses: darenm/Setup-VSTest@v1
+    - name: Restore Packages (Net Framework)
+      run: nuget restore sdk-dotnet\Src\Temporal.Sdk.sln
+    - name: Build Solution (Net Framework)
+      run: |
+        msbuild.exe sdk-dotnet\Src\Temporal.Sdk.sln /nologo /nr:false /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:DeleteExistingFiles=True /p:platform="Any CPU" /p:configuration="Release"
+    - name: VSTest
+      run: vstest.console.exe  sdk-dotnet\Src\Temporal.Sdk.sln
+
+    
