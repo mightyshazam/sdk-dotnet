@@ -17,6 +17,13 @@
 
     <Compile Include="$(SharedSrcBaseDir)\Temporal.Util\internal\Format.cs"
              Link="$(SharedSrcBaseLabel)\Temporal.Util\internal\%(Filename)%(Extension)" />
+
+    <Compile Include="$(SharedSrcBaseDir)\Temporal.Util\internal\Concurrent.cs"
+             Link="$(SharedSrcBaseLabel)\Temporal.Util\internal\%(Filename)%(Extension)" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
   
 </Project>

@@ -83,7 +83,7 @@ namespace Temporal.Common.Payloads
                         return GetOrUpdateCache(index, value);
                     }
 
-                    throw CreateNoSuchIndexException(index, Count);
+                    throw PayloadContainers.Util.CreateNoSuchIndexException(index, Count, this);
                 }
 
                 public bool TryGetValue<TVal>(int index, out TVal value)
@@ -153,7 +153,7 @@ namespace Temporal.Common.Payloads
                             return new PayloadContainers.UnnamedEntry(index, this);
                         }
 
-                        throw CreateNoSuchIndexException(index, Count);
+                        throw PayloadContainers.Util.CreateNoSuchIndexException(index, Count, this);
                     }
                 }
 
@@ -199,24 +199,6 @@ namespace Temporal.Common.Payloads
                     SerializedPayloads wrapper = new();
                     wrapper.Payloads_.Add(_serializedData.Payloads_[index]);
                     return wrapper;
-                }
-
-                private static ArgumentException CreateNoSuchIndexException(int index, int containerItemCount)
-                {
-                    if (index < 0)
-                    {
-                        return new ArgumentOutOfRangeException(nameof(index), $"The value of {nameof(index)} may not be negative,"
-                                                                            + $" but `{index}` was specified.");
-                    }
-
-                    if (index >= containerItemCount)
-                    {
-                        return new ArgumentOutOfRangeException(nameof(index),
-                                                               $"This {nameof(PayloadContainers.IUnnamed)} includes"
-                                                             + $" {containerItemCount} items, but the {nameof(index)}=`{index}` was specified.");
-                    }
-
-                    return new ArgumentException(message: $"Invalid value of {nameof(index)}: {index}.", paramName: nameof(index));
                 }
             }
         }

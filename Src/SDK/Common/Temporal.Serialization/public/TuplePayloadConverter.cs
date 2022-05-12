@@ -6,7 +6,7 @@ namespace Temporal.Serialization
 {
     /// <summary>
     /// <para>
-    /// This is a sample. In the long runm, we will move it to the samples directory.
+    /// This is a sample. In the long run, we will move it to the samples directory.
     /// For now, we keep it here to exemplify custom <c>IPayloadConverter</c> implementation.
     /// </para>
     /// The "build-in" payload converters can only de-/serialize a <see cref="Payloads"/>-collections with a

@@ -3,15 +3,27 @@ using System.Text;
 using Temporal.Util;
 using Google.Protobuf;
 using Temporal.Api.Common.V1;
+using System.Diagnostics;
 
 namespace Temporal.Serialization
 {
     /// <summary>
-    /// Mainly intended for debugging and development.
-    /// </summary>
-    public class CatchAllPayloadConverter : IPayloadConverter
+    /// <para>
+    /// This is a sample. In the long run, we will move it to the samples directory.
+    /// For now, we keep it here to exemplify custom <c>IPayloadConverter</c> implementation,
+    /// and to provide a useful debugging tool.
+    /// </para>
+    /// This payload converter is mainly intended for debugging and development.
+    /// It does not actually convert the data.
+    /// Instead: On the outgoing path it creates a payload that contains a UTF8 string with some metadata about what was going to be converted
+    /// In the incoming path, it contains a string description about the incoming data and tried to convert it to the requested type.
+    /// If tat is not possible, the default for the requested type is returned.
+    /// Either way, the metadata / description is traced.
+    /// </summary>    
+    public class DiagnosticCatchAllPayloadConverter : IPayloadConverter
     {
         public const string PayloadMetadataEncodingValue = "json/plain";
+        //public const string PayloadMetadataEncodingValue = "binary/plain";
 
         private static ByteString s_payloadMetadataEncodingValueBytes = null;
 
@@ -73,7 +85,10 @@ namespace Temporal.Serialization
                 msg.Append(" ]");
             }
 
-            if (!msg.ToString().TryCast<string, T>(out item))
+            string msgStr = msg.ToString();
+            Trace.WriteLine($"{this.GetType().Name}.{nameof(TryDeserialize)}<{typeof(T).Name}>(..): \n{msgStr}");
+
+            if (!msgStr.TryCast<string, T>(out item))
             {
                 item = default(T);
             }
@@ -85,6 +100,8 @@ namespace Temporal.Serialization
         {
             string itemString = (item == null) ? "null" : item.ToString();
             string itemInfo = $"\"[{item.TypeOf()}]{{{itemString}}}\"";
+
+            Trace.WriteLine($"{this.GetType().Name}.{nameof(TrySerialize)}<{typeof(T).Name}>(..): \n{itemInfo}");
 
             Payload serializedItemData = new();
             serializedItemData.Metadata.Add(PayloadConverter.PayloadMetadataEncodingKey, PayloadMetadataEncodingValueBytes);
