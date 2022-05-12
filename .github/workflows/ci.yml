@@ -22,11 +22,13 @@ jobs:
         - '6.0.x'
         include:
         - dotnet-version: '3.1.x'
-          framework: netcore3.1
+          framework: netcoreapp3.1
         - dotnet-version: '6.0.x'
           framework: net6.0
     steps:
     - uses: actions/checkout@v3
+      with:
+        path: sdk-dotnet
     - uses: actions/checkout@v3
       with:
         repository: temporalio/api
@@ -36,9 +38,9 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Build Solution (Net Core)
-      run: dotnet build -f ${{ matrix.framework }} -c Release Src/Temporal.Sdk.sln
+      run: dotnet build -f ${{ matrix.framework }} -c Release sdk-dotnet/Src/Temporal.Sdk.sln
     - name: Build Solution (Net Core)
-      run: dotnet test  -f ${{ matrix.framework }} -c Release Src/Temporal.Sdk.sln
+      run: dotnet test  -f ${{ matrix.framework }} -c Release sdk-dotnet/Src/Temporal.Sdk.sln
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v3
       with:
