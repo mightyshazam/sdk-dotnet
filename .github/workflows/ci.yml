@@ -5,7 +5,7 @@ on:
     branches:
     - master
     - main
-#    - feature/github-actions-ci
+    - feature/github-actions-ci
 jobs:
   build-and-test-net-core:
     name: build-and-test-${{matrix.os}}-${{ matrix.dotnet-version }}
@@ -47,7 +47,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Setup MSBuild (Net Framework)
-      uses: microsoft/setup-msbuild@v1
+      uses: microsoft/setup-msbuild@v1.0.2
     - name: Setup NuGet (Net Framework)
       uses: NuGet/setup-nuget@v1.0.2
     - name: Setup VSTest Path
