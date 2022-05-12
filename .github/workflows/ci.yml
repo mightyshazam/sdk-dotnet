@@ -20,6 +20,11 @@ jobs:
         dotnet-version:
         - '3.1.x'
         - '6.0.x'
+        include:
+        - dotnet-version: '3.1.x'
+          framework: netcore3.1
+        - dotnet-version: '6.0.x'
+          framework: net6.0
     steps:
     - uses: actions/checkout@v3
     - uses: actions/checkout@v3
@@ -31,9 +36,9 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Build Solution (Net Core)
-      run: dotnet build -c Release Src/Temporal.Sdk.sln
+      run: dotnet build -f ${{ matrix.framework }} -c Release Src/Temporal.Sdk.sln
     - name: Build Solution (Net Core)
-      run: dotnet test -c Release Src/Temporal.Sdk.sln
+      run: dotnet test  -f ${{ matrix.framework }} -c Release Src/Temporal.Sdk.sln
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v3
       with:
@@ -49,8 +54,8 @@ jobs:
       with:
         repository: temporalio/api
         path: api
-#    - name: Setup MSBuild (Net Framework)
-#      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Setup MSBuild (Net Framework)
+      uses: microsoft/setup-msbuild@v1.0.2
 #    - name: Setup NuGet (Net Framework)
 #      uses: NuGet/setup-nuget@v1.0.2
     - name: Setup VSTest Path
@@ -61,6 +66,6 @@ jobs:
       run: |
         msbuild.exe Src\Temporal.Sdk.sln /nologo /nr:false /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:DeleteExistingFiles=True /p:platform="Any CPU" /p:configuration="Release"
     - name: VSTest
-      run: vstest.console.exe  sdk-dotnet\Src\Temporal.Sdk.sln
+      run: vstest.console.exe  Src\Temporal.Sdk.sln
 
     
