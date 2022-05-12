@@ -22,8 +22,6 @@ jobs:
         - '6.0.x'
     steps:
     - uses: actions/checkout@v3
-      with:
-        path: sdk-dotnet
     - uses: actions/checkout@v3
       with:
         repository: temporalio/api
@@ -46,10 +44,15 @@ jobs:
   build-and-test-net-fx:
     runs-on: windows-latest
     steps:
-    - name: Setup MSBuild (Net Framework)
-      uses: microsoft/setup-msbuild@v1.0.2
-    - name: Setup NuGet (Net Framework)
-      uses: NuGet/setup-nuget@v1.0.2
+    - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
+      with:
+        repository: temporalio/api
+        path: api
+#    - name: Setup MSBuild (Net Framework)
+#      uses: microsoft/setup-msbuild@v1.0.2
+#    - name: Setup NuGet (Net Framework)
+#      uses: NuGet/setup-nuget@v1.0.2
     - name: Setup VSTest Path
       uses: darenm/Setup-VSTest@v1
     - name: Restore Packages (Net Framework)
