@@ -12,6 +12,7 @@ namespace Temporal.Sdk.Common.Tests
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_PayloadContainers_Unnamed_Empty()
         {
             PayloadContainers.Unnamed.Empty empty = new PayloadContainers.Unnamed.Empty();

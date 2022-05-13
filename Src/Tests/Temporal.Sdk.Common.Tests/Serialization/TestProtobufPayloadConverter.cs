@@ -8,6 +8,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
     public class TestProtobufPayloadConverter
     {
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_ProtobufPayloadConverter_ByteString_Roundtrip()
         {
             WorkflowExecution wf = new() { WorkflowId = "test", RunId = "tset" };
@@ -21,6 +22,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_ProtobufPayloadConverter_POCO_Roundtrip_Failure()
         {
             ProtobufPayloadConverter instance = new();

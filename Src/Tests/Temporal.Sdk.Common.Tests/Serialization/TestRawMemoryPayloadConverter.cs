@@ -11,6 +11,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
     public class TestRawMemoryPayloadConverter
     {
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_RawMemoryPayloadConverter_ByteString_Roundtrip()
         {
             ByteString bs = ByteString.CopyFrom(0, 0, 1);
@@ -25,6 +26,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
 
 #if NETCOREAPP3_1_OR_GREATER
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_RawMemoryPayloadConverter_ReadonlyMemory_Roundtrip()
         {
             Random r = new();
@@ -39,6 +41,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_RawMemoryPayloadConverter_Memory_Roundtrip()
         {
             Random r = new();
@@ -54,6 +57,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
 #endif
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_RawMemoryPayloadConverter_MemoryStream_Roundtrip()
         {
             Random r = new();
@@ -73,6 +77,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         // TODO: Determine whether this should successfully roundtrip
         public void Test_RawMemoryPayloadConverter_ByteArray_Roundtrip()
         {
