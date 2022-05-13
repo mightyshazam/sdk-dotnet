@@ -43,7 +43,7 @@ jobs:
 #    - name: Build Solution
 #      run: dotnet build -f ${{ matrix.framework }} -c Release sdk-dotnet/Src/Temporal.Sdk.sln
     - name: Test with dotnet
-      run: dotnet test -f ${{ matrix.framework }} --logger trx --results-directory sdk-dotnet/Src/Temporal.Sdk.sln "TestResults-${{ matrix.dotnet-version }}"  
+      run: dotnet test -f ${{ matrix.framework }} -c Release --logger trx --results-directory "TestResults-${{ matrix.dotnet-version }}" sdk-dotnet/Src/Temporal.Sdk.sln
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v3
       with:
