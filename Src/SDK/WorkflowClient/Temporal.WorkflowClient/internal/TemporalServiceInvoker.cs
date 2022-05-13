@@ -39,7 +39,6 @@ namespace Temporal.WorkflowClient
             // Note: payloadCodec may be null
 
             grpcClientEnvelope.AddRef();
-
             _grpcServiceClientEnvelope = grpcClientEnvelope;
             _clientIdentityMarker = clientIdentityMarker;
             _payloadConverter = payloadConverter;
