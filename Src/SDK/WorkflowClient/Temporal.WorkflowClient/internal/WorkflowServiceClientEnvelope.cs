@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+
 using Grpc.Core;
+
 using Temporal.Api.WorkflowService.V1;
 using Temporal.Util;
 

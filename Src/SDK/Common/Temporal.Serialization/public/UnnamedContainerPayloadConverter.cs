@@ -1,11 +1,11 @@
 ﻿using System;
-using Temporal.Util;
-using Temporal.Common.Payloads;
 using System.Collections;
+
 using Temporal.Common;
+using Temporal.Common.Payloads;
+using Temporal.Util;
 
 using SerializedPayloads = Temporal.Api.Common.V1.Payloads;
-using System.Linq;
 
 namespace Temporal.Serialization
 {

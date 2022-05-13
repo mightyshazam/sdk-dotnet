@@ -1,6 +1,8 @@
 ﻿using System;
-using System.IO;
+
+#if NETCOREAPP3_1_OR_GREATER
 using System.Security.Cryptography.X509Certificates;
+#endif
 
 namespace Temporal.WorkflowClient
 {

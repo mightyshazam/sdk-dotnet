@@ -35,7 +35,7 @@ namespace Temporal.Util
     ///                 errors.Add(ex);
     ///             }
     ///     
-    ///             IEnumerable<object> items = null;
+    ///             IEnumerable{object} items = null;
     ///             foreach (object item in items)
     ///             {
     ///                 try
@@ -99,7 +99,7 @@ namespace Temporal.Util
 
             if (_aggregator is Exception prevException)
             {
-                var aggr = new List<Exception>();
+                List<Exception> aggr = new();
                 aggr.Add(prevException);
                 aggr.Add(exception);
                 _aggregator = aggr;

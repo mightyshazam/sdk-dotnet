@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Temporal.WorkflowClient.Interceptors
+﻿namespace Temporal.WorkflowClient.Interceptors
 {
     public record ServiceInvocationPipelineItemFactoryArguments(ITemporalClient ServiceClient,
                                                                 object InitialPipelineOwner,

@@ -6,7 +6,7 @@ namespace Temporal.Common
     {
         public sealed class Void : IPayload
         {
-            public static readonly Void Instance = new Void();
+            public static readonly Void Instance = new();
             public static readonly Task<Void> CompletedTask = Task.FromResult(Instance);
         }
     }

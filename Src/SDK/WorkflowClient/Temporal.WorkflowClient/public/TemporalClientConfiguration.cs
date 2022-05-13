@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+
+#if NETCOREAPP3_1_OR_GREATER
 using System.Security.Cryptography.X509Certificates;
+#endif
+
 using Temporal.Api.WorkflowService.V1;
 using Temporal.Serialization;
 using Temporal.WorkflowClient.Interceptors;
@@ -63,8 +67,7 @@ namespace Temporal.WorkflowClient
         /// Creates a new <c>TemporalClientConfiguration</c> initialized with default settings for use with
         /// a the Temporal Cloud frontend.<br/>
         /// To create a <c>TemporalClientConfiguration</c> with custom settings, use the ctor.
-        /// </summary>
-        /// <param name="namespace">The Temporal namespace to use by the clients based on the configuration being created.</param>
+        /// </summary>        
         public static TemporalClientConfiguration ForTemporalCloud(string @namespace, string clientCertPemFilePath, string clientKeyPemFilePath)
         {
             Temporal.Util.Validate.NotNull(@namespace);

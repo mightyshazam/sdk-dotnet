@@ -1,8 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+
+#if NETCOREAPP3_1
+using System.Security.Cryptography;
 using Temporal.Util;
+#endif
 
 namespace Temporal.WorkflowClient
 {
@@ -64,7 +67,7 @@ namespace Temporal.WorkflowClient
             // @ToDo: Review this for other OSes when supported.
 
             byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx);
-            X509Certificate2 certificate = new X509Certificate2(ephemeralCertBytes);
+            X509Certificate2 certificate = new(ephemeralCertBytes);
 
             // Done:
             return certificate;
@@ -80,7 +83,7 @@ namespace Temporal.WorkflowClient
         /// </summary>        
         private static X509Certificate2 CreateX509EphemeralCertFromPemData(string certMarkedUpPemData, string keyMarkedUpPemData)
         {
-#if NET6_0_OR_GREATER            
+#if NET6_0_OR_GREATER
             return (keyMarkedUpPemData == null)
                         ? X509Certificate2.CreateFromPem(certMarkedUpPemData)
                         : X509Certificate2.CreateFromPem(certMarkedUpPemData, keyMarkedUpPemData);
@@ -146,7 +149,7 @@ namespace Temporal.WorkflowClient
 #endif
         }
 
-#if NETCOREAPP3_1_OR_GREATER && !NET6_0_OR_GREATER            
+#if NETCOREAPP3_1_OR_GREATER && !NET6_0_OR_GREATER
         private static byte[] GetPemSectionContent(string markedUpPem, string sectionName)
         {
             const string SectionStartMarkerTemplate = "-----BEGIN {0}-----";

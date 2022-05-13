@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Temporal.Api.Enums.V1;
 using Temporal.Api.WorkflowService.V1;

@@ -1,20 +1,25 @@
 ﻿using System;
+using System.IO;
+using System.Net.Http;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using Temporal.Util;
+
+#if NETCOREAPP3_1
+using System.Security.Cryptography;
+#endif
+
 using Google.Protobuf;
 using Grpc.Core;
+
 using Temporal.Api.Common.V1;
 using Temporal.Api.Enums.V1;
 using Temporal.Api.History.V1;
 using Temporal.Api.TaskQueue.V1;
 using Temporal.Api.Workflow.V1;
 using Temporal.Api.WorkflowService.V1;
-using System.IO;
-using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography;
-using System.Net.Security;
+using Temporal.Util;
 
 #if NETCOREAPP
 using Microsoft.Extensions.Logging;
@@ -80,7 +85,7 @@ namespace Temporal.Demos.AdHocScenarios
                 //new ChannelOption(ChannelOptions.SslTargetNameOverride, "tls-sample"),
             };
 
-            Grpc.Core.Channel channel = new Grpc.Core.Channel(TemporalServerHost, TemporalServerPort, sslCreds, channelOptions);
+            Grpc.Core.Channel channel = new(TemporalServerHost, TemporalServerPort, sslCreds, channelOptions);
             // *** }
 
             Console.WriteLine($"Created a `{channel.GetType().FullName}` to \"{channel.ResolvedTarget}\".");
@@ -247,9 +252,9 @@ namespace Temporal.Demos.AdHocScenarios
 #endif
 
             byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx);
-            X509Certificate2 certificate = new X509Certificate2(rawData: ephemeralCertBytes,
-                                                                password: (string) null,
-                                                                keyStorageFlags: keyStorageFlags);
+            X509Certificate2 certificate = new(rawData: ephemeralCertBytes,
+                                               password: (string) null,
+                                               keyStorageFlags: keyStorageFlags);
 
             // Done:    
             return certificate;

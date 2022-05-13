@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Temporal.Util;
+
 using Temporal.Api.Enums.V1;
 using Temporal.Common;
+using Temporal.Util;
 using Temporal.WorkflowClient;
 using Temporal.WorkflowClient.Errors;
-using Temporal.WorkflowClient.Interceptors;
-using System.Threading;
 
 namespace Temporal.Demos.AdHocScenarios
 {
