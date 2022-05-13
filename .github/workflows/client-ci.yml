@@ -53,8 +53,8 @@ jobs:
       uses: dorny/test-reporter@v1.5.0
       with:
         name: dotnet-results-${{ matrix.dotnet-version }}
-        path: 'TestResults-${{ matrix.dotnet-version }}/*.trx'
-        working-directory: sdk-dotnet
+        path: '*.trx'
+        working-directory: sdk-dotnet/TestResults-${{ matrix.dotnet-version }}
         reporter: dotnet-trx
       if: success() || failure()
     - name: Upload dotnet test results
