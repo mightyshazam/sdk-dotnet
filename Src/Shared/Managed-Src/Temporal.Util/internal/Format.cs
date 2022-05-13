@@ -50,7 +50,7 @@ namespace Temporal.Util
                 return NullWord;
             }
 
-            var builder = new StringBuilder();
+            StringBuilder builder = new();
             builder.Append('"');
             builder.Append(str);
             builder.Append('"');
@@ -171,7 +171,7 @@ namespace Temporal.Util
             string postStr = value.Substring(valueLen - postLen, postLen);
             string preStr = value.Substring(0, preLen);
 
-            var shortResult = new StringBuilder(preStr, maxLength);
+            StringBuilder shortResult = new(preStr, maxLength);
             shortResult.Append(FillStr);
             shortResult.Append(postStr);
 
@@ -185,7 +185,7 @@ namespace Temporal.Util
                 return str;
             }
 
-            var s = new StringBuilder(str, minLen);
+            StringBuilder s = new(str, minLen);
             while (minLen - s.Length > 100)
             {
                 s.Append(HundredSpaces);

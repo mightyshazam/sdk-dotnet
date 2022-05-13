@@ -71,12 +71,12 @@ dotnet_diagnostic.IDE0017.severity = silent  # Use object initializers
 
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 
-dotnet_style_prefer_auto_properties = true:silent
+dotnet_style_prefer_auto_properties = false:silent
 dotnet_diagnostic.IDE0032.severity = silent  # Use auto property
 
-dotnet_style_prefer_compound_assignment = true:suggestion
-dotnet_diagnostic.IDE0054.severity = suggestion  # Use compound assignment
-dotnet_diagnostic.IDE0074.severity = suggestion  # Use coalesce compound assignment
+dotnet_style_prefer_compound_assignment = true:silent
+dotnet_diagnostic.IDE0054.severity = silent  # Use compound assignment
+dotnet_diagnostic.IDE0074.severity = silent  # Use coalesce compound assignment
 
 dotnet_style_prefer_conditional_expression_over_assignment = true:silent
 dotnet_diagnostic.IDE0045.severity = silent  # Use conditional expression for assignment 
@@ -106,44 +106,44 @@ dotnet_code_quality_unused_parameters = all:warning
 dotnet_diagnostic.IDE0060.severity = warning  # Remove unused parameter
 
 # Suppression preferences
-dotnet_remove_unnecessary_suppression_exclusions = none
+dotnet_remove_unnecessary_suppression_exclusions = warning
 dotnet_diagnostic.IDE0079.severity = warning  # Remove unnecessary suppression
 
 #### C# Coding Conventions ####
 
 # var preferences
-csharp_style_var_when_type_is_apparent = true:silent
-dotnet_diagnostic.IDE0007.severity = silent  # Use 'var' instead of explicit type
+csharp_style_var_when_type_is_apparent = false:error
+dotnet_diagnostic.IDE0007.severity = error  # Use 'var' instead of explicit type
 
 csharp_style_var_for_built_in_types = false:error
 csharp_style_var_elsewhere = false:error
 dotnet_diagnostic.IDE0008.severity = error  # Use explicit type instead of 'var'
 
 # Expression-bodied members
-csharp_style_expression_bodied_accessors = false:suggestion
-dotnet_diagnostic.IDE0027.severity = suggestion  # Use expression body for accessors
+csharp_style_expression_bodied_accessors = false:error
+dotnet_diagnostic.IDE0027.severity = error  # Use expression body for accessors
 
 csharp_style_expression_bodied_constructors = false:error
 dotnet_diagnostic.IDE0021.severity = error  # Use expression body for constructors
 
-csharp_style_expression_bodied_indexers = false:suggestion
-dotnet_diagnostic.IDE0026.severity = suggestion  # Use expression body for indexers 
+csharp_style_expression_bodied_indexers = false:error
+dotnet_diagnostic.IDE0026.severity = error  # Use expression body for indexers 
 
 csharp_style_expression_bodied_lambdas = true:suggestion
-dotnet_diagnostic.IDE0053.severity = suggestion  # Use expression body for lambdas
+dotnet_diagnostic.IDE0053.severity = error  # Use expression body for lambdas
 
-csharp_style_expression_bodied_local_functions = false:error
-dotnet_diagnostic.IDE0061.severity = error  # Use expression body for local functions 
+csharp_style_expression_bodied_local_functions = true:suggestion
+dotnet_diagnostic.IDE0061.severity = suggestion  # Use expression body for local functions 
 
 csharp_style_expression_bodied_methods = false:error
 dotnet_diagnostic.IDE0022.severity = error  # Use expression body for methods
 
-csharp_style_expression_bodied_operators = false:suggestion
-dotnet_diagnostic.IDE0023.severity = suggestion  # Use expression body for conversion operators
-dotnet_diagnostic.IDE0024.severity = suggestion  # Use expression body for operators
+csharp_style_expression_bodied_operators = false:error
+dotnet_diagnostic.IDE0023.severity = error  # Use expression body for conversion operators
+dotnet_diagnostic.IDE0024.severity = error  # Use expression body for operators
 
-csharp_style_expression_bodied_properties = false:suggestion
-dotnet_diagnostic.IDE0025.severity = suggestion  # Use expression body for properties
+csharp_style_expression_bodied_properties = false:error
+dotnet_diagnostic.IDE0025.severity = error  # Use expression body for properties
 
 # Pattern matching preferences
 csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
@@ -163,8 +163,8 @@ csharp_style_prefer_switch_expression = false:silent
 dotnet_diagnostic.IDE0066.severity = silent  # Use switch expression
 
 # Null-checking preferences
-csharp_style_conditional_delegate_call = false:suggestion
-dotnet_diagnostic.IDE1005.severity = suggestion  # Use conditional delegate call
+csharp_style_conditional_delegate_call = false:warning
+dotnet_diagnostic.IDE1005.severity = warning  # Use conditional delegate call
 
 # Modifier preferences
 csharp_prefer_static_local_function = true:warning
@@ -177,15 +177,15 @@ dotnet_diagnostic.IDE0036.severity = warning  # Order modifiers
 csharp_prefer_braces = true:error
 dotnet_diagnostic.IDE0011.severity = error  # Add braces
 
-csharp_prefer_simple_using_statement = false:silent
+csharp_prefer_simple_using_statement = true:silent
 dotnet_diagnostic.IDE0063.severity = silent  # Use simple 'using' statement
 
 # Expression-level preferences
-csharp_prefer_simple_default_expression = true:suggestion
-dotnet_diagnostic.IDE0034.severity = suggestion  # Simplify default expression
+csharp_prefer_simple_default_expression = false:silent
+dotnet_diagnostic.IDE0034.severity = silent  # Simplify default expression
 
-csharp_style_deconstructed_variable_declaration = false:suggestion
-dotnet_diagnostic.IDE0042.severity = suggestion  # Deconstruct variable declaration
+csharp_style_deconstructed_variable_declaration = true:error
+dotnet_diagnostic.IDE0042.severity = error  # Deconstruct variable declaration
 
 csharp_style_inlined_variable_declaration = true:suggestion
 dotnet_diagnostic.IDE0018.severity = suggestion  # Inline variable declaration
@@ -193,10 +193,10 @@ dotnet_diagnostic.IDE0018.severity = suggestion  # Inline variable declaration
 csharp_style_pattern_local_over_anonymous_function = true:warning
 dotnet_diagnostic.IDE0039.severity = warning  # Use local function instead of lambda
 
-csharp_style_prefer_index_operator = true:silent
+csharp_style_prefer_index_operator = false:silent
 dotnet_diagnostic.IDE0056.severity = silent  # Use index operator
 
-csharp_style_prefer_range_operator = true:silent
+csharp_style_prefer_range_operator = false:silent
 dotnet_diagnostic.IDE0057.severity = silent  # Use range  operator
 
 csharp_style_throw_expression = false:warning
@@ -281,14 +281,18 @@ dotnet_diagnostic.IDE0077.severity = error       # Avoid legacy format target in
 dotnet_diagnostic.IDE0001.severity = silent      # Simplify name 
 dotnet_diagnostic.IDE0002.severity = silent      # Simplify member access  
 dotnet_diagnostic.IDE0004.severity = silent      # Remove unnecessary cast
-dotnet_diagnostic.IDE0005.severity = suggestion  # Remove unnecessary import
+dotnet_diagnostic.IDE0005.severity = warning     # Remove unnecessary import
 dotnet_diagnostic.IDE0035.severity = suggestion  # Remove unreachable code
-dotnet_diagnostic.IDE0051.severity = warning     # Remove unused private member  
-dotnet_diagnostic.IDE0052.severity = warning     # Remove unread private member 
+dotnet_diagnostic.IDE0051.severity = suggestion  # Remove unused private member  
+dotnet_diagnostic.IDE0052.severity = suggestion  # Remove unread private member 
 dotnet_diagnostic.IDE0080.severity = warning     # Remove unnecessary suppression operator 
-dotnet_diagnostic.IDE0100.severity = silent      # Remove unnecessary equality operator  
+dotnet_diagnostic.IDE0100.severity = none        # Remove unnecessary equality operator  
 dotnet_diagnostic.IDE0110.severity = warning     # Remove unnecessary discard
 dotnet_diagnostic.IDE0070.severity = warning     # Use 'System.HashCode.Combine'
+
+#### CSxxxx rules that do not have a corresponding dotnet_style_blah or csharp_style_blah specification: ####
+
+dotnet_diagnostic.CS1591.severity = silent       # Missing XML comment for publicly visible type or member 'Type_or_Member'
 
 #### Rules that have dotnet_style_blah or csharp_style_blah specification, but are not in the VS UI: ####
 

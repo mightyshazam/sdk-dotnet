@@ -1,11 +1,24 @@
 ﻿namespace Temporal.Common
 {
+    public static class TryResult
+    {
+        public static TryResult<T> ForSuccess<T>(T result)
+        {
+            return new TryResult<T>(isSuccess: true, result);
+        }
+
+        public static TryResult<T> ForFailure<T>()
+        {
+            return new TryResult<T>(isSuccess: false, default(T));
+        }
+    }
+
     public struct TryResult<T>
     {
         private readonly bool _isSuccess;
         private readonly T _result;
 
-        public TryResult(T result)
+        internal TryResult(T result)
             : this(true, result)
         {
         }

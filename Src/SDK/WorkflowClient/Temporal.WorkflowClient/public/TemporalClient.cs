@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Temporal.Util;
-using Grpc.Core;
-using Temporal.Api.WorkflowService.V1;
+
 using Temporal.Common;
 using Temporal.Serialization;
+using Temporal.Util;
 using Temporal.WorkflowClient.Interceptors;
 using Temporal.WorkflowClient.OperationConfigurations;
 
@@ -81,7 +81,7 @@ namespace Temporal.WorkflowClient
 
         #region -- Fields, Ctors, Common properties --
 
-        private readonly ChannelBase _grpcChannel;
+        private WorkflowServiceClientEnvelope _grpcServiceClientEnvelope = null;
         private readonly string _identityMarker;
 
         public TemporalClient()
@@ -94,9 +94,7 @@ namespace Temporal.WorkflowClient
             TemporalClientConfiguration.Validate(config);
 
             Configuration = config;
-
-            _grpcChannel = GrpcChannelFactory.SingletonInstance.GetOrCreateChannel(config);
-            _identityMarker = config.ClientIdentity ?? CreateIdentityMarker();
+            _identityMarker = config.ClientIdentityMarker ?? CreateIdentityMarker();
         }
 
         public TemporalClientConfiguration Configuration { get; }
@@ -265,7 +263,7 @@ namespace Temporal.WorkflowClient
         /// <para>The default implementation of this iface (<see cref="TemporalClient" />) has a factory method that created a client
         /// instace with a readily initialized connection (<see cref="TemporalClient.ConnectAsync" />). However, implementations
         /// of this iface may choose not to provide such a factory method. Users of such implementations can use this API to
-        /// pro-actively initialize the server connection.<br .>
+        /// pro-actively initialize the server connection.<br/>
         /// This method must be a no-op, if the connection is already initialized.</para>
         /// <para>Implementations that use the Temporal server need to initialize the underlying connection by executing
         /// GetSystemInfo(..) to check the server health and get server capabilities. This API will explicitly perform that.
@@ -384,7 +382,9 @@ namespace Temporal.WorkflowClient
 
             // Create the sink:
 
-            ITemporalClientInterceptor downstream = new TemporalServiceInvoker(_grpcChannel,
+            WorkflowServiceClientEnvelope grpcClientEnvelope = GetOrCreateGrpcClientEnvelope();
+
+            ITemporalClientInterceptor downstream = new TemporalServiceInvoker(grpcClientEnvelope,
                                                                                _identityMarker,
                                                                                payloadConverter,
                                                                                payloadCodec);
@@ -408,10 +408,70 @@ namespace Temporal.WorkflowClient
 
         private List<ITemporalClientInterceptor> CreateDefaultServiceInvocationPipeline()
         {
-            List<ITemporalClientInterceptor> pipeline = new List<ITemporalClientInterceptor>();
+            List<ITemporalClientInterceptor> pipeline = new();
             return pipeline;
         }
 
+        private WorkflowServiceClientEnvelope GetOrCreateGrpcClientEnvelope()
+        {
+            WorkflowServiceClientEnvelope grpcClientEnvelope = _grpcServiceClientEnvelope;
+            while (grpcClientEnvelope == null)
+            {
+                WorkflowServiceClientEnvelope newEnvelope = (Configuration.CustomGrpcWorkflowServiceClient != null)
+                                        ? new WorkflowServiceClientEnvelope(Configuration.CustomGrpcWorkflowServiceClient)
+                                        : WorkflowServiceClientFactory.SingletonInstance.GetOrCreateClient(Configuration.ServiceConnection);
+
+                if (newEnvelope.TryAddRef())
+                {
+                    grpcClientEnvelope = Concurrent.TrySetOrGetValue(ref _grpcServiceClientEnvelope, newEnvelope, out bool stored);
+                    if (!stored)
+                    {
+                        newEnvelope.Release();
+                    }
+                }
+            }
+
+            return grpcClientEnvelope;
+        }
+
         #endregion -- Service invocation pipeline management --
+
+        #region -- Dispose --
+
+        private void Dispose(bool disposing)
+        {
+            try
+            {
+                WorkflowServiceClientEnvelope grpcClientEnvelope = Interlocked.Exchange(ref _grpcServiceClientEnvelope, null);
+                if (grpcClientEnvelope != null)
+                {
+                    grpcClientEnvelope.Release();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (disposing)
+                {
+                    // Only rethrow if not on finalizer thread.
+                    // @ToDo: once we have logging, log if on finalizer thread.
+                    ExceptionDispatchInfo.Capture(ex).Throw();
+                }
+            }
+        }
+
+        ~TemporalClient()
+        {
+            // Do not change this code. Put cleanup code in `Dispose(bool disposing)` method.
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in `Dispose(bool disposing)` method.
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion -- Dispose --
     }
 }

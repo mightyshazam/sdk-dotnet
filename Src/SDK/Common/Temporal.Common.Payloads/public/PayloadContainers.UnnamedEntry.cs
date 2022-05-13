@@ -25,6 +25,8 @@ namespace Temporal.Common.Payloads
 
             public int Index { get { return _index; } }
 
+            public object ValueObject { get { return GetValue<object>(); } }
+
             private PayloadContainers.IUnnamed Container
             {
                 get
@@ -32,8 +34,8 @@ namespace Temporal.Common.Payloads
                     if (_container == null)
                     {
                         throw new InvalidOperationException($"The {nameof(_container)} of this {nameof(PayloadContainers.UnnamedEntry)} is null;"
-                                                            + $" make sure to always use the ctor that takes a valid"
-                                                            + $" {nameof(PayloadContainers.IUnnamed)} container parameter.");
+                                                          + $" make sure to always use the ctor that takes a valid"
+                                                          + $" {nameof(PayloadContainers.IUnnamed)} container parameter.");
                     }
 
                     return _container;

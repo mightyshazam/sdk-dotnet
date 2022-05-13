@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Temporal.Util;
+﻿using System.Collections.Generic;
 using Google.Protobuf.Collections;
+
 using Temporal.Api.Common.V1;
+using Temporal.Util;
 
 namespace Temporal.Serialization
 {
@@ -43,6 +43,18 @@ namespace Temporal.Serialization
             Validate.NotNull(serializedDataAccumulator.Payloads_);
 
             serializedDataAccumulator.Payloads_.Add(serializedItemData);
+        }
+
+        public static bool TryGetSinglePayload(Payloads payloadsContainer, out Payload payloadItem)
+        {
+            if (GetPayloadCount(payloadsContainer, out IReadOnlyList<Payload> payloadList) == 1)
+            {
+                payloadItem = payloadList[0];
+                return true;
+            }
+
+            payloadItem = null;
+            return false;
         }
 
         public static int GetPayloadCount(Payloads payloads)

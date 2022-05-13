@@ -14,7 +14,7 @@ namespace Temporal.Serialization
 
         /// <summary>
         /// Utility method used by several <c>IPayloadConverter</c> implementations.
-        /// If <c>valueBytes</c> is NOT null, return the object referenced by <c>valueBytes</c>.
+        /// If <c>valueBytes</c> is NOT null, return the <c>ByteString</c>-object referenced by <c>valueBytes</c>.
         /// Otherwise, convert the specified <c>value</c> into a <c>ByteString</c>, store it into the location referenced
         /// by <c>valueBytes</c>, and return the resulting object.
         /// </summary>        
@@ -24,10 +24,59 @@ namespace Temporal.Serialization
             if (bytes == null)
             {
                 bytes = ByteString.CopyFromUtf8(value);
-                valueBytes = bytes;
+                bytes = Concurrent.TrySetOrGetValue(ref valueBytes, bytes);
             }
 
             return bytes;
+        }
+
+        public static bool IsNormalEnumerable<T>(T item)
+        {
+            return IsNormalEnumerable<T>(item, out _);
+        }
+
+        public static bool IsNormalEnumerable<T>(T item, out System.Collections.IEnumerable enumerableItem)
+        {
+            enumerableItem = null;
+
+            if (item != null)
+            {
+                if (item is PayloadContainers.IUnnamed                  // Wrapped in Container => False
+                        || item is PayloadContainers.Enumerable         // Wrapped in Enumerable Container => False
+                        || item is string)                              // String => False
+                {
+                    return false;
+                }
+
+                // Return wether Is IEnumerable:
+                if (item is System.Collections.IEnumerable emItem)
+                {
+                    enumerableItem = emItem;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return IsNormalEnumerable<T>();
+        }
+
+        public static bool IsNormalEnumerable<T>()
+        {
+            Type checkedType = typeof(T);
+
+            // If Wrapped in Container => False:
+            if (typeof(PayloadContainers.IUnnamed).IsAssignableFrom(checkedType)            // Wrapped in IUnnamed Container => False
+                    || typeof(PayloadContainers.Enumerable).IsAssignableFrom(checkedType)   // Wrapped in Enumerable Container => False
+                    || typeof(string).IsAssignableFrom(checkedType))                        // String => False
+            {
+                return false;
+            }
+
+            // Return wether Is IEnumerable:
+            return typeof(System.Collections.IEnumerable).IsAssignableFrom(checkedType);
         }
 
         /// <summary>
@@ -98,7 +147,7 @@ namespace Temporal.Serialization
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"Cannot {nameof(Serialize)} the specified {nameof(item)};"
-                                                  + $" type of the specified {nameof(converter)}: \"{converter.GetType().FullName}\";"
+                                                  + $" type of the {nameof(converter)}: \"{converter.GetType().FullName}\";"
                                                   + $" static type of the specified {nameof(item)}: \"{typeof(T).FullName}\";"
                                                   + (item == null
                                                         ? $" the specified {nameof(item)} is null."
@@ -192,7 +241,7 @@ namespace Temporal.Serialization
                         + $" Although the specified {nameof(IPayloadConverter)} may be able to handle the container itself,"
                         + $" it may have not been able to handle one or more of the values within the container.";
             }
-            else if (IsUnwrappedEnumerable<T>(item))
+            else if (IsNormalEnumerable<T>(item))
             {
                 message = message
                         + $"\nThe specified data item is an IEnumerable. Specifying Enumerables (arrays,"
@@ -213,20 +262,6 @@ namespace Temporal.Serialization
             }
 
             throw new InvalidOperationException(message);
-        }
-
-        private static bool IsUnwrappedEnumerable<T>(T item)
-        {
-            // If Wrapped => False:
-            if ((item != null && item is PayloadContainers.IUnnamed)
-                    || typeof(PayloadContainers.IUnnamed).IsAssignableFrom(typeof(T)))
-            {
-                return false;
-            }
-
-            // Return wether Is IEnumerable:
-            return ((item != null && item is System.Collections.IEnumerable)
-                    || typeof(System.Collections.IEnumerable).IsAssignableFrom(typeof(T)));
         }
     }
 }

@@ -93,7 +93,7 @@ namespace Temporal.WorkflowClient
         /// <summary>
         /// Get the very last run IF it is already known to be final (no further runs can/will follow).<br />
         /// If it is not yet known whether the latest run is final, this API will not fail, but it will return False.
-        /// There is no long poll. This can be used to get result of the chain IF chain has finished (grab result of final run).</summary>
+        /// There is no long poll. This can be used to get result of the chain IF chain has finished (grab result of final run).
         /// </summary>
         Task<TryResult<IWorkflowRunHandle>> TryGetFinalRunAsync(CancellationToken cancelToken = default);
 

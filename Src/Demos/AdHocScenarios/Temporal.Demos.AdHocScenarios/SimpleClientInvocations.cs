@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Temporal.Util;
+
 using Temporal.Api.Enums.V1;
 using Temporal.Common;
+using Temporal.Util;
 using Temporal.WorkflowClient;
 using Temporal.WorkflowClient.Errors;
-using Temporal.WorkflowClient.Interceptors;
-using System.Threading;
 
 namespace Temporal.Demos.AdHocScenarios
 {
@@ -23,10 +23,71 @@ namespace Temporal.Demos.AdHocScenarios
             Console.ReadLine();
         }
 
+        private static class CreateClient
+        {
+            public static Task<ITemporalClient> LocalPlainAsync()
+            {
+                Console.WriteLine("Creating a client over a plain (unsecured) channel...");
+
+                return TemporalClient.ConnectAsync(TemporalClientConfiguration.ForLocalHost());
+            }
+
+            public static Task<ITemporalClient> LocalWithCustomCaAsync()
+            {
+                Console.WriteLine("Creating a client over an SSL channel with a custom server CA...");
+
+                return TemporalClient.ConnectAsync(TemporalClientConfiguration.ForLocalHost() with
+                {
+                    ServiceConnection = new TemporalClientConfiguration.Connection() with
+                    {
+                        IsTlsEnabled = true,
+                        ServerCertAuthority = TemporalClientConfiguration.TlsCertificate.FromPemFile(
+                                        @"PATH\ca.cert")
+                    }
+
+                });
+            }
+
+            public static Task<ITemporalClient> LocalWithNoServerValidation()
+            {
+                if (RuntimeEnvironmentInfo.SingletonInstance.CoreAssembyInfo.IsMscorlib)
+                {
+                    throw new PlatformNotSupportedException("Disabling server certificate validation is not supported"
+                                                          + " on classic Net Fx becasue of limitations in the .NET gRPC library used"
+                                                          + " with those Framework versions. Use a custom Cert Authority identity of a"
+                                                          + " modern .NET version.");
+                }
+
+                Console.WriteLine("Creating a client over an SSL channel with no server sert validation...");
+
+                return TemporalClient.ConnectAsync(TemporalClientConfiguration.ForLocalHost() with
+                {
+                    ServiceConnection = new TemporalClientConfiguration.Connection() with
+                    {
+                        IsTlsEnabled = true,
+                        SkipServerCertValidation = true
+                    }
+                });
+            }
+
+            public static Task<ITemporalClient> TemporalCloud()
+            {
+                Console.WriteLine("Creating a client over an SSL channel to Temporal Cloud...");
+
+                return TemporalClient.ConnectAsync(TemporalClientConfiguration.ForTemporalCloud(
+                                        "NAMESPACE",
+                                        @"PATH\NAME.crt.pem",
+                                        @"PATH\NAME.key.pem"
+                                        ));
+            }
+        }
+
         public async Task RunAsync()
         {
-            Console.WriteLine("Creating a client...");
-            ITemporalClient client = await TemporalClient.ConnectAsync(TemporalClientConfiguration.ForLocalHost());
+            ITemporalClient client = await CreateClient.LocalPlainAsync();
+            //ITemporalClient client = await CreateClient.LocalWithCustomCaAsync();
+            //ITemporalClient client = await CreateClient.LocalWithNoServerValidation();
+            //ITemporalClient client = await CreateClient.TemporalCloud();
 
             string demoWfId = "Demo Workflow XYZ / " + Format.AsReadablePreciseLocal(DateTimeOffset.Now);
 
