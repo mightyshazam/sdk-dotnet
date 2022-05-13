@@ -40,10 +40,10 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
       if: ${{ matrix.download }}
-    - name: Build Solution
-      run: dotnet build -f ${{ matrix.framework }} -c Release sdk-dotnet/Src/Temporal.Sdk.sln
+#    - name: Build Solution
+#      run: dotnet build -f ${{ matrix.framework }} -c Release sdk-dotnet/Src/Temporal.Sdk.sln
     - name: Test with dotnet
-      run: dotnet test --logger trx --results-directory sdk-dotnet\Src\Temporal.Sdk.sln "TestResults-${{ matrix.dotnet-version }}"  
+      run: dotnet test --logger trx --results-directory sdk-dotnet/Src/Temporal.Sdk.sln "TestResults-${{ matrix.dotnet-version }}"  
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v3
       with:
