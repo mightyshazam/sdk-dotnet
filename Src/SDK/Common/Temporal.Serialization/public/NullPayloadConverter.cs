@@ -22,11 +22,11 @@ namespace Temporal.Serialization
             item = default(T);
 
             // Check: `Payloads` have exactly one entry:
-            if (SerializationUtil.GetPayloadCount(serializedData, out IReadOnlyList<Payload> payloadList) == 1)
+            if (SerializationUtil.TryGetSinglePayload(serializedData, out Payload serializedItem))
             {
                 // Check: `T` is nullable AND the payloads entry has the matching encoding key in the metadata:
                 if (item == null
-                        && payloadList[0].Metadata.TryGetValue(PayloadConverter.PayloadMetadataEncodingKey, out ByteString encodingBytes)
+                        && serializedItem.Metadata.TryGetValue(PayloadConverter.PayloadMetadataEncodingKey, out ByteString encodingBytes)
                         && PayloadMetadataEncodingValueBytes.Equals(encodingBytes))
                 {
                     return true;

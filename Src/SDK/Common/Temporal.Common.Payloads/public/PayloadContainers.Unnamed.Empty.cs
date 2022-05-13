@@ -11,12 +11,8 @@ namespace Temporal.Common.Payloads
             /// <summary>
             /// <c>PayloadContainers.IUnnamed</c> implementation that contains no items.
             /// </summary>
-            public class Empty : PayloadContainers.IUnnamed, IPayload
+            public struct Empty : PayloadContainers.IUnnamed, IPayload
             {
-                public Empty()
-                {
-                }
-
                 public int Count
                 {
                     get { return 0; }

@@ -45,6 +45,18 @@ namespace Temporal.Serialization
             serializedDataAccumulator.Payloads_.Add(serializedItemData);
         }
 
+        public static bool TryGetSinglePayload(Payloads payloadsContainer, out Payload payloadItem)
+        {
+            if (GetPayloadCount(payloadsContainer, out IReadOnlyList<Payload> payloadList) == 1)
+            {
+                payloadItem = payloadList[0];
+                return true;
+            }
+
+            payloadItem = null;
+            return false;
+        }
+
         public static int GetPayloadCount(Payloads payloads)
         {
             return GetPayloadCount(payloads, out RepeatedField<Payload> _);

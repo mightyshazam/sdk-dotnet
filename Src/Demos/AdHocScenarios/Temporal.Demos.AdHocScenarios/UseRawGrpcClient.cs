@@ -405,7 +405,7 @@ namespace Temporal.Demos.AdHocScenarios
                 WorkflowId = "Some-Workflow-Id",
                 WorkflowType = new WorkflowType()
                 {
-                    Name = "Some-Workflow-Id",
+                    Name = "Some-Workflow-Name",
                 },
                 TaskQueue = new TaskQueue()
                 {

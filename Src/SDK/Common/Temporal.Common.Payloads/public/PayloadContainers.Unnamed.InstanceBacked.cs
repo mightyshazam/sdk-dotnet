@@ -35,7 +35,7 @@ namespace Temporal.Common.Payloads
                         return _values[index].Cast<T, TVal>();
                     }
 
-                    throw CreateNoSuchIndexException(index, Count);
+                    throw PayloadContainers.Util.CreateNoSuchIndexException(index, Count, this);
                 }
 
                 public bool TryGetValue<TVal>(int index, out TVal value)
@@ -45,7 +45,7 @@ namespace Temporal.Common.Payloads
                         return _values[index].TryCast<T, TVal>(out value);
                     }
 
-                    throw CreateNoSuchIndexException(index, Count);
+                    throw PayloadContainers.Util.CreateNoSuchIndexException(index, Count, this);
                 }
 
                 public Type GetValueType(int index)
@@ -55,17 +55,16 @@ namespace Temporal.Common.Payloads
                         return _values[index].TypeOf();
                     }
 
-                    throw CreateNoSuchIndexException(index, Count);
+                    throw PayloadContainers.Util.CreateNoSuchIndexException(index, Count, this);
                 }
 
                 public IEnumerable<PayloadContainers.UnnamedEntry> Values
                 {
                     get
                     {
-                        int i = 0;
-                        foreach (T value in _values)
+                        for (int i = 0; i < Count; i++)
                         {
-                            yield return new PayloadContainers.UnnamedEntry(i++, this);
+                            yield return new PayloadContainers.UnnamedEntry(i, this);
                         }
                     }
                 }
@@ -89,26 +88,8 @@ namespace Temporal.Common.Payloads
                             return new PayloadContainers.UnnamedEntry(index, this);
                         }
 
-                        throw CreateNoSuchIndexException(index, Count);
+                        throw PayloadContainers.Util.CreateNoSuchIndexException(index, Count, this);
                     }
-                }
-
-                private static ArgumentException CreateNoSuchIndexException(int index, int containerItemCount)
-                {
-                    if (index < 0)
-                    {
-                        return new ArgumentOutOfRangeException(nameof(index), $"The value of {nameof(index)} may not be negative,"
-                                                                            + $" but `{index}` was specified.");
-                    }
-
-                    if (index >= containerItemCount)
-                    {
-                        return new ArgumentOutOfRangeException(nameof(index),
-                                                               $"This {nameof(PayloadContainers.IUnnamed)} includes"
-                                                             + $" {containerItemCount} items, but the {nameof(index)}=`{index}` was specified.");
-                    }
-
-                    return new ArgumentException(message: $"Invalid value of {nameof(index)}: {index}.", paramName: nameof(index));
                 }
             }
         }

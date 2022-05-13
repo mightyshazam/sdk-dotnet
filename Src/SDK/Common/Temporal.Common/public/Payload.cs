@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Temporal.Util;
 
 using Temporal.Common.Payloads;
+using System.Runtime.InteropServices;
+using System.Collections;
 
 namespace Temporal.Common
 {
@@ -59,5 +61,59 @@ namespace Temporal.Common
         }
 
         #endregion Unnamed(..)
+
+
+        #region Enumerable(..)
+
+        public static PayloadContainers.Enumerable Enumerable(IEnumerable enumerable)
+        {
+            return (enumerable is PayloadContainers.Enumerable alreadyWrapped)
+                        ? alreadyWrapped
+                        : new PayloadContainers.Enumerable(enumerable);
+        }
+
+        public static PayloadContainers.Enumerable<TElem> Enumerable<TElem>(IEnumerable<TElem> enumerable)
+        {
+            return (enumerable is PayloadContainers.Enumerable<TElem> alreadyWrapped)
+                        ? alreadyWrapped
+                        : new PayloadContainers.Enumerable<TElem>(enumerable);
+        }
+
+        #endregion Enumerable(..)
+
+
+        #region Raw(..)
+
+        public static Google.Protobuf.ByteString Raw(byte[] data)
+        {
+            return (data == null) ? null : Google.Protobuf.ByteString.CopyFrom(data);
+        }
+
+        public static Google.Protobuf.ByteString Raw(ArraySegment<byte> data)
+        {
+            return Raw(data.Array, data.Offset, data.Count);
+        }
+
+        public static Google.Protobuf.ByteString Raw(byte[] data, int index, int count)
+        {
+            return (data == null)
+                        ? null
+                        : Google.Protobuf.ByteString.CopyFrom(data, index, count);
+        }
+
+#if NETCOREAPP3_1_OR_GREATER
+        public static Google.Protobuf.ByteString Raw(ReadOnlySpan<byte> data)
+        {
+            return Google.Protobuf.ByteString.CopyFrom(data);
+        }
+
+        public static Google.Protobuf.ByteString Raw<T>(ReadOnlySpan<T> data) where T : struct
+        {
+            ReadOnlySpan<byte> byteData = MemoryMarshal.AsBytes(data);
+            return Raw(byteData);
+        }
+#endif
+
+        #endregion Raw(..)
     }
 }

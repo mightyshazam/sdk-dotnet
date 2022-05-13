@@ -1,20 +1,24 @@
 ﻿using System;
 using Temporal.Util;
-using Temporal.Api.Common.V1;
 using Temporal.Common.Payloads;
+using System.Collections;
+using Temporal.Common;
+
+using SerializedPayloads = Temporal.Api.Common.V1.Payloads;
+using System.Linq;
 
 namespace Temporal.Serialization
 {
     public sealed class UnnamedContainerPayloadConverter : DelegatingPayloadConverterBase
     {
-        public override bool TrySerialize<T>(T item, Payloads serializedDataAccumulator)
+        public override bool TrySerialize<T>(T item, SerializedPayloads serializedDataAccumulator)
         {
             if (item == null)
             {
                 return false;
             }
 
-            // If `item` is a paylload container backed by serialized data AND its converter is the hame used here
+            // If `item` is a payload container backed by serialized data AND its converter is the hame used here
             //  => use the serialized data directly, whtout round-triping it.
 
             if (item is PayloadContainers.Unnamed.SerializedDataBacked serializedDataBackedItemsContainer
@@ -41,7 +45,26 @@ namespace Temporal.Serialization
                 {
                     try
                     {
-                        PayloadConverter.Serialize(DelegateConvertersContainer, itemsContainer.GetValue<object>(i), serializedDataAccumulator);
+                        object contVal = itemsContainer.GetValue<object>(i);
+
+                        if (PayloadConverter.IsNormalEnumerable(contVal, out IEnumerable enumblVal))
+                        {
+                            PayloadConverter.Serialize(DelegateConvertersContainer,
+                                                       Payload.Enumerable(enumblVal),
+                                                       serializedDataAccumulator);
+                        }
+                        else if (contVal is PayloadContainers.IUnnamed subCont)
+                        {
+                            PayloadConverter.Serialize(DelegateConvertersContainer,
+                                                       new PayloadContainers.Unnamed.ValuesSerializationContainer(subCont),
+                                                       serializedDataAccumulator);
+                        }
+                        else
+                        {
+                            PayloadConverter.Serialize(DelegateConvertersContainer,
+                                                       contVal,
+                                                       serializedDataAccumulator);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -60,7 +83,7 @@ namespace Temporal.Serialization
             return false;
         }
 
-        public override bool TryDeserialize<T>(Payloads serializedData, out T deserializedItem)
+        public override bool TryDeserialize<T>(SerializedPayloads serializedData, out T deserializedItem)
         {
             Validate.NotNull(serializedData);
 
