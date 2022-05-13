@@ -18,7 +18,7 @@ jobs:
         - windows-latest
 #        - windows-latest
         dotnet-version:
-        - '3.1.x'
+#        - '3.1.x'
         - '6.0.x'
         - '4.6.2'
         include:
@@ -65,27 +65,16 @@ jobs:
       with:
         repository: temporalio/api
         path: api
-#    - name: Setup MSBuild (Net Framework)
-#      uses: microsoft/setup-msbuild@v1.0.2
-#    - name: Setup NuGet (Net Framework)
-#      uses: NuGet/setup-nuget@v1.0.2
-#    - name: Setup VSTest Path
-#      uses: darenm/Setup-VSTest@v1
-#    - name: Restore Packages (Net Framework)
-#      run: nuget restore sdk-dotnet\Src\Temporal.Sdk.sln
-#    - name: Msbuild Restore
-#      run: msbuild.exe /t:Restore /p:configuration="Release" sdk-dotnet\Src\Temporal.Sdk.sln
     - name: Build Solution (Net Framework)
       run: |
         dotnet build -c Release -f net462 sdk-dotnet\Src\Temporal.Sdk.sln
     - name: VSTest
-#      run: vstest.console.exe _build\bin\Release-AnyCPU\Tests\Temporal.Sdk.Common.Tests\net462\Temporal.Sdk.Common.Tests.dll /logger:trx;LogFileName=TestResults-net462.trx
       run: |
         dotnet test _build\bin\Release-AnyCPU\Tests\Temporal.Sdk.Common.Tests\net462\Temporal.Sdk.Common.Tests.dll --logger "trx;logfilename=TestResults-net462.trx"
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v3
       with:
         name: dotnet-results-net462
-        path: sdk-dotnet\TestResults\TestResults-net462.trx
+        path: sdk-dotnet/TestResults/TestResults-net462.trx
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
