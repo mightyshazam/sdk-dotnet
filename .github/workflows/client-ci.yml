@@ -47,17 +47,15 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
       if: ${{ matrix.download }}
-#    - name: Build Solution
-#      run: dotnet build -f ${{ matrix.framework }} -c Release sdk-dotnet/Src/Temporal.Sdk.sln
     - name: Test with dotnet
       run: dotnet test -f ${{ matrix.framework }} -c Release --logger trx --results-directory "TestResults-${{ matrix.dotnet-version }}" sdk-dotnet/Src/Temporal.Sdk.sln
-    - name: Test Reporter
-      uses: dorny/test-reporter@v1.5.0
-      with:
-        name: dotnet-results-${{ matrix.dotnet-version }}
-        path: 'TestResults-${{ matrix.dotnet-version }}/*.trx'
-        reporter: dotnet-trx
-      if: success() || failure()
+#    - name: Test Reporter
+#      uses: dorny/test-reporter@v1.5.0
+#      with:
+#        name: dotnet-results-${{ matrix.dotnet-version }}
+#        path: 'TestResults-${{ matrix.dotnet-version }}/*.trx'
+#        reporter: dotnet-trx
+#      if: success() || failure()
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v3
       with:
