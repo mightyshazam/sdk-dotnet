@@ -4,6 +4,7 @@ on:
     workflows: ['Client CI']                     # runs after CI workflow
     types:
       - completed
+    branches: ['main', 'master']
 jobs:
   report:
     runs-on: ubuntu-latest
