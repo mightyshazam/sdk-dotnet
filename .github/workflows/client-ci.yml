@@ -9,7 +9,7 @@ on:
     - LICENSE
 jobs:
   build-and-test-net-core:
-    name: build-and-test-${{matrix.os}}-${{ matrix.dotnet-version }}
+    name: BuildAndTest-${{matrix.os}}-${{ matrix.dotnet-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
@@ -33,7 +33,8 @@ jobs:
           framework: net462
           download: false
     steps:
-    - uses: actions/checkout@v3
+    - name: Clone this repo (sdk-dotnet)
+      uses: actions/checkout@v3
       with:
         path: sdk-dotnet
     - uses: actions/checkout@v3
@@ -46,19 +47,11 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
       if: ${{ matrix.download }}
     - name: Test with dotnet
-      run: dotnet test -f ${{ matrix.framework }} -c Release --filter "Category=Common|Category=Client" --logger "trx;LogFileName=client-${{ matrix.dotnet-version }}.trx" --results-directory sdk-dotnet/testresults sdk-dotnet/Src/Temporal.Sdk.sln
-#    - name: Test Reporter
-#      uses: dorny/test-reporter@v1.5.0
-#      with:
-#        name: dotnet-client-results-${{ matrix.dotnet-version }}
-#        path: '${{ matrix.dotnet-version }}.trx'
-#        working-directory: sdk-dotnet/testresults
-#        reporter: dotnet-trx
-#      if: success() || failure()
+      run: dotnet test -f ${{ matrix.framework }} -c Release --filter "Category=Common|Category=Client" --logger "trx;LogFileName=client-${{ matrix.dotnet-version }}.trx" --results-directory testresults sdk-dotnet/Src/Temporal.Sdk.sln
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v3
       with:
         name: dotnet-client-results-${{ matrix.dotnet-version }}
-        path: sdk-dotnet/testresults
+        path: testresults
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
