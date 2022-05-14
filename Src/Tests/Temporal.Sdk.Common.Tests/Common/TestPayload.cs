@@ -46,8 +46,7 @@ namespace Temporal.Sdk.Common.Tests
             AssertUnnamedCorrectness(length, payload);
         }
 
-        private static void AssertUnnamedCorrectness<T>(
-            int length,
+        private static void AssertUnnamedCorrectness<T>(int length,
             PayloadContainers.Unnamed.InstanceBacked<T> payload)
         {
             Assert.Equal(length, payload.Count);

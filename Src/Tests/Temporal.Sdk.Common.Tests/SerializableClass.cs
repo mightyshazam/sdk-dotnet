@@ -4,10 +4,7 @@ namespace Temporal.Common.Payloads
     {
         public static SerializableClass Default
         {
-            get
-            {
-                return new SerializableClass { Name = "Test", Value = 1 };
-            }
+            get { return new SerializableClass { Name = "Test", Value = 1 }; }
         }
 
         public string Name { get; set; }

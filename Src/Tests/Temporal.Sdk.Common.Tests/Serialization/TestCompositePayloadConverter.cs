@@ -6,6 +6,7 @@ using Xunit;
 
 namespace Temporal.Sdk.Common.Tests.Serialization
 {
+    // TODO: Add roundtrip tests for more types
     public class TestCompositePayloadConverter
     {
         [Fact]
@@ -33,15 +34,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Fact]
         public void Test_CompositePayloadConverter_Unnamed_Roundtrip()
         {
-            UnnamedContainerPayloadConverter unnamed = new UnnamedContainerPayloadConverter();
-            unnamed.InitDelegates(new[] { new JsonPayloadConverter() });
-            CompositePayloadConverter instance = new CompositePayloadConverter(new IPayloadConverter[]
-            {
-                new VoidPayloadConverter(),
-                new NullPayloadConverter(),
-                new UnnamedContainerPayloadConverter(),
-                new JsonPayloadConverter(),
-            });
+            CompositePayloadConverter instance = new CompositePayloadConverter();
             Payloads p = new Payloads();
             PayloadContainers.Unnamed.InstanceBacked<string> data = new PayloadContainers.Unnamed.InstanceBacked<string>(new[] { "hello" });
             Assert.True(instance.TrySerialize(data, p));
@@ -50,17 +43,6 @@ namespace Temporal.Sdk.Common.Tests.Serialization
             Assert.NotEmpty(cl);
             Assert.True(cl.TryGetValue(0, out string val));
             Assert.Equal("hello", val);
-        }
-
-        [Fact]
-        public void Test_CompositePayloadConverter_Catchall_Roundtrip()
-        {
-            CompositePayloadConverter converter = new CompositePayloadConverter();
-            Payloads p = new Payloads();
-            Assert.True(converter.TrySerialize(new IPayload.Void(), p));
-            Assert.Empty(p.Payloads_);
-            Assert.True(converter.TryDeserialize(p, out IPayload.Void item));
-            Assert.NotNull(item);
         }
     }
 }
