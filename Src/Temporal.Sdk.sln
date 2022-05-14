@@ -56,7 +56,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Managed-Src", "Managed-Src"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{358405B5-48F0-4CFF-8634-4FB0424EBCF5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkflowClient.UsageSamples", "Samples\WorkflowClient.UsageSamples\Temporal.Sdk.WorkflowClient.UsageSamples.csproj", "{1D783A90-4558-420E-BE15-7B4A8567DF14}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Temporal.Sdk.WorkflowClient.UsageSamples", "Samples\WorkflowClient.UsageSamples\Temporal.Sdk.WorkflowClient.UsageSamples.csproj", "{1D783A90-4558-420E-BE15-7B4A8567DF14}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{95CBC63E-CFB0-4AE1-AAB7-440E68DBFA2E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SDK", "SDK", "{723CF6E1-998A-4A83-8331-67028EAF0083}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Temporal.Sdk.WorkflowClient.Test.Integration", "Test\SDK\WorkflowClient\Temporal.Sdk.WorkflowClient.Test.Integration.csproj", "{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{AE43949A-DDBC-463B-81EE-A48424E96AB4}"
+	ProjectSection(SolutionItems) = preProject
+		Test\Directory.Build.props = Test\Directory.Build.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -84,6 +95,10 @@ Global
 		{1D783A90-4558-420E-BE15-7B4A8567DF14}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D783A90-4558-420E-BE15-7B4A8567DF14}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D783A90-4558-420E-BE15-7B4A8567DF14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -99,6 +114,9 @@ Global
 		{E3E0E0E6-1584-4548-99A8-36EB2AF2D734} = {FF933DEC-86A3-4061-B431-623D75560363}
 		{D5032D09-C116-4821-A17F-48A877FD2DF6} = {E3E0E0E6-1584-4548-99A8-36EB2AF2D734}
 		{1D783A90-4558-420E-BE15-7B4A8567DF14} = {358405B5-48F0-4CFF-8634-4FB0424EBCF5}
+		{723CF6E1-998A-4A83-8331-67028EAF0083} = {95CBC63E-CFB0-4AE1-AAB7-440E68DBFA2E}
+		{88B8C081-09B2-4491-ACB8-A3FE325CFFBD} = {723CF6E1-998A-4A83-8331-67028EAF0083}
+		{AE43949A-DDBC-463B-81EE-A48424E96AB4} = {FF933DEC-86A3-4061-B431-623D75560363}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E8142887-814F-45CE-9A2D-B4F6E5B752A8}
