@@ -28,12 +28,13 @@ namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
 
             ITemporalClient client = await TemporalClient.ConnectAsync(TemporalClientConfiguration.ForLocalHost());
 
-            string demoWfId = $"{nameof(SimpleClientInvocationsE2ETest)} / " + Format.AsReadablePreciseLocal(DateTimeOffset.Now);
+            string demoWfId = TestCaseContextMonikers.ForWorkflowId(this);
+            string demoTastQueue = TestCaseContextMonikers.ForTaskQueue(this);
 
             CoutWriteLine("Starting a workflow...");
             IWorkflowHandle workflow = await client.StartWorkflowAsync(demoWfId,
                                                                       "DemoWorkflowTypeName",
-                                                                      "DemoTaskQueue");
+                                                                      demoTastQueue);
             CoutWriteLine("Started. Info:");
             CoutWriteLine($"    Namespace:       {workflow.Namespace}");
             CoutWriteLine($"    WorkflowId:      {workflow.WorkflowId}");
@@ -46,7 +47,7 @@ namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
 
             try
             {
-                await client.StartWorkflowAsync(demoWfId, "DemoWorkflowTypeName", "DemoTaskQueue");
+                await client.StartWorkflowAsync(demoWfId, "DemoWorkflowTypeName", demoTastQueue);
 
                 throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
             }

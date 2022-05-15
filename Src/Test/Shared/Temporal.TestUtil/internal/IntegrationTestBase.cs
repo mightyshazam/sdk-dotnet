@@ -12,6 +12,8 @@ namespace Temporal.TestUtil
         private readonly bool _redirectServerOutToCout;
         private ITemporalTestServerController _testServer = null;
 
+        private readonly TestCaseContextMonikers _testCaseContextMonikers;
+
         public IntegrationTestBase(ITestOutputHelper cout)
             : this(cout, RedirectServerOutToCoutDefault)
         {
@@ -21,11 +23,17 @@ namespace Temporal.TestUtil
             : base(cout)
         {
             _redirectServerOutToCout = redirectServerOutToCout;
+            _testCaseContextMonikers = new TestCaseContextMonikers(System.DateTimeOffset.Now);
         }
 
         internal virtual ITemporalTestServerController TestServer
         {
             get { return _testServer; }
+        }
+
+        internal virtual TestCaseContextMonikers TestCaseContextMonikers
+        {
+            get { return _testCaseContextMonikers; }
         }
 
         public override async Task InitializeAsync()

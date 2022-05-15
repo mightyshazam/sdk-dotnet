@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using Temporal.Util;
@@ -25,6 +27,24 @@ namespace Temporal.TestUtil
         public Task StartAsync()
         {
             EnsureRunningWindows();
+
+            const int TemporalServicePort = 7233;
+            if (IsPortInUse(TemporalServicePort))
+            {
+                CoutWriteLine();
+                CoutWriteLine($"WARNING!   Something is already listening on local port {TemporalServicePort}."
+                            + $" We will not be able to start TemporalLite."
+                            + Environment.NewLine
+                            + CoutPrefix("WARNING!   However, this is most likely some kind of Temporal server,"
+                                       + " so we will not abort based on this.")
+                            + Environment.NewLine
+                            + CoutPrefix("WARNING!   Take notice of this, as it may affect any test in an unpredictable manner.")
+                            + Environment.NewLine
+                            + CoutPrefix("WARNING!   You may not be running with a test-dedicated TemporalLite instance!"));
+                CoutWriteLine();
+
+                return Task.CompletedTask;
+            }
 
             string temporalLiteExePath = GetTemporalLiteExePath();
             if (!File.Exists(temporalLiteExePath))
@@ -206,6 +226,11 @@ namespace Temporal.TestUtil
             ShutdownAsync().GetAwaiter().GetResult();
         }
 
+        private static string CoutPrefix(string text)
+        {
+            return (text == null) ? text : ("[TmprlLt Ctrl] " + text);
+        }
+
         private void CoutWriteLine(string text = null)
         {
             if (text == null)
@@ -214,8 +239,26 @@ namespace Temporal.TestUtil
             }
             else
             {
-                _cout.WriteLine("[TmprlLt Ctrl] " + text);
+                _cout.WriteLine(CoutPrefix(text));
             }
+        }
+
+        private static bool IsPortInUse(int port)
+
+        {
+            IPGlobalProperties ipProperties = IPGlobalProperties.GetIPGlobalProperties();
+            IPEndPoint[] ipEndPoints = ipProperties.GetActiveTcpListeners();
+
+            foreach (IPEndPoint endPoint in ipEndPoints)
+            {
+                if (endPoint.Port == port)
+                {
+                    return true;
+
+                }
+            }
+
+            return false;
         }
     }
 }

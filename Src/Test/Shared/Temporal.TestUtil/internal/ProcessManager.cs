@@ -76,6 +76,9 @@ namespace Temporal.TestUtil
             proc.BeginOutputReadLine();
             proc.BeginErrorReadLine();
 
+            cout?.WriteLine($"[ProcMan] Proc `{proc.Id}` started (TS: {Format.AsReadablePreciseLocal(DateTimeOffset.Now)})."
+                          + $" Startup took {(Environment.TickCount - startMillis)} msec so far.");
+
             if (initSignal != null)
             {
                 cout?.WriteLine($"[ProcMan] Waiting until init-completed-marker is encountered in the proc output"
@@ -100,7 +103,7 @@ namespace Temporal.TestUtil
             }
 
             int elapsedMillis = Environment.TickCount - startMillis;
-            cout?.WriteLine($"[ProcMan] Startup took {elapsedMillis} msec.");
+            cout?.WriteLine($"[ProcMan] Startup & initialization of proc `{proc.Id}` took {elapsedMillis} msec.");
 
             return procMan;
         }
@@ -174,7 +177,7 @@ namespace Temporal.TestUtil
             _process.StandardInput.Flush();
             _process.StandardInput.Close();
 
-            _cout?.WriteLine($"[ProcMan] Sent Ctrl-C to proc {_process.Id} (isSucc={isSucc}).");
+            _cout?.WriteLine($"[ProcMan] Sent Ctrl-C to proc `{_process.Id}` (isSucc={isSucc}).");
         }
 
         public bool SendCtrlCAndWaitForExit(int timeout = Timeout.Infinite)
