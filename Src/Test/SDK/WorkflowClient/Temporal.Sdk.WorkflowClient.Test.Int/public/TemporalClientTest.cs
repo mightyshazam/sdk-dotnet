@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Temporal.Sdk.WorkflowClient.Test.Integration
+using Temporal.TestUtil;
+
+namespace Temporal.Sdk.WorkflowClient.Test.Int
 {
     public class TemporalClientTest : IntegrationTestBase
     {
@@ -41,7 +43,7 @@ namespace Temporal.Sdk.WorkflowClient.Test.Integration
         public async Task StartWorkflowAsync_WithWfArgs()
         {
             await Task.Delay(1);
-            Cout.WriteLine("Current dir:" + Environment.CurrentDirectory);
+            Cout.WriteLine("Current dir xxx:" + Environment.CurrentDirectory);
         }
 
     }

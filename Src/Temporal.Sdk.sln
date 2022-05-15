@@ -62,7 +62,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{95CBC63E-C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SDK", "SDK", "{723CF6E1-998A-4A83-8331-67028EAF0083}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Temporal.Sdk.WorkflowClient.Test.Integration", "Test\SDK\WorkflowClient\Temporal.Sdk.WorkflowClient.Test.Integration.csproj", "{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Temporal.Sdk.WorkflowClient.Test.Int", "Test\SDK\WorkflowClient\Temporal.Sdk.WorkflowClient.Test.Int.csproj", "{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{AE43949A-DDBC-463B-81EE-A48424E96AB4}"
 	ProjectSection(SolutionItems) = preProject

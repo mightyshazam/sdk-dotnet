@@ -11,6 +11,7 @@ namespace Temporal.TestUtil
     {
         private readonly ITestOutputHelper _cout;
         private volatile int _isDisposed = 0;
+        private string _coutWriteLineMoniker = null;
 
         /// <summary>Prevents subclasses from not passing the required parameters by making the default ctor private.</summary>
         private TestBase()
@@ -21,11 +22,39 @@ namespace Temporal.TestUtil
         {
             Validate.NotNull(cout);
             _cout = cout;
+
+            CoutWriteLine($"{this.GetType().Name}: {RuntimeEnvironmentInfo.SingletonInstance}");
         }
 
         public virtual ITestOutputHelper Cout
         {
             get { return _cout; }
+        }
+
+        public string CoutWriteLineMoniker
+        {
+            get { return _coutWriteLineMoniker; }
+            set { _coutWriteLineMoniker = value; }
+        }
+
+        public virtual void CoutWriteLine(string text = null)
+        {
+            if (text == null)
+            {
+                _cout.WriteLine(String.Empty);
+            }
+            else
+            {
+                string coutWriteLineMoniker = _coutWriteLineMoniker;
+                if (coutWriteLineMoniker == null)
+                {
+                    _cout.WriteLine(text);
+                }
+                else
+                {
+                    _cout.WriteLine('[' + coutWriteLineMoniker + ']' + text);
+                }
+            }
         }
 
         public virtual Task InitializeAsync()

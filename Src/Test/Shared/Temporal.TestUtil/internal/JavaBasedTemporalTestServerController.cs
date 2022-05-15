@@ -1,18 +1,18 @@
-using System.Threading;
+using System;
 using System.Threading.Tasks;
 
 namespace Temporal.TestUtil
 {
     internal class JavaBasedTemporalTestServerController : ITemporalTestServerController
     {
-        public Task StartAsync(CancellationToken cancelToken = default)
+        public Task StartAsync()
         {
-            return null;
+            throw new NotImplementedException($"{nameof(JavaBasedTemporalTestServerController)} is not implemented.");
         }
 
-        public Task ShutdownAsync(CancellationToken cancelToken = default)
+        public Task ShutdownAsync()
         {
-            return null;
+            throw new NotImplementedException($"{nameof(JavaBasedTemporalTestServerController)} is not implemented.");
         }
     }
 }

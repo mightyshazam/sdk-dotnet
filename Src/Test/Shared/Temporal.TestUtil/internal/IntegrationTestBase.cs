@@ -3,17 +3,24 @@ using System.Threading.Tasks;
 
 using Xunit.Abstractions;
 
-using Temporal.TestUtil;
-
-namespace Temporal.Sdk.WorkflowClient.Test.Integration
+namespace Temporal.TestUtil
 {
     public class IntegrationTestBase : TestBase
     {
+        private const bool RedirectServerOutToCoutDefault = false;
+
+        private readonly bool _redirectServerOutToCout;
         private ITemporalTestServerController _testServer = null;
 
         public IntegrationTestBase(ITestOutputHelper cout)
+            : this(cout, RedirectServerOutToCoutDefault)
+        {
+        }
+
+        public IntegrationTestBase(ITestOutputHelper cout, bool redirectServerOutToCout)
             : base(cout)
         {
+            _redirectServerOutToCout = redirectServerOutToCout;
         }
 
         internal virtual ITemporalTestServerController TestServer
@@ -28,8 +35,8 @@ namespace Temporal.Sdk.WorkflowClient.Test.Integration
             // In the future, when we will have other test servers (docker base, remote, ...), we will use some sort of
             // configuration mechanism to decide on the implementation chosen.
 
-            ITemporalTestServerController testServer = new JavaBasedTemporalTestServerController();
-            await testServer.StartAsync();
+            _testServer = new TemporalLiteExeTestServerController(Cout, _redirectServerOutToCout);
+            await _testServer.StartAsync();
         }
 
         public override async Task DisposeAsync()
