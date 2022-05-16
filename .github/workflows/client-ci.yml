@@ -37,7 +37,8 @@ jobs:
       uses: actions/checkout@v3
       with:
         path: sdk-dotnet
-    - uses: actions/checkout@v3
+    - name: "Clone the temporalio/api repo"
+      uses: actions/checkout@v3
       with:
         repository: temporalio/api
         path: api
@@ -47,11 +48,11 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
       if: ${{ matrix.download }}
     - name: Test with dotnet
-      run: dotnet test -f ${{ matrix.framework }} -c Release --filter "Category=Common|Category=Client" --logger "trx;LogFileName=client-${{ matrix.dotnet-version }}.trx" --results-directory testresults sdk-dotnet/Src/Temporal.Sdk.sln
+      run: dotnet test -f ${{ matrix.framework }} -c Release --filter "Category=Common|Category=Client" --logger "trx;LogFileName=client-${{ matrix.dotnet-version }}.trx" --results-directory _testresults sdk-dotnet/Src/Temporal.Sdk.sln
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v3
       with:
         name: dotnet-client-results-${{ matrix.dotnet-version }}
-        path: testresults
+        path: _testresults
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
