@@ -10,12 +10,14 @@ namespace Temporal.Sdk.Common.Tests
     public class TestPayload
     {
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_Payload_Unnamed_With_Null_Argument()
         {
             Assert.Throws<ArgumentNullException>(() => Payload.Unnamed(null));
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_Payload_Unnamed_With_Variadic_Arguments()
         {
             PayloadContainers.Unnamed.InstanceBacked<object> payload = Payload.Unnamed(new object(), new object());
@@ -23,6 +25,7 @@ namespace Temporal.Sdk.Common.Tests
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_Payload_Unnamed_With_Array_Arguments()
         {
             PayloadContainers.Unnamed.InstanceBacked<int> payload = Payload.Unnamed(new[] { 1, 2, 3 });
@@ -39,6 +42,7 @@ namespace Temporal.Sdk.Common.Tests
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_Payload_Unnamed_With_Enumerable_Arguments()
         {
             int length = 10;
@@ -47,6 +51,7 @@ namespace Temporal.Sdk.Common.Tests
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_Payload_Unnamed_With_List_Arguments()
         {
             int length = 10;

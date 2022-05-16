@@ -10,6 +10,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
     public class TestCompositePayloadConverter
     {
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_CompositePayloadConverter_Void_Roundtrip()
         {
             CompositePayloadConverter converter = new CompositePayloadConverter();
@@ -21,6 +22,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_CompositePayloadConverter_Null_Roundtrip()
         {
             CompositePayloadConverter converter = new CompositePayloadConverter();
@@ -32,6 +34,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_CompositePayloadConverter_Unnamed_Roundtrip()
         {
             CompositePayloadConverter instance = new CompositePayloadConverter();
@@ -43,6 +46,17 @@ namespace Temporal.Sdk.Common.Tests.Serialization
             Assert.NotEmpty(cl);
             Assert.True(cl.TryGetValue(0, out string val));
             Assert.Equal("hello", val);
+        }
+
+        [Fact]
+        public void Test_CompositePayloadConverter_Catchall_Roundtrip()
+        {
+            CompositePayloadConverter converter = new CompositePayloadConverter();
+            Payloads p = new Payloads();
+            Assert.True(converter.TrySerialize(new IPayload.Void(), p));
+            Assert.Empty(p.Payloads_);
+            Assert.True(converter.TryDeserialize(p, out IPayload.Void item));
+            Assert.NotNull(item);
         }
     }
 }

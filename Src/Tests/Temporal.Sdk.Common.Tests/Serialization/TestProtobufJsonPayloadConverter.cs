@@ -21,6 +21,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_ProtobufPayloadConverter_POCO_Roundtrip_Failure()
         {
             ProtobufJsonPayloadConverter instance = new();

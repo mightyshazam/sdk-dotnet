@@ -9,6 +9,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
     public class TestNullPayloadConverter
     {
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_NullPayloadConverter_TryDeserialize_Nullable_Type()
         {
             ByteString bs = null;
@@ -24,6 +25,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_NullPayloadConverter_TryDeserialize_Nonnullable_Type()
         {
             NullPayloadConverter instance = new NullPayloadConverter();
@@ -32,6 +34,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_NullPayloadConverter_TryDeserialize_MultiplePayloads()
         {
             NullPayloadConverter instance = new NullPayloadConverter();
@@ -41,6 +44,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_NullPayloadConverter_TryDeserialize_NoPayload()
         {
             NullPayloadConverter instance = new NullPayloadConverter();
@@ -48,6 +52,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_NullPayloadConverter_TrySerialize_Null()
         {
             NullPayloadConverter instance = new NullPayloadConverter();
@@ -66,6 +71,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_NullPayloadConverter_TrySerialize_ValueType_Null()
         {
             NullPayloadConverter instance = new NullPayloadConverter();
@@ -75,6 +81,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_NullPayloadConverter_TrySerialize_Not_Null()
         {
             NullPayloadConverter instance = new NullPayloadConverter();

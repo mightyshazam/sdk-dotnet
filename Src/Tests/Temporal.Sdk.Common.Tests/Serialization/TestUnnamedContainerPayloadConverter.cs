@@ -9,6 +9,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
     public class TestUnnamedContainerPayloadConverter
     {
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_String()
         {
             UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
@@ -18,6 +19,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Null()
         {
             UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
@@ -27,6 +29,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_SerializedDataBacked()
         {
             UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
@@ -46,6 +49,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_InstanceBacked()
         {
             void AssertDeserialization<T>(IPayloadConverter i, Payloads p)
@@ -68,6 +72,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_Empty()
         {
             UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
