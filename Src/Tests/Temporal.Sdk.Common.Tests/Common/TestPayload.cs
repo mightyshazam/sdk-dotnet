@@ -30,6 +30,15 @@ namespace Temporal.Sdk.Common.Tests
         }
 
         [Fact]
+        public void Test_Payload_Unnamed_With_Array_Type()
+        {
+            PayloadContainers.Unnamed.InstanceBacked<int[]> payload = Payload.Unnamed<int[]>(new[] { 1, 2, 3 });
+            AssertUnnamedCorrectness(1, payload);
+            int[] value = payload.GetValue<int[]>(0);
+            Assert.Equal(3, value.Length);
+        }
+
+        [Fact]
         public void Test_Payload_Unnamed_With_Enumerable_Arguments()
         {
             int length = 10;

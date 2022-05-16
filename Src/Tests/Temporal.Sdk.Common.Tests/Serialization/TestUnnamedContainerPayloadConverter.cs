@@ -30,7 +30,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_SerializedDataBacked()
         {
             UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
-            instance.InitDelegates(new[] { new JsonPayloadConverter() });
+            instance.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
             Payloads p = new Payloads();
             NewtonsoftJsonPayloadConverter converter = new NewtonsoftJsonPayloadConverter();
             converter.Serialize(new SerializableClass { Name = "test", Value = 2 }, p);
@@ -48,7 +48,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_InstanceBacked()
         {
             UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
-            instance.InitDelegates(new[] { new JsonPayloadConverter() });
+            instance.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
             Payloads p = new Payloads();
             PayloadContainers.Unnamed.InstanceBacked<string> data = new PayloadContainers.Unnamed.InstanceBacked<string>(new[] { "hello" });
             Assert.True(instance.TrySerialize(data, p));
@@ -64,7 +64,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_Empty()
         {
             UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
-            instance.InitDelegates(new[] { new JsonPayloadConverter() });
+            instance.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
             Payloads p = new Payloads();
             PayloadContainers.Unnamed.Empty data = new PayloadContainers.Unnamed.Empty();
             Assert.True(instance.TrySerialize(data, p));
