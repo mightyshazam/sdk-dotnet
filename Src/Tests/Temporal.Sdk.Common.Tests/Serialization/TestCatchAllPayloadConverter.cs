@@ -9,6 +9,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
     public class TestNewtonsoftJsonPayloadConverter
     {
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_TestNewtonsoftJsonPayloadConverter_ValueType_Roundtrip()
         {
             NewtonsoftJsonPayloadConverter instance = new();
@@ -19,6 +20,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_TestNewtonsoftJsonPayloadConverter_ReferenceType_Roundtrip()
         {
             const string Expected = "hello";
@@ -31,6 +33,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_TestNewtonsoftJsonPayloadConverter_ComplexReference_Roundtrip()
         {
             SerializableClass expected = SerializableClass.Default;
@@ -44,6 +47,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_TestNewtonsoftJsonPayloadConverter_Array_Roundtrip()
         {
             string[] expected = { "hello", "goodbye" };

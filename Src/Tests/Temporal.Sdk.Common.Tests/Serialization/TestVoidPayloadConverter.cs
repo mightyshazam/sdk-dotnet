@@ -10,6 +10,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
     public class TestVoidPayloadConverter
     {
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_VoidPayloadConverter_Empty_Payload()
         {
             VoidPayloadConverter converter = new VoidPayloadConverter();
@@ -18,6 +19,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_VoidPayloadConverter_Nonempty_Payload()
         {
             VoidPayloadConverter converter = new VoidPayloadConverter();
@@ -30,6 +32,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_VoidPayloadConverter_Roundtrip()
         {
             VoidPayloadConverter converter = new VoidPayloadConverter();

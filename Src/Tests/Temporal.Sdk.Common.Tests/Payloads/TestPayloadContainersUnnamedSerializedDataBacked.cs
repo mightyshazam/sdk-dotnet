@@ -16,6 +16,7 @@ namespace Temporal.Sdk.Common.Tests
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_Payload_Containers_Unnamed_Instance_Backed_Type_Conversion()
         {
             ConvertedClass defaultValue = ConvertedClass.Default;
