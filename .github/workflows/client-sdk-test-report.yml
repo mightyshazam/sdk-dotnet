@@ -1,7 +1,7 @@
-name: 'Client Test Report'
+name: 'Client SDK Test Report'
 on:
   workflow_run:
-    workflows: ['Client CI']                     # runs after CI workflow
+    workflows: ['Build and Test Client SDK']                     # runs after CI workflow
     types:
       - completed
     branches: ['main', 'master']
