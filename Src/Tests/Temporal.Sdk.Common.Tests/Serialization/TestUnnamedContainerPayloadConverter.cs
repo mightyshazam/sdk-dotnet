@@ -40,6 +40,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
             Assert.True(instance.TryDeserialize(p, out PayloadContainers.Unnamed.SerializedDataBacked cl));
             Assert.NotNull(cl);
             SerializableClass deserializedData = cl.GetValue<SerializableClass>(0);
+            // Assert.Equal(instance, cl.PayloadConverter);
             Assert.Equal("test", deserializedData.Name);
             Assert.Equal(2, deserializedData.Value);
         }
@@ -47,6 +48,14 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Fact]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_InstanceBacked()
         {
+            void AssertDeserialization<T>(IPayloadConverter i, Payloads p)
+            {
+                Assert.True(i.TryDeserialize(p, out PayloadContainers.Unnamed.SerializedDataBacked cl));
+                Assert.NotEmpty(cl);
+                Assert.True(cl.TryGetValue(0, out string val));
+                Assert.Equal("hello", val);
+            }
+
             UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
             instance.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
             Payloads p = new Payloads();
@@ -54,10 +63,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
             Assert.True(instance.TrySerialize(data, p));
             Assert.NotEmpty(p.Payloads_);
             Assert.False(instance.TryDeserialize(p, out PayloadContainers.Unnamed.InstanceBacked<string> _));
-            Assert.True(instance.TryDeserialize(p, out PayloadContainers.Unnamed.SerializedDataBacked cl));
-            Assert.NotEmpty(cl);
-            Assert.True(cl.TryGetValue(0, out string val));
-            Assert.Equal("hello", val);
+            AssertDeserialization<PayloadContainers.Unnamed.SerializedDataBacked>(instance, p);
+            AssertDeserialization<PayloadContainers.IUnnamed>(instance, p);
         }
 
         [Fact]
