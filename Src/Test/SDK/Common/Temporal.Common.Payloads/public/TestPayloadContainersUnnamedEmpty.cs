@@ -15,7 +15,7 @@ namespace Temporal.Sdk.Common.Tests
         [Trait("Category", "Common")]
         public void Test_PayloadContainers_Unnamed_Empty()
         {
-            PayloadContainers.Unnamed.Empty empty = new PayloadContainers.Unnamed.Empty();
+            PayloadContainers.Unnamed.Empty empty = new();
             Assert.Empty(empty);
             Assert.Throws<ArgumentOutOfRangeException>(() => empty.GetValue<object>(0));
             Assert.False(empty.TryGetValue<object>(0, out _));
