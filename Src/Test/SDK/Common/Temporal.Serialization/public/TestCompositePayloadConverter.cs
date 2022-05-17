@@ -2,6 +2,7 @@ using Temporal.Api.Common.V1;
 using Temporal.Common;
 using Temporal.Common.Payloads;
 using Temporal.Serialization;
+using Temporal.TestUtil;
 using Xunit;
 
 namespace Temporal.Sdk.Common.Tests.Serialization
@@ -13,8 +14,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Trait("Category", "Common")]
         public void Test_CompositePayloadConverter_Void_Roundtrip()
         {
-            CompositePayloadConverter converter = new CompositePayloadConverter();
-            Payloads p = new Payloads();
+            CompositePayloadConverter converter = new();
+            Payloads p = new();
             Assert.True(converter.TrySerialize(new IPayload.Void(), p));
             Assert.Empty(p.Payloads_);
             Assert.True(converter.TryDeserialize(p, out IPayload.Void item));
@@ -25,8 +26,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Trait("Category", "Common")]
         public void Test_CompositePayloadConverter_Null_Roundtrip()
         {
-            CompositePayloadConverter converter = new CompositePayloadConverter();
-            Payloads p = new Payloads();
+            CompositePayloadConverter converter = new();
+            Payloads p = new();
             Assert.True(converter.TrySerialize<string>(null, p));
             Assert.Single(p.Payloads_);
             Assert.True(converter.TryDeserialize(p, out string item));
@@ -37,9 +38,17 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Trait("Category", "Common")]
         public void Test_CompositePayloadConverter_Unnamed_Roundtrip()
         {
-            CompositePayloadConverter instance = new CompositePayloadConverter();
-            Payloads p = new Payloads();
-            PayloadContainers.Unnamed.InstanceBacked<string> data = new PayloadContainers.Unnamed.InstanceBacked<string>(new[] { "hello" });
+            UnnamedContainerPayloadConverter unnamed = new();
+            unnamed.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
+            CompositePayloadConverter instance = new(new IPayloadConverter[]
+            {
+                new VoidPayloadConverter(),
+                new NullPayloadConverter(),
+                new UnnamedContainerPayloadConverter(),
+                new NewtonsoftJsonPayloadConverter(),
+            });
+            Payloads p = new();
+            PayloadContainers.Unnamed.InstanceBacked<string> data = new(new[] { "hello" });
             Assert.True(instance.TrySerialize(data, p));
             Assert.NotEmpty(p.Payloads_);
             Assert.True(instance.TryDeserialize(p, out PayloadContainers.Unnamed.SerializedDataBacked cl));
@@ -49,10 +58,11 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
+        [Trait("Category", "Common")]
         public void Test_CompositePayloadConverter_Catchall_Roundtrip()
         {
-            CompositePayloadConverter converter = new CompositePayloadConverter();
-            Payloads p = new Payloads();
+            CompositePayloadConverter converter = new();
+            Payloads p = new();
             Assert.True(converter.TrySerialize(new IPayload.Void(), p));
             Assert.Empty(p.Payloads_);
             Assert.True(converter.TryDeserialize(p, out IPayload.Void item));

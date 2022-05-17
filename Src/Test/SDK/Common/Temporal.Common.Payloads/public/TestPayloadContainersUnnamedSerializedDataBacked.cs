@@ -1,8 +1,7 @@
-using Google.Protobuf;
-using Newtonsoft.Json;
 using Temporal.Api.Common.V1;
 using Temporal.Common.Payloads;
 using Temporal.Serialization;
+using Temporal.TestUtil;
 using Xunit;
 
 namespace Temporal.Sdk.Common.Tests

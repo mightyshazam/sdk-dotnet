@@ -2,6 +2,7 @@ using System;
 using Temporal.Api.Common.V1;
 using Temporal.Common.Payloads;
 using Temporal.Serialization;
+using Temporal.TestUtil;
 using Xunit;
 
 namespace Temporal.Sdk.Common.Tests.Serialization
@@ -12,8 +13,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_String()
         {
-            UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
-            Payloads p = new Payloads();
+            UnnamedContainerPayloadConverter instance = new();
+            Payloads p = new();
             Assert.False(instance.TrySerialize(String.Empty, p));
             Assert.Empty(p.Payloads_);
         }
@@ -22,8 +23,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Null()
         {
-            UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
-            Payloads p = new Payloads();
+            UnnamedContainerPayloadConverter instance = new();
+            Payloads p = new();
             Assert.False(instance.TrySerialize<string>(null, p));
             Assert.Empty(p.Payloads_);
         }
@@ -37,13 +38,12 @@ namespace Temporal.Sdk.Common.Tests.Serialization
             Payloads p = new Payloads();
             NewtonsoftJsonPayloadConverter converter = new NewtonsoftJsonPayloadConverter();
             converter.Serialize(new SerializableClass { Name = "test", Value = 2 }, p);
-            PayloadContainers.Unnamed.SerializedDataBacked data = new PayloadContainers.Unnamed.SerializedDataBacked(p, converter);
+            PayloadContainers.Unnamed.SerializedDataBacked data = new(p, converter);
             Assert.True(instance.TrySerialize(data, p));
             Assert.NotEmpty(p.Payloads_);
             Assert.True(instance.TryDeserialize(p, out PayloadContainers.Unnamed.SerializedDataBacked cl));
             Assert.NotNull(cl);
             SerializableClass deserializedData = cl.GetValue<SerializableClass>(0);
-            // Assert.Equal(instance, cl.PayloadConverter);
             Assert.Equal("test", deserializedData.Name);
             Assert.Equal(2, deserializedData.Value);
         }
