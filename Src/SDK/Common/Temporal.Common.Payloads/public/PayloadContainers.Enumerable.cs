@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using Temporal.Util;
 
 namespace Temporal.Common.Payloads
 {
     public static partial class PayloadContainers
     {
-        [JsonConverter(typeof(PayloadContainersEnumerableJsonConverter))]
         public class Enumerable : IPayload, IEnumerable
         {
             private readonly IEnumerable _enumerable = null;
@@ -74,7 +72,6 @@ namespace Temporal.Common.Payloads
             }
         }
 
-        [JsonConverter(typeof(PayloadContainersEnumerableJsonConverter<>))]
         public sealed class Enumerable<T> : PayloadContainers.Enumerable, IPayload, IEnumerable<T>
         {
             //public Enumerable()
