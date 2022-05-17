@@ -113,9 +113,9 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
             {
                 history[1].Should().NotBeNull();
                 history[1].EventType.Should().Be(EventType.WorkflowTaskScheduled);
-                WorkflowExecutionStartedEventAttributes eventAttrs = history[1].WorkflowExecutionStartedEventAttributes;
+                WorkflowTaskScheduledEventAttributes eventAttrs = history[1].WorkflowTaskScheduledEventAttributes;
 
-                history[0].Should().NotBeNull();
+                eventAttrs.Should().NotBeNull();
                 eventAttrs.TaskQueue?.Name.Should().Be(taskQueue);
             }
         }
@@ -158,9 +158,9 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
             {
                 history[1].Should().NotBeNull();
                 history[1].EventType.Should().Be(EventType.WorkflowTaskScheduled);
-                WorkflowExecutionStartedEventAttributes eventAttrs = history[1].WorkflowExecutionStartedEventAttributes;
+                WorkflowTaskScheduledEventAttributes eventAttrs = history[1].WorkflowTaskScheduledEventAttributes;
 
-                history[0].Should().NotBeNull();
+                eventAttrs.Should().NotBeNull();
                 eventAttrs.TaskQueue?.Name.Should().Be(taskQueue);
             }
         }

@@ -21,10 +21,12 @@ namespace Temporal.TestUtil
                 throw new ArgumentNullException(nameof(item));
             }
 
+            string jsonStr = JsonConvert.SerializeObject(item);
+
             serializedDataAccumulator.Payloads_.Add(
                 new Payload
                 {
-                    Data = ByteString.CopyFromUtf8(JsonConvert.SerializeObject(item)),
+                    Data = ByteString.CopyFromUtf8(jsonStr),
                 });
 
             return true;
