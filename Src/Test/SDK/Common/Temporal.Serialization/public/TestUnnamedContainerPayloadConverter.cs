@@ -35,8 +35,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         {
             UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
             instance.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
-            Payloads p = new Payloads();
-            NewtonsoftJsonPayloadConverter converter = new NewtonsoftJsonPayloadConverter();
+            Payloads p = new();
+            NewtonsoftJsonPayloadConverter converter = new();
             converter.Serialize(new SerializableClass { Name = "test", Value = 2 }, p);
             PayloadContainers.Unnamed.SerializedDataBacked data = new(p, converter);
             Assert.True(instance.TrySerialize(data, p));
