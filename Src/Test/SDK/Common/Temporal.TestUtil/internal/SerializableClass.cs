@@ -1,4 +1,4 @@
-namespace Temporal.Common.Payloads
+namespace Temporal.TestUtil
 {
     internal class SerializableClass
     {

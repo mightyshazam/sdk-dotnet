@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using Temporal.Serialization;
 using Payload = Temporal.Api.Common.V1.Payload;
 
-namespace Temporal.Sdk.Common.Tests
+namespace Temporal.TestUtil
 {
     internal class JsonPayloadConverter : IPayloadConverter
     {
