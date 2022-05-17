@@ -2,6 +2,7 @@ using Google.Protobuf;
 using Newtonsoft.Json;
 using Temporal.Api.Common.V1;
 using Temporal.Common.Payloads;
+using Temporal.TestUtil;
 using Xunit;
 
 namespace Temporal.Sdk.Common.Tests
@@ -20,8 +21,7 @@ namespace Temporal.Sdk.Common.Tests
         public void Test_Payload_Containers_Unnamed_Instance_Backed_Type_Conversion()
         {
             ConvertedClass defaultValue = ConvertedClass.Default;
-            PayloadContainers.Unnamed.SerializedDataBacked instance =
-                new PayloadContainers.Unnamed.SerializedDataBacked(CreateDefaultPayloads(), new JsonPayloadConverter());
+            PayloadContainers.Unnamed.SerializedDataBacked instance = new(CreateDefaultPayloads(), new JsonPayloadConverter());
             ConvertedClass value = instance.GetValue<ConvertedClass>(0);
             AssertWellFormed(defaultValue, value);
             Assert.True(instance.TryGetValue(0, out value));

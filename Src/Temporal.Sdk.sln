@@ -67,6 +67,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{AE43949A-DDBC-463B-81EE-A48424E96AB4}"
 	ProjectSection(SolutionItems) = preProject
 		Test\Directory.Build.props = Test\Directory.Build.props
+		Test\Temporal.Sdk.Test.Int.Automation.sln = Test\Temporal.Sdk.Test.Int.Automation.sln
+		Test\Temporal.Sdk.Test.Unit.Automation.sln = Test\Temporal.Sdk.Test.Unit.Automation.sln
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{AF4E5CEC-DA7A-4FAE-893E-90693DA97DFE}"
@@ -80,6 +82,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		..\.github\workflows\build-and-test-client-sdk.yml = ..\.github\workflows\build-and-test-client-sdk.yml
 		..\.github\workflows\client-sdk-test-report.yml = ..\.github\workflows\client-sdk-test-report.yml
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Temporal.Sdk.Common.Test.Unit", "Test\SDK\Common\Temporal.Sdk.Common.Test.Unit.csproj", "{E3F286FE-170B-4FB0-B32B-89E2E6493758}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +115,10 @@ Global
 		{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88B8C081-09B2-4491-ACB8-A3FE325CFFBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3F286FE-170B-4FB0-B32B-89E2E6493758}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3F286FE-170B-4FB0-B32B-89E2E6493758}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3F286FE-170B-4FB0-B32B-89E2E6493758}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3F286FE-170B-4FB0-B32B-89E2E6493758}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -131,6 +139,7 @@ Global
 		{AE43949A-DDBC-463B-81EE-A48424E96AB4} = {FF933DEC-86A3-4061-B431-623D75560363}
 		{AF4E5CEC-DA7A-4FAE-893E-90693DA97DFE} = {1F96769B-B8F3-4D14-85D0-F1DA754B6572}
 		{517D116B-34FC-4824-BC0D-B710367C1A47} = {AF4E5CEC-DA7A-4FAE-893E-90693DA97DFE}
+		{E3F286FE-170B-4FB0-B32B-89E2E6493758} = {723CF6E1-998A-4A83-8331-67028EAF0083}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E8142887-814F-45CE-9A2D-B4F6E5B752A8}
