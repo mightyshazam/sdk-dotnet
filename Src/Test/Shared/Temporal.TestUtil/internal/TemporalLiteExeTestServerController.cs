@@ -41,10 +41,12 @@ namespace Temporal.TestUtil
 
         public async Task StartAsync()
         {
+#pragma warning disable CS0162 // Unreachable code detected: Using const bools for settings
             if (Config.ExeBinarySource == ExeBinarySource.PrecompiledFromToolsRepo)
             {
                 EnsureRunningWindows();
             }
+#pragma warning restore CS0162 // Unreachable code detected
 
             const int TemporalServicePort = 7233;
             if (IsPortInUse(TemporalServicePort))
