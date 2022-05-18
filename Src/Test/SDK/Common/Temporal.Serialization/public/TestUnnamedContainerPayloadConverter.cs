@@ -33,6 +33,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_SerializedDataBacked()
         {
+            //CompositePayloadConverter instance = new(new IPayloadConverter[] { new UnnamedContainerPayloadConverter(),
+            //                                                                   new JsonPayloadConverter() });
             UnnamedContainerPayloadConverter instance = new();
             instance.InitDelegates(new[] { new JsonPayloadConverter() });
             Payloads p = new();

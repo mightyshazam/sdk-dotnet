@@ -14,6 +14,7 @@ using Temporal.WorkflowClient.Errors;
 
 namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
 {
+    [Collection("SequentialTextExecution")]
     public class SimpleClientInvocationsE2ETest : IntegrationTestBase
     {
         public SimpleClientInvocationsE2ETest(ITestOutputHelper cout)
