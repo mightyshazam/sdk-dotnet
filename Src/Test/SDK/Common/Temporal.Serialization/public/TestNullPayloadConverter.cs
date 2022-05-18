@@ -29,8 +29,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         public void Test_NullPayloadConverter_TryDeserialize_Nonnullable_Type()
         {
             NullPayloadConverter instance = new NullPayloadConverter();
-            Assert.False(instance.TryDeserialize(
-                new Payloads { Payloads_ = { new Payload() }, },
+            Assert.False(instance.TryDeserialize(new Payloads { Payloads_ = { new Payload() }, },
                 out int _));
         }
 
@@ -59,6 +58,15 @@ namespace Temporal.Sdk.Common.Tests.Serialization
             NullPayloadConverter instance = new NullPayloadConverter();
             Payloads p = new Payloads();
             Assert.True(instance.TrySerialize<string>(null, p));
+            Assert.NotEmpty(p.Payloads_);
+        }
+
+        [Fact]
+        public void Test_NullPayloadConverter_TrySerialize_Null_ValueType()
+        {
+            NullPayloadConverter instance = new NullPayloadConverter();
+            Payloads p = new Payloads();
+            Assert.True(instance.TrySerialize<int?>(null, p));
             Assert.NotEmpty(p.Payloads_);
         }
 

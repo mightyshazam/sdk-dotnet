@@ -7,6 +7,7 @@ using Xunit;
 
 namespace Temporal.Sdk.Common.Tests.Serialization
 {
+    // TODO: Add roundtrip tests for more types
     public class TestCompositePayloadConverter
     {
         [Fact]
@@ -38,13 +39,13 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         public void Test_CompositePayloadConverter_Unnamed_Roundtrip()
         {
             UnnamedContainerPayloadConverter unnamed = new();
-            unnamed.InitDelegates(new[] { new JsonPayloadConverter() });
+            unnamed.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
             CompositePayloadConverter instance = new(new IPayloadConverter[]
             {
                 new VoidPayloadConverter(),
                 new NullPayloadConverter(),
                 new UnnamedContainerPayloadConverter(),
-                new JsonPayloadConverter(),
+                new NewtonsoftJsonPayloadConverter(),
             });
             Payloads p = new();
             PayloadContainers.Unnamed.InstanceBacked<string> data = new(new[] { "hello" });
