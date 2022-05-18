@@ -177,11 +177,11 @@ namespace Temporal.TestUtil
 
         private string GetReleaseBinArchiveUrl()
         {
-            const string ReleaseBinBaseIUrl = @"https://github.com/macrogreg/temporalite/releases/download/v0.0.3/";
+            const string ReleaseBinBaseUrl = @"https://github.com/macrogreg/temporalite/releases/download/v0.0.3/";
             const string ReleaseBinArchiveName_Win_x86x64 = "temporalite_0.0.3_Windows_x86_64.zip";
 
 #if NETFRAMEWORK
-            return ReleaseBinBaseIUrl + ReleaseBinArchiveName_Win_x86x64;
+            return ReleaseBinBaseUrl + ReleaseBinArchiveName_Win_x86x64;
 #else
             const string ReleaseBinArchiveName_Linux_x86x64 = "temporalite_0.0.3_Linux_x86_64.zip";
             const string ReleaseBinArchiveName_Linux_Arm64 = "temporalite_0.0.3_Linux_arm64.zip";
@@ -192,33 +192,33 @@ namespace Temporal.TestUtil
                     && (RuntimeInformation.OSArchitecture == Architecture.X86
                         || RuntimeInformation.OSArchitecture == Architecture.X64))
             {
-                return ReleaseBinBaseIUrl + ReleaseBinArchiveName_Win_x86x64;
+                return ReleaseBinBaseUrl + ReleaseBinArchiveName_Win_x86x64;
             }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
                     && (RuntimeInformation.OSArchitecture == Architecture.X86
                         || RuntimeInformation.OSArchitecture == Architecture.X64))
             {
-                return ReleaseBinBaseIUrl + ReleaseBinArchiveName_Linux_x86x64;
+                return ReleaseBinBaseUrl + ReleaseBinArchiveName_Linux_x86x64;
             }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
                     && (RuntimeInformation.OSArchitecture == Architecture.Arm64))
             {
-                return ReleaseBinBaseIUrl + ReleaseBinArchiveName_Linux_Arm64;
+                return ReleaseBinBaseUrl + ReleaseBinArchiveName_Linux_Arm64;
             }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
                     && (RuntimeInformation.OSArchitecture == Architecture.X86
                         || RuntimeInformation.OSArchitecture == Architecture.X64))
             {
-                return ReleaseBinBaseIUrl + ReleaseBinArchiveName_MacOS_x86x64;
+                return ReleaseBinBaseUrl + ReleaseBinArchiveName_MacOS_x86x64;
             }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
                     && (RuntimeInformation.OSArchitecture == Architecture.Arm64))
             {
-                return ReleaseBinBaseIUrl + ReleaseBinArchiveName_MacOS_Arm64;
+                return ReleaseBinBaseUrl + ReleaseBinArchiveName_MacOS_Arm64;
             }
 
             CoutWriteLine($"Unexpected OS/Architecture: {RuntimeInformation.OSDescription} / {RuntimeInformation.OSArchitecture}.");
