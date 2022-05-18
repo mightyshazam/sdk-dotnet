@@ -33,10 +33,8 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_SerializedDataBacked()
         {
-            //CompositePayloadConverter instance = new(new IPayloadConverter[] { new UnnamedContainerPayloadConverter(),
-            //                                                                   new JsonPayloadConverter() });
-            UnnamedContainerPayloadConverter instance = new();
-            instance.InitDelegates(new[] { new JsonPayloadConverter() });
+            UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
+            instance.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
             Payloads p = new();
             NewtonsoftJsonPayloadConverter converter = new();
             converter.Serialize(new SerializableClass { Name = "test", Value = 2 }, p);
@@ -54,27 +52,33 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_InstanceBacked()
         {
-            UnnamedContainerPayloadConverter instance = new();
-            instance.InitDelegates(new[] { new JsonPayloadConverter() });
-            Payloads p = new();
-            PayloadContainers.Unnamed.InstanceBacked<string> data = new(new[] { "hello" });
+            void AssertDeserialization<T>(IPayloadConverter i, Payloads p)
+            {
+                Assert.True(i.TryDeserialize(p, out PayloadContainers.Unnamed.SerializedDataBacked cl));
+                Assert.NotEmpty(cl);
+                Assert.True(cl.TryGetValue(0, out string val));
+                Assert.Equal("hello", val);
+            }
+
+            UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
+            instance.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
+            Payloads p = new Payloads();
+            PayloadContainers.Unnamed.InstanceBacked<string> data = new PayloadContainers.Unnamed.InstanceBacked<string>(new[] { "hello" });
             Assert.True(instance.TrySerialize(data, p));
             Assert.NotEmpty(p.Payloads_);
             Assert.False(instance.TryDeserialize(p, out PayloadContainers.Unnamed.InstanceBacked<string> _));
-            Assert.True(instance.TryDeserialize(p, out PayloadContainers.Unnamed.SerializedDataBacked cl));
-            Assert.NotEmpty(cl);
-            Assert.True(cl.TryGetValue(0, out string val));
-            Assert.Equal("hello", val);
+            AssertDeserialization<PayloadContainers.Unnamed.SerializedDataBacked>(instance, p);
+            AssertDeserialization<PayloadContainers.IUnnamed>(instance, p);
         }
 
         [Fact]
         [Trait("Category", "Common")]
         public void Test_UnnamedContainerPayloadConverter_TrySerialize_Unnamed_Empty()
         {
-            UnnamedContainerPayloadConverter instance = new();
-            instance.InitDelegates(new[] { new JsonPayloadConverter() });
-            Payloads p = new();
-            PayloadContainers.Unnamed.Empty data = new();
+            UnnamedContainerPayloadConverter instance = new UnnamedContainerPayloadConverter();
+            instance.InitDelegates(new[] { new NewtonsoftJsonPayloadConverter() });
+            Payloads p = new Payloads();
+            PayloadContainers.Unnamed.Empty data = new PayloadContainers.Unnamed.Empty();
             Assert.True(instance.TrySerialize(data, p));
             Assert.Empty(p.Payloads_);
         }

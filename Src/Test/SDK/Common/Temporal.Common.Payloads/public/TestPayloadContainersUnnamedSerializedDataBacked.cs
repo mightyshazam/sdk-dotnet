@@ -1,7 +1,6 @@
-using Google.Protobuf;
-using Newtonsoft.Json;
 using Temporal.Api.Common.V1;
 using Temporal.Common.Payloads;
+using Temporal.Serialization;
 using Temporal.TestUtil;
 using Xunit;
 
@@ -11,7 +10,7 @@ namespace Temporal.Sdk.Common.Tests
     {
         public TestPayloadContainersUnnamedSerializedDataBacked()
             : base(
-                new PayloadContainers.Unnamed.SerializedDataBacked(CreateDefaultPayloads(), new JsonPayloadConverter()),
+                new PayloadContainers.Unnamed.SerializedDataBacked(CreateDefaultPayloads(), new NewtonsoftJsonPayloadConverter()),
                 1)
         {
         }
@@ -20,15 +19,16 @@ namespace Temporal.Sdk.Common.Tests
         [Trait("Category", "Common")]
         public void Test_Payload_Containers_Unnamed_Instance_Backed_Type_Conversion()
         {
-            ConvertedClass defaultValue = ConvertedClass.Default;
-            PayloadContainers.Unnamed.SerializedDataBacked instance = new(CreateDefaultPayloads(), new JsonPayloadConverter());
-            ConvertedClass value = instance.GetValue<ConvertedClass>(0);
+            SerializableClass defaultValue = SerializableClass.Default;
+            PayloadContainers.Unnamed.SerializedDataBacked instance =
+                new PayloadContainers.Unnamed.SerializedDataBacked(CreateDefaultPayloads(), new NewtonsoftJsonPayloadConverter());
+            SerializableClass value = instance.GetValue<SerializableClass>(0);
             AssertWellFormed(defaultValue, value);
             Assert.True(instance.TryGetValue(0, out value));
             AssertWellFormed(defaultValue, value);
         }
 
-        private static void AssertWellFormed(ConvertedClass expected, ConvertedClass actual)
+        private static void AssertWellFormed(SerializableClass expected, SerializableClass actual)
         {
             Assert.Equal(expected.Name, actual.Name);
             Assert.Equal(expected.Value, actual.Value);
@@ -36,32 +36,10 @@ namespace Temporal.Sdk.Common.Tests
 
         private static Payloads CreateDefaultPayloads()
         {
-            return new Payloads
-            {
-                Payloads_ =
-                {
-                    new Payload
-                    {
-                        Data = ByteString.CopyFromUtf8(JsonConvert.SerializeObject(ConvertedClass.Default)),
-                    },
-                },
-            };
-        }
-
-        private class ConvertedClass
-        {
-            public string Name { get; set; }
-
-            public int Value { get; set; }
-
-            public static ConvertedClass Default
-            {
-
-                get
-                {
-                    return new ConvertedClass { Name = "Test", Value = 1, };
-                }
-            }
+            Payloads payload = new Payloads();
+            NewtonsoftJsonPayloadConverter converter = new NewtonsoftJsonPayloadConverter();
+            converter.Serialize(SerializableClass.Default, payload);
+            return payload;
         }
     }
 }
