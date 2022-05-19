@@ -1,6 +1,7 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Temporal.WorkflowClient;
 using Xunit.Abstractions;
 
 namespace Temporal.TestUtil
@@ -62,6 +63,34 @@ namespace Temporal.TestUtil
             }
 
             await base.DisposeAsync();
+        }
+
+        protected TemporalClient CreateTemporalClient()
+        {
+            return TlsOptions switch
+            {
+                TestTlsOptions.None => new TemporalClient(),
+                TestTlsOptions.Server => new TemporalClient(new TemporalClientConfiguration
+                {
+                    ServiceConnection = new TemporalClientConfiguration.Connection("localhost",
+                        Port,
+                        true,
+                        null,
+                        false,
+                        TemporalClientConfiguration.TlsCertificate.FromPemFile(TestEnvironment.CaCertificatePath)),
+                }),
+                TestTlsOptions.Mutual => new TemporalClient(new TemporalClientConfiguration
+                {
+                    ServiceConnection = new TemporalClientConfiguration.Connection("localhost",
+                        Port,
+                        true,
+                        TemporalClientConfiguration.TlsCertificate.FromPemFile(TestEnvironment.ClientCertificatePath,
+                            TestEnvironment.ClientKeyPath),
+                        false,
+                        TemporalClientConfiguration.TlsCertificate.FromPemFile(TestEnvironment.CaCertificatePath)),
+                }),
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
     }
 }
