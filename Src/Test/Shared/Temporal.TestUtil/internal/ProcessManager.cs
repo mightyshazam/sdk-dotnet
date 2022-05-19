@@ -169,7 +169,11 @@ namespace Temporal.TestUtil
 
         public void SendCtrlC()
         {
+#if NETCOREAPP3_1_OR_GREATER
+            bool isSucc = true;
+#else
             bool isSucc = GenerateConsoleCtrlEvent(CtrlEvent.CtrlC, _process.Id);
+#endif
             _process.StandardInput.Flush();
 
             _process.CloseMainWindow();
