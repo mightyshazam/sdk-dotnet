@@ -235,6 +235,22 @@ namespace Temporal.TestUtil
             return _process.HasExited;
         }
 
+        public bool WaitForExit(int timeout = Timeout.Infinite)
+        {
+            int startMillis = (timeout == Timeout.Infinite) ? 0 : Environment.TickCount;
+
+            _process.WaitForExit(timeout);
+
+            if (timeout != Timeout.Infinite)
+            {
+                int elapsedMillis = Environment.TickCount - startMillis;
+                timeout = Math.Max(1, timeout - elapsedMillis);
+            }
+
+            DrainOutput(timeout);
+            return _process.HasExited;
+        }
+
         public bool DrainOutput(int timeout = Timeout.Infinite)
         {
             _errorSignal = new ManualResetEventSlim();

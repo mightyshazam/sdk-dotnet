@@ -170,6 +170,39 @@ namespace Temporal.TestUtil
             }
 
             CoutWriteLine($"Unpacking completed.");
+
+            if (File.Exists(temporalLiteExePath))
+            {
+                CoutWriteLine($"The expected TemporalLite executable is among the"
+                            + $" unpacked files ({temporalLiteExePath}).");
+            }
+            else
+            {
+                CoutWriteLine($"The expected TemporalLite executable is NOT among the unpacked"
+                            + $" files ({temporalLiteExePath}). Giving up.");
+                throw new Exception($"TemporalLite distributable downloaded and unpacked,"
+                                  + $" but the expected TemporalLite executable is NOT among"
+                                  + $" the unpacked files ({temporalLiteExePath}).");
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                    || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                string temporalLiteExeName = Path.GetFileName(temporalLiteExePath);
+                CoutWriteLine($"Setting eXecutable mode for the TemporalLite binary ({temporalLiteExeName})...");
+
+                string escapedTemporalLiteExePath = temporalLiteExePath.Replace("\"", "\\\"");
+                ProcessManager chmod = ProcessManager.Start(exePath: "/bin/bash",
+                                                            args: $"-v -c chmod +x \"{escapedTemporalLiteExePath}\"",
+                                                            waitForInitOptions: null,
+                                                            redirectToCout: true,
+                                                            coutProcNameMoniker: "bash",
+                                                            _cout);
+                chmod.WaitForExit(timeout: 2000);
+
+                CoutWriteLine($"TemporalLite binary set to be eXecutable.");
+            }
+
             CoutWriteLine();
             CoutWriteLine($"TemporalLite has been installed.");
             CoutWriteLine();
