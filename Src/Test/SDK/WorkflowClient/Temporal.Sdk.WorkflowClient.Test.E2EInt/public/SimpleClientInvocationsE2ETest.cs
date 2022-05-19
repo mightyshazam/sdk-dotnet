@@ -18,7 +18,7 @@ namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
     public class SimpleClientInvocationsE2ETest : IntegrationTestBase
     {
         public SimpleClientInvocationsE2ETest(ITestOutputHelper cout)
-            : base(cout)
+            : base(cout, 7233, TestTlsOptions.None)
         {
         }
 

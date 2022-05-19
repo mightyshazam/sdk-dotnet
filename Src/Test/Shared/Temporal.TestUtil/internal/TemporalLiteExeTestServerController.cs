@@ -12,6 +12,10 @@ namespace Temporal.TestUtil
 {
     internal sealed class TemporalLiteExeTestServerController : ITemporalTestServerController, IDisposable
     {
+        private const string DefaultTemporalLiteProcArgsTemplate = "start --ephemeral --namespace {0} --port {1}";
+
+        private const string TlsTemporalLiteProcArgsTemplate =
+            "--tls-certificate-file \"{2}\" --tls-key-file \"{3}\" --client-certificate-authority \"{4}\"";
         private readonly ITestOutputHelper _cout;
         private readonly bool _redirectServerOutToCout;
 
@@ -24,15 +28,14 @@ namespace Temporal.TestUtil
             _redirectServerOutToCout = redirectServerOutToCout;
         }
 
-        public Task StartAsync()
+        public Task StartAsync(TestTlsOptions tlsOptions, int port = 7233)
         {
             EnsureRunningWindows();
 
-            const int TemporalServicePort = 7233;
-            if (IsPortInUse(TemporalServicePort))
+            if (IsPortInUse(port))
             {
                 CoutWriteLine();
-                CoutWriteLine($"WARNING!   Something is already listening on local port {TemporalServicePort}."
+                CoutWriteLine($"WARNING!   Something is already listening on local port {port}."
                             + $" We will not be able to start TemporalLite."
                             + Environment.NewLine
                             + CoutPrefix("WARNING!   However, this is most likely some kind of Temporal server,"
@@ -52,7 +55,7 @@ namespace Temporal.TestUtil
                 InstallTemporalLite(temporalLiteExePath);
             }
 
-            Start(temporalLiteExePath);
+            Start(temporalLiteExePath, tlsOptions, port);
             return Task.CompletedTask;
         }
 
@@ -128,15 +131,39 @@ namespace Temporal.TestUtil
             CoutWriteLine();
         }
 
-        private void Start(string temporalLiteExePath)
+        private string CreateDefaultServerArgs(string @namespace, int port)
+        {
+            return String.Format(DefaultTemporalLiteProcArgsTemplate, @namespace, port);
+        }
+
+        private string CreateTlsServerArgs(bool useMtls)
+        {
+            return String.Empty;
+        }
+
+        private string CreateServerArgs(string @namespace, TestTlsOptions tlsOptions, int port)
+        {
+            switch (tlsOptions)
+            {
+                case TestTlsOptions.None:
+                    return CreateDefaultServerArgs(@namespace, port);
+                case TestTlsOptions.Server:
+                    return $"{CreateDefaultServerArgs(@namespace, port)} {CreateTlsServerArgs(false)}";
+                case TestTlsOptions.Mutual:
+                    return $"{CreateDefaultServerArgs(@namespace, port)} {CreateTlsServerArgs(true)}";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(tlsOptions), "unexpected tls arguments received");
+            }
+        }
+
+        private void Start(string temporalLiteExePath, TestTlsOptions tlsOptions, int port)
         {
             const string TemporalLiteNamespace = "default";
-            const string TemporalLiteProcArgsTemplate = "start --ephemeral --namespace {0}";
 
             const string TemporalLiteInitCompletedMsg = "worker service started";
             const int TemporalLiteInitTimeoutMillis = 15000;
-
-            string temporalLiteProcArgs = String.Format(TemporalLiteProcArgsTemplate, TemporalLiteNamespace);
+            string args = CreateServerArgs(TemporalLiteNamespace, tlsOptions, port);
+            string temporalLiteProcArgs = String.Format(args, TemporalLiteNamespace);
 
             try
             {
@@ -206,10 +233,6 @@ namespace Temporal.TestUtil
 
         private static void EnsureRunningWindows()
         {
-            if (!TestEnvironment.IsWindows)
-            {
-                throw new PlatformNotSupportedException($"{nameof(TemporalLiteExeTestServerController)} currently only supports Windows.");
-            }
         }
 
         private static string GetTemporalLiteExePath()
