@@ -70,6 +70,10 @@ namespace Temporal.TestUtil
             if (!File.Exists(temporalLiteExePath))
             {
                 await InstallTemporalLiteAsync(temporalLiteExePath);
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    ProcessManager.ExecuteShellCommand($"chmod +x {temporalLiteExePath}");
+                }
             }
 
             Start(temporalLiteExePath);

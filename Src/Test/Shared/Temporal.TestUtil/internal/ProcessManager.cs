@@ -21,6 +21,26 @@ namespace Temporal.TestUtil
 
         public record WaitForInitOptions(string InitCompletedMsg, int TimeoutMillis);
 
+        public static void ExecuteShellCommand(string cmd)
+        {
+            string escapedArgs = cmd.Replace("\"", "\\\"");
+            using Process process = new()
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"{escapedArgs}\""
+                }
+            };
+
+            process.Start();
+            process.WaitForExit();
+        }
+
         public static ProcessManager Start(string exePath,
                                            string args,
                                            WaitForInitOptions waitForInitOptions,
