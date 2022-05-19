@@ -133,6 +133,20 @@ namespace Temporal.WorkflowClient
 
                 if (!privKeyLoaded)
                 {
+                    try
+                    {
+                        byte[] keyBytes = GetPemSectionContent(keyMarkedUpPemData, "EC PRIVATE KEY");
+                        rsa.ImportRSAPrivateKey(keyBytes, out _);
+                        privKeyLoaded = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        exAggr.Add(ex);
+                    }
+                }
+
+                if (!privKeyLoaded)
+                {
                     exAggr.ThrowIfNotEmpty();
                     throw new InvalidOperationException($"Could not read the private key from {nameof(keyMarkedUpPemData)}.");
                 }
