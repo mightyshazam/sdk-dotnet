@@ -66,8 +66,8 @@ namespace Temporal.WorkflowClient
             // (https://github.com/dotnet/runtime/issues/23749)
             // @ToDo: Review this for other OSes when supported.
 
-            byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx);
-            X509Certificate2 certificate = new(ephemeralCertBytes);
+            byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx, "");
+            X509Certificate2 certificate = new(ephemeralCertBytes, "");
 
             // Done:
             return certificate;
