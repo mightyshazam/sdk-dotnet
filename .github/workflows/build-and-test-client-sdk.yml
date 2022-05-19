@@ -211,14 +211,10 @@ jobs:
           - dotnet-moniker: 'NetFx4.6'
             os-moniker: 'MacOS'
 
-          - os-moniker: 'Linux'
-          - os-moniker: 'MacOS'
-
         include:
           - dotnet-moniker: 'NetCore3.1'
             dotnet-version: '3.1.x'
             framework: 'netcoreapp3.1'
-
 
           - dotnet-moniker: 'Net6'
             dotnet-version: '6.0.x'
