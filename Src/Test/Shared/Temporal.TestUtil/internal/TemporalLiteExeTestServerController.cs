@@ -193,7 +193,7 @@ namespace Temporal.TestUtil
 
                 string escapedTemporalLiteExePath = temporalLiteExePath.Replace("\"", "\\\"");
                 ProcessManager chmod = ProcessManager.Start(exePath: "/bin/bash",
-                                                            args: $"-c chmod -v +x \"{escapedTemporalLiteExePath}\"",
+                                                            args: $"-c chmod +x \"{escapedTemporalLiteExePath}\"",
                                                             waitForInitOptions: null,
                                                             redirectToCout: true,
                                                             coutProcNameMoniker: "bash",
