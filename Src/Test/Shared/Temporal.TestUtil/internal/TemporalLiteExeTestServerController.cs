@@ -189,11 +189,11 @@ namespace Temporal.TestUtil
                     || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 string temporalLiteExeName = Path.GetFileName(temporalLiteExePath);
-                CoutWriteLine($"Setting eXecutable mode for the TemporalLite binary ({temporalLiteExeName})...");
+                CoutWriteLine($"Setting eXecutable mode for the TemporalLite binary (\"{temporalLiteExeName}\")...");
 
                 string escapedTemporalLiteExePath = temporalLiteExePath.Replace("\"", "\\\"");
                 ProcessManager chmod = ProcessManager.Start(exePath: "/bin/bash",
-                                                            args: $"-v -c chmod +x \"{escapedTemporalLiteExePath}\"",
+                                                            args: $"-c chmod -v +x \"{escapedTemporalLiteExePath}\"",
                                                             waitForInitOptions: null,
                                                             redirectToCout: true,
                                                             coutProcNameMoniker: "bash",
