@@ -215,7 +215,7 @@ namespace Temporal.TestUtil
                 return ReleaseBinBaseUrl + ReleaseBinArchiveName_MacOS_x86x64;
             }
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
                     && (RuntimeInformation.OSArchitecture == Architecture.Arm64))
             {
                 return ReleaseBinBaseUrl + ReleaseBinArchiveName_MacOS_Arm64;

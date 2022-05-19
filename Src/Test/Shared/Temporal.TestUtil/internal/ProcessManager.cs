@@ -169,8 +169,21 @@ namespace Temporal.TestUtil
 
         public void SendCtrlC()
         {
+            // @ToDo: In the long-term we need to either make the Ctrl-C "signal" work on all
+            // OSes, or get rid of it altogether. However, at best this does tests a little
+            // neater, so we can get to it after we have collected some more maturity of running
+            // integration tests on different versions of Temporal and under different OSes.
+#if NETFRAMEWORK
             bool isSucc = GenerateConsoleCtrlEvent(CtrlEvent.CtrlC, _process.Id);
             _process.StandardInput.Flush();
+#else
+            bool isSucc = false;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                isSucc = GenerateConsoleCtrlEvent(CtrlEvent.CtrlC, _process.Id);
+                _process.StandardInput.Flush();
+            }
+#endif
 
             _process.CloseMainWindow();
             _process.StandardInput.Write("\x3");
