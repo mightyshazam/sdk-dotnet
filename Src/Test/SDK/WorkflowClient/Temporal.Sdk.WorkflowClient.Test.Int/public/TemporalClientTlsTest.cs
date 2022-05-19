@@ -7,7 +7,7 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
     public class TemporalClientTlsTest : AbstractTemporalClientTest
     {
         public TemporalClientTlsTest(ITestOutputHelper cout)
-            : base(cout, TestTlsOptions.Server)
+            : base(cout, TestTlsOptions.Server, 7235)
         {
         }
     }

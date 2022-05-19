@@ -15,7 +15,7 @@ namespace Temporal.TestUtil
         private const string DefaultTemporalLiteProcArgsTemplate = "start --ephemeral --namespace {0} --port {1}";
 
         private const string TlsTemporalLiteProcArgsTemplate =
-            "--tls-certificate-file \"{2}\" --tls-key-file \"{3}\" --client-certificate-authority \"{4}\"";
+            "--tls-certificate-file \"{0}\" --tls-key-file \"{1}\" --client-certificate-authority \"{2}\"";
         private readonly ITestOutputHelper _cout;
         private readonly bool _redirectServerOutToCout;
 
@@ -138,7 +138,16 @@ namespace Temporal.TestUtil
 
         private string CreateTlsServerArgs(bool useMtls)
         {
-            return String.Empty;
+            string binaryRoot = TestEnvironment.GetBinaryRootDirPath();
+            string certificate = Path.Combine(binaryRoot, TestEnvironment.ServerCertificatePath);
+            string key = Path.Combine(binaryRoot, TestEnvironment.ServerKeyPath);
+            string ca = Path.Combine(binaryRoot, TestEnvironment.CaCertificatePath);
+            if (useMtls)
+            {
+                return $"{String.Format(TlsTemporalLiteProcArgsTemplate, certificate, key, ca)} --mtls";
+            }
+
+            return String.Format(TlsTemporalLiteProcArgsTemplate, certificate, key, ca);
         }
 
         private string CreateServerArgs(string @namespace, TestTlsOptions tlsOptions, int port)

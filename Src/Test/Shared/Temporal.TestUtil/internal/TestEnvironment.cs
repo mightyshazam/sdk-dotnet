@@ -5,6 +5,12 @@ namespace Temporal.TestUtil
 {
     internal static class TestEnvironment
     {
+        internal const string CaCertificatePath = "ca.pem";
+        internal const string ClientCertificatePath = "client.pem";
+        internal const string ClientKeyPath = "client-key.pem";
+        internal const string ServerCertificatePath = "server.pem";
+        internal const string ServerKeyPath = "server-key.pem";
+
         public static bool IsWindows
         {
             get { return (Environment.OSVersion.Platform.ToString().IndexOf("Win") == 0); }
