@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 
 #if NETCOREAPP3_1
@@ -66,7 +67,12 @@ namespace Temporal.WorkflowClient
             // (https://stackoverflow.com/questions/55456807/create-x509certificate2-from-cert-and-key-without-making-a-pfx-file)
             // (https://github.com/dotnet/runtime/issues/23749)
             // @ToDo: Review this for other OSes when supported.
-
+#if NETCOREAPP3_1
+            if (!ephemeralCert.HasPrivateKey)
+            {
+                return new(ephemeralCert.Export(X509ContentType.Cert));
+            }
+#endif
             byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx, Password);
             X509Certificate2 certificate = new(ephemeralCertBytes, Password);
 
