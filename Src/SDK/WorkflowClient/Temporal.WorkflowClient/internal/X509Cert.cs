@@ -136,8 +136,9 @@ namespace Temporal.WorkflowClient
                     try
                     {
                         byte[] keyBytes = GetPemSectionContent(keyMarkedUpPemData, "EC PRIVATE KEY");
-                        rsa.ImportRSAPrivateKey(keyBytes, out _);
-                        privKeyLoaded = true;
+                        using ECDsa ec = ECDsa.Create();
+                        ec.ImportECPrivateKey(keyBytes, out _);
+                        return pubCert.CopyWithPrivateKey(ec);
                     }
                     catch (Exception ex)
                     {
