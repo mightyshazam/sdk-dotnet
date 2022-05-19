@@ -51,7 +51,7 @@ namespace Temporal.TestUtil
             proc.StartInfo.RedirectStandardError = true;
             proc.StartInfo.RedirectStandardInput = true;
 
-            cout?.WriteLine($"Starting proc."
+            cout?.WriteLine($"[ProcMan] Starting proc."
                           + $" (RedirectToCout={redirectToCout};"
                           + $" File=\"{proc.StartInfo.FileName}\";"
                           + $" Args={Format.QuoteOrNull(proc.StartInfo.Arguments)})");
