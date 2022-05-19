@@ -56,6 +56,7 @@ namespace Temporal.WorkflowClient
 
         public static X509Certificate2 CreateFromPemData(string certMarkedUpPemData, string keyMarkedUpPemData)
         {
+            const string Password = "password";
             // Get the ephemeral (in-memory) cert:
 
             using X509Certificate2 ephemeralCert = CreateX509EphemeralCertFromPemData(certMarkedUpPemData, keyMarkedUpPemData);
@@ -66,8 +67,8 @@ namespace Temporal.WorkflowClient
             // (https://github.com/dotnet/runtime/issues/23749)
             // @ToDo: Review this for other OSes when supported.
 
-            byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx, "");
-            X509Certificate2 certificate = new(ephemeralCertBytes, "");
+            byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx, Password);
+            X509Certificate2 certificate = new(ephemeralCertBytes, Password);
 
             // Done:
             return certificate;
