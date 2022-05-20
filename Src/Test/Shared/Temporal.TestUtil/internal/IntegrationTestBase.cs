@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Temporal.WorkflowClient;
@@ -91,6 +92,16 @@ namespace Temporal.TestUtil
                 }),
                 _ => throw new ArgumentOutOfRangeException()
             };
+        }
+
+        protected string TestCaseWorkflowId([CallerMemberName] string testMethodName = null)
+        {
+            return TestCaseContextMonikers.ForWorkflowId(this, testMethodName);
+        }
+
+        protected string TestCaseTaskQueue([CallerMemberName] string testMethodName = null)
+        {
+            return TestCaseContextMonikers.ForTaskQueue(this, testMethodName);
         }
     }
 }

@@ -949,7 +949,7 @@ namespace Temporal.WorkflowClient
                 Reason = opArgs.Reason ?? String.Empty,
                 Details = serializedDets,
                 Identity = _clientIdentityMarker,
-                FirstExecutionRunId = workflowChainId,
+                FirstExecutionRunId = workflowChainId ?? String.Empty,
             };
 
             TerminateWorkflowExecutionResponse resTermWf = await InvokeRemoteCallAndProcessErrors(
