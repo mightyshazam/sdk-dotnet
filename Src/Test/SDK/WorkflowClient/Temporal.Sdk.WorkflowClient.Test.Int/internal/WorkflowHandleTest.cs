@@ -1,5 +1,4 @@
 using System;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,13 +10,12 @@ using Temporal.TestUtil;
 using Temporal.WorkflowClient;
 using Temporal.WorkflowClient.Errors;
 using Temporal.WorkflowClient.Interceptors;
-using Temporal.WorkflowClient.OperationConfigurations;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Temporal.Sdk.WorkflowClient.Test.Int
 {
-    [Collection("SequentialTextExecution")]
+    [Collection("SequentialTestExecution")]
     public class WorkflowHandleTest : IntegrationTestBase
     {
         private TemporalClient _client;
@@ -227,7 +225,7 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
         }
         private async Task DoWithHandle(Func<WorkflowHandle, string, Task> work, [CallerMemberName] string caller = null)
         {
-            (string workflowId, string queue) = GetIdAndQueue();
+            (string workflowId, string queue) = GetIdAndQueue(caller);
             TemporalClient client = CreateTemporalClient();
             using WorkflowHandle handle = WorkflowHandle.CreateUnbound(client, workflowId);
             await work(handle, queue);
