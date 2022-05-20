@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -56,17 +55,6 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
 
             await base.DisposeAsync();
         }
-
-        private string TestCaseWorkflowId([CallerMemberName] string testMethodName = null)
-        {
-            return TestCaseContextMonikers.ForWorkflowId(this, testMethodName);
-        }
-
-        private string TestCaseTaskQueue([CallerMemberName] string testMethodName = null)
-        {
-            return TestCaseContextMonikers.ForTaskQueue(this, testMethodName);
-        }
-
 
         [Fact]
         public async Task ConnectAsync()
