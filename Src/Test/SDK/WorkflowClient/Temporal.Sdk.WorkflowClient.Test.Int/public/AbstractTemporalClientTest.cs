@@ -19,7 +19,7 @@ using Temporal.WorkflowClient.OperationConfigurations;
 
 namespace Temporal.Sdk.WorkflowClient.Test.Int
 {
-    [Collection("SequentialTextExecution")]
+    [Collection("SequentialTestExecution")]
     public abstract class AbstractTemporalClientTest : IntegrationTestBase
     {
         private ITemporalClient _client = null;
