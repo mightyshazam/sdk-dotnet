@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
 {
-    [Collection("SequentialTextExecution")]
+    [Collection("SequentialTestExecution")]
     public abstract class AbstractSimpleClientInvocationsE2ETest : IntegrationTestBase
     {
         protected AbstractSimpleClientInvocationsE2ETest(ITestOutputHelper cout, TestTlsOptions options, int port)
