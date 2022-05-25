@@ -20,12 +20,12 @@ using Temporal.WorkflowClient.OperationConfigurations;
 namespace Temporal.Sdk.WorkflowClient.Test.Int
 {
     [Collection("SequentialTestExecution")]
-    public abstract class AbstractTemporalClientTest : IntegrationTestBase
+    public abstract class TemporalClientTestBase : IntegrationTestBase
     {
         private ITemporalClient _client = null;
         private ExtendedWorkflowServiceClient _wfServiceClient = null;
 
-        public AbstractTemporalClientTest(ITestOutputHelper cout, TestTlsOptions tlsOptions, int temporalServicePort = 7233)
+        public TemporalClientTestBase(ITestOutputHelper cout, TestTlsOptions tlsOptions, int temporalServicePort = 7233)
             : base(cout, temporalServicePort, tlsOptions)
         {
         }

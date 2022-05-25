@@ -13,9 +13,9 @@ using Xunit.Abstractions;
 namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
 {
     [Collection("SequentialTestExecution")]
-    public abstract class AbstractSimpleClientInvocationsE2ETest : IntegrationTestBase
+    public abstract class SimpleClientInvocationsE2ETestBase : IntegrationTestBase
     {
-        protected AbstractSimpleClientInvocationsE2ETest(ITestOutputHelper cout, TestTlsOptions options, int port)
+        protected SimpleClientInvocationsE2ETestBase(ITestOutputHelper cout, TestTlsOptions options, int port)
             : base(cout, port, options)
         {
         }
@@ -23,17 +23,18 @@ namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
         [Fact]
         public async Task E2EScenarioAsync()
         {
-            CoutWriteLine("Creating a client over a plain (unsecured) channel...");
+            string channelType = TlsOptions == TestTlsOptions.None ? "plain unsecured" : "tls secured";
+            CoutWriteLine($"Creating a client over a ({channelType}) channel...");
 
             ITemporalClient client = await InitTemporalClient();
 
             string demoWfId = TestCaseContextMonikers.ForWorkflowId(this);
-            string demoTastQueue = TestCaseContextMonikers.ForTaskQueue(this);
+            string demoTaskQueue = TestCaseContextMonikers.ForTaskQueue(this);
 
             CoutWriteLine("Starting a workflow...");
             IWorkflowHandle workflow = await client.StartWorkflowAsync(demoWfId,
-                "DemoWorkflowTypeName",
-                demoTastQueue);
+                                                       "DemoWorkflowTypeName",
+                                                                       demoTaskQueue);
             CoutWriteLine("Started. Info:");
             CoutWriteLine($"    Namespace:       {workflow.Namespace}");
             CoutWriteLine($"    WorkflowId:      {workflow.WorkflowId}");
@@ -46,7 +47,7 @@ namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
 
             try
             {
-                await client.StartWorkflowAsync(demoWfId, "DemoWorkflowTypeName", demoTastQueue);
+                await client.StartWorkflowAsync(demoWfId, "DemoWorkflowTypeName", demoTaskQueue);
 
                 throw new Exception("ERROR. We should never get here, because the above code is expected to throw.");
             }
