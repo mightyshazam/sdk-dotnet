@@ -36,41 +36,31 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
         {
             await base.InitializeAsync();
 
-            switch (TlsOptions)
+            TemporalClient client = TlsOptions switch
             {
-                case TestTlsOptions.None:
-                    _client = new TemporalClient();
-                    break;
-                case TestTlsOptions.Server:
-                    _client = new TemporalClient(new TemporalClientConfiguration
-                    {
-                        ServiceConnection = new TemporalClientConfiguration.Connection(
-                            "localhost",
-                            Port,
-                            true,
-                            null,
-                            false,
-                            TemporalClientConfiguration.TlsCertificate.FromPemFile()),
-                    });
-                    break;
-                case TestTlsOptions.Mutual:
-                    _client = new TemporalClient(new TemporalClientConfiguration
-                    {
-                        ServiceConnection = new TemporalClientConfiguration.Connection(
-                            "localhost",
-                            Port,
-                            true,
-                            TemporalClientConfiguration.TlsCertificate.FromPemFile(),
-                            false,
-                            TemporalClientConfiguration.TlsCertificate.FromPemFile()),
-                    });
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            TemporalClient client = new();
+                TestTlsOptions.None => new TemporalClient(),
+                TestTlsOptions.Server => new TemporalClient(new TemporalClientConfiguration
+                {
+                    ServiceConnection = new TemporalClientConfiguration.Connection("localhost",
+                        Port,
+                        true,
+                        null,
+                        false,
+                        TemporalClientConfiguration.TlsCertificate.FromPemFile(TestEnvironment.CaCertificatePath)),
+                }),
+                TestTlsOptions.Mutual => new TemporalClient(new TemporalClientConfiguration
+                {
+                    ServiceConnection = new TemporalClientConfiguration.Connection("localhost",
+                        Port,
+                        true,
+                        TemporalClientConfiguration.TlsCertificate.FromPemFile(TestEnvironment.ClientCertificatePath,
+                            TestEnvironment.ClientKeyPath),
+                        false,
+                        TemporalClientConfiguration.TlsCertificate.FromPemFile(TestEnvironment.CaCertificatePath)),
+                }),
+                _ => throw new ArgumentOutOfRangeException()
+            };
             _client = client;
-
             _wfServiceClient = new ExtendedWorkflowServiceClient(client.Configuration);
         }
 

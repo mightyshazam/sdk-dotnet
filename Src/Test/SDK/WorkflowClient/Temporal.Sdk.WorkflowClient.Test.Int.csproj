@@ -41,6 +41,15 @@
     </Compile>       
     <Compile Update="Temporal.Sdk.WorkflowClient.Test.Int\public\TemporalClientMutualTlsTest.cs">
       <Link>Shared-Test-Src\Temporal.TestUtil\internal\CertificateKeyPair.cs</Link>
+    </Compile>       
+    <Compile Update="Temporal.Sdk.WorkflowClient.Test.E2EInt\public\AbstractSimpleClientInvocationsE2ETest.cs">
+      <Link>Shared-Test-Src\Temporal.TestUtil\internal\CertificateKeyPair.cs</Link>
+    </Compile>       
+    <Compile Update="Temporal.Sdk.WorkflowClient.Test.E2EInt\public\SimpleClientInvocationsE2EWithTlsTest.cs">
+      <Link>Shared-Test-Src\Temporal.TestUtil\internal\CertificateKeyPair.cs</Link>
+    </Compile>       
+    <Compile Update="Temporal.Sdk.WorkflowClient.Test.E2EInt\public\SimpleClientInvocationsE2EWithMutualTlsTest.cs">
+      <Link>Shared-Test-Src\Temporal.TestUtil\internal\CertificateKeyPair.cs</Link>
     </Compile>
   </ItemGroup>
   
@@ -60,6 +69,29 @@
     <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\ExtendedWorkflowServiceClient.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
 
     <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\TestCaseContextMonikers.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />    
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="..\..\..\..\Certificates\ca.pem">
+      <Link>ca.pem</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\Certificates\client.pem">
+      <Link>client.pem</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\Certificates\client-key.pem">
+      <Link>client-key.pem</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\Certificates\server.pem">
+      <Link>server.pem</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\Certificates\server-key.pem">
+      <Link>server-key.pem</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

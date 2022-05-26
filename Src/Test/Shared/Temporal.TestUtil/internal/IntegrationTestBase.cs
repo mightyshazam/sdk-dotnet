@@ -7,12 +7,6 @@ namespace Temporal.TestUtil
 {
     public class IntegrationTestBase : TestBase
     {
-        protected const string CaCertificatePath = "";
-        protected const string ClientCertificatePath = "";
-        protected const string ClientKeyPath = "";
-        protected const string ServerCertificatePath = "";
-        protected const string ServerKeyPath = "";
-
         private const bool RedirectServerOutToTstoutDefault = false;
 
         private readonly bool _redirectServerOutToTstout;
