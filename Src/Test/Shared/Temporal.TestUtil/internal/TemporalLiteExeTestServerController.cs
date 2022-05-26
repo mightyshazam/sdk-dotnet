@@ -348,7 +348,7 @@ namespace Temporal.TestUtil
 
         private string CreateTlsServerArgs(bool useMtls)
         {
-            string binaryRoot = TestEnvironment.GetBinaryRootDirPath();
+            string binaryRoot = Environment.CurrentDirectory;
             string certificate = Path.Combine(binaryRoot, TestEnvironment.ServerCertificatePath);
             string key = Path.Combine(binaryRoot, TestEnvironment.ServerKeyPath);
             string ca = Path.Combine(binaryRoot, TestEnvironment.CaCertificatePath);
