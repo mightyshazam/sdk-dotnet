@@ -1,6 +1,5 @@
 using Xunit.Abstractions;
 using Temporal.TestUtil;
-using Xunit;
 
 namespace Temporal.Sdk.WorkflowClient.Test.Int
 {
