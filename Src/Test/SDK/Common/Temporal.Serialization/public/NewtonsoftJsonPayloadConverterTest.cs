@@ -6,11 +6,10 @@ using Xunit;
 namespace Temporal.Sdk.Common.Tests.Serialization
 {
     // Currently used for debug/dev
-    public class TestNewtonsoftJsonPayloadConverter
+    public class NewtonsoftJsonPayloadConverterTest
     {
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_TestNewtonsoftJsonPayloadConverter_ValueType_Roundtrip()
+        public void ValueType_Roundtrip()
         {
             NewtonsoftJsonPayloadConverter instance = new();
             Payloads p = new();
@@ -20,8 +19,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_TestNewtonsoftJsonPayloadConverter_ReferenceType_Roundtrip()
+        public void ReferenceType_Roundtrip()
         {
             const string Expected = "hello";
             NewtonsoftJsonPayloadConverter instance = new();
@@ -33,10 +31,9 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_TestNewtonsoftJsonPayloadConverter_ComplexReference_Roundtrip()
+        public void ComplexReference_Roundtrip()
         {
-            SerializableClass expected = SerializableClass.Default;
+            SerializableClass expected = SerializableClass.CreateDefault();
             NewtonsoftJsonPayloadConverter instance = new();
             Payloads p = new();
             Assert.True(instance.TrySerialize(expected, p));
@@ -47,8 +44,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_TestNewtonsoftJsonPayloadConverter_Array_Roundtrip()
+        public void Array_Roundtrip()
         {
             string[] expected = { "hello", "goodbye" };
             NewtonsoftJsonPayloadConverter instance = new();

@@ -4,16 +4,15 @@ using Xunit;
 
 namespace Temporal.Sdk.Common.Tests
 {
-    public class TestPayloadContainersUnnamedEmpty : AbstractUnnamedTest
+    public class PayloadContainersUnnamedEmptyTest : PayloadContainersUnnamedTestBase
     {
-        public TestPayloadContainersUnnamedEmpty()
+        public PayloadContainersUnnamedEmptyTest()
             : base(new PayloadContainers.Unnamed.Empty(), 0)
         {
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_PayloadContainers_Unnamed_Empty()
+        public void Ctor()
         {
             PayloadContainers.Unnamed.Empty empty = new();
             Assert.Empty(empty);

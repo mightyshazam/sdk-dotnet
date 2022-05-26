@@ -12,11 +12,10 @@ using Xunit;
 
 namespace Temporal.Sdk.Common.Tests.Serialization
 {
-    public class TestRawMemoryPayloadConverter
+    public class RawMemoryPayloadConverterTest
     {
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_RawMemoryPayloadConverter_ByteString_Roundtrip()
+        public void ByteString_Roundtrip()
         {
             ByteString bs = ByteString.CopyFrom(0, 0, 1);
             RawMemoryPayloadConverter instance = new();
@@ -30,8 +29,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
 
 #if NETCOREAPP3_1_OR_GREATER
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_RawMemoryPayloadConverter_ReadonlyMemory_Roundtrip()
+        public void ReadonlyMemory_Roundtrip()
         {
             Random r = new();
             byte[] buffer = new byte[10];
@@ -45,8 +43,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_RawMemoryPayloadConverter_Memory_Roundtrip()
+        public void Memory_Roundtrip()
         {
             Random r = new();
             byte[] buffer = new byte[10];
@@ -61,8 +58,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
 #endif
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_RawMemoryPayloadConverter_MemoryStream_Roundtrip()
+        public void MemoryStream_Roundtrip()
         {
             Random r = new();
             byte[] buffer = new byte[10];
@@ -81,9 +77,7 @@ namespace Temporal.Sdk.Common.Tests.Serialization
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        // TODO: Determine whether this should successfully roundtrip
-        public void Test_RawMemoryPayloadConverter_ByteArray_Roundtrip()
+        public void ByteArray_Roundtrip()
         {
             Random r = new();
             byte[] buffer = new byte[10];
@@ -93,12 +87,6 @@ namespace Temporal.Sdk.Common.Tests.Serialization
             Payloads p = new();
             Assert.False(instance.TrySerialize(buffer, p));
             Assert.False(instance.TryDeserialize(p, out byte[] _));
-            /*Assert.Equal(buffer.Length, actual.Length);
-            foreach (byte b in buffer)
-            {
-                byte read = (byte)actual.ReadByte();
-                Assert.Equal(b, read);
-            }*/
         }
     }
 }

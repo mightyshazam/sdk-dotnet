@@ -4,7 +4,7 @@ using Xunit;
 namespace Temporal.Sdk.Common.Tests
 {
 
-    public class TestWorkflowExecutionStatusExtensions
+    public class WorkflowExecutionStatusExtensionsTest
     {
         [Theory]
         [InlineData(WorkflowExecutionStatus.Unspecified, false)]
@@ -15,7 +15,7 @@ namespace Temporal.Sdk.Common.Tests
         [InlineData(WorkflowExecutionStatus.Terminated, true)]
         [InlineData(WorkflowExecutionStatus.ContinuedAsNew, true)]
         [InlineData(WorkflowExecutionStatus.TimedOut, true)]
-        public void Test_IsTerminal_Returns_Correct_Result(WorkflowExecutionStatus status, bool expected)
+        public void IsTerminal(WorkflowExecutionStatus status, bool expected)
         {
             Assert.Equal(expected, status.IsTerminal());
         }

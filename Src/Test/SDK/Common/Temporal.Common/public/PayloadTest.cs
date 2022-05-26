@@ -7,33 +7,30 @@ using Xunit;
 
 namespace Temporal.Sdk.Common.Tests
 {
-    public class TestPayload
+    public class PayloadTest
     {
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_Payload_Unnamed_With_Null_Argument()
+        public void Unnamed_WithNullArgument()
         {
             Assert.Throws<ArgumentNullException>(() => Payload.Unnamed(null));
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_Payload_Unnamed_With_Variadic_Arguments()
+        public void Unnamed_WithVariadicArguments()
         {
             PayloadContainers.Unnamed.InstanceBacked<object> payload = Payload.Unnamed(new object(), new object());
             AssertUnnamedCorrectness(2, payload);
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_Payload_Unnamed_With_Array_Arguments()
+        public void Unnamed_WithArrayArguments()
         {
             PayloadContainers.Unnamed.InstanceBacked<int> payload = Payload.Unnamed(new[] { 1, 2, 3 });
             AssertUnnamedCorrectness(3, payload);
         }
 
         [Fact]
-        public void Test_Payload_Unnamed_With_Array_Type()
+        public void Unnamed_WithArrayType()
         {
             PayloadContainers.Unnamed.InstanceBacked<int[]> payload = Payload.Unnamed<int[]>(new[] { 1, 2, 3 });
             AssertUnnamedCorrectness(1, payload);
@@ -42,8 +39,7 @@ namespace Temporal.Sdk.Common.Tests
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_Payload_Unnamed_With_Enumerable_Arguments()
+        public void Unnamed_WithEnumerableArguments()
         {
             int length = 10;
             PayloadContainers.Unnamed.InstanceBacked<string> payload = Payload.Unnamed(Enumerable.Repeat("hello", length));
@@ -51,8 +47,7 @@ namespace Temporal.Sdk.Common.Tests
         }
 
         [Fact]
-        [Trait("Category", "Common")]
-        public void Test_Payload_Unnamed_With_List_Arguments()
+        public void Unnamed_WithListArguments()
         {
             int length = 10;
             IReadOnlyList<string> lst = Enumerable.Repeat("hello", length).ToList();
@@ -61,7 +56,7 @@ namespace Temporal.Sdk.Common.Tests
         }
 
         private static void AssertUnnamedCorrectness<T>(int length,
-            PayloadContainers.Unnamed.InstanceBacked<T> payload)
+                                                        PayloadContainers.Unnamed.InstanceBacked<T> payload)
         {
             Assert.Equal(length, payload.Count);
             foreach (PayloadContainers.UnnamedEntry entry in payload.Values)
