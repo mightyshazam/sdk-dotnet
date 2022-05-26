@@ -7,6 +7,12 @@ namespace Temporal.TestUtil
 {
     public class IntegrationTestBase : TestBase
     {
+        protected const string CaCertificatePath = "";
+        protected const string ClientCertificatePath = "";
+        protected const string ClientKeyPath = "";
+        protected const string ServerCertificatePath = "";
+        protected const string ServerKeyPath = "";
+
         private const bool RedirectServerOutToTstoutDefault = false;
 
         private readonly bool _redirectServerOutToTstout;
@@ -14,17 +20,23 @@ namespace Temporal.TestUtil
 
         private readonly TestCaseContextMonikers _testCaseContextMonikers;
 
-        public IntegrationTestBase(ITestOutputHelper tstout)
-            : this(tstout, RedirectServerOutToTstoutDefault)
+        public IntegrationTestBase(ITestOutputHelper tstout, int temporalServicePort, TestTlsOptions testTlsOptions)
+            : this(tstout, RedirectServerOutToTstoutDefault, temporalServicePort, testTlsOptions)
         {
         }
 
-        public IntegrationTestBase(ITestOutputHelper tstout, bool redirectServerOutToTstout)
-            : base(tstout)
+        public IntegrationTestBase(ITestOutputHelper cout, bool redirectServerOutToTstout, int temporalServicePort, TestTlsOptions testTlsOptions)
+            : base(cout)
         {
             _redirectServerOutToTstout = redirectServerOutToTstout;
+            Port = temporalServicePort;
+            TlsOptions = testTlsOptions;
             _testCaseContextMonikers = new TestCaseContextMonikers(System.DateTimeOffset.Now);
         }
+
+        protected TestTlsOptions TlsOptions { get; }
+
+        protected int Port { get; }
 
         internal virtual ITemporalTestServerController TestServer
         {
@@ -44,7 +56,7 @@ namespace Temporal.TestUtil
             // configuration mechanism to decide on the implementation chosen.
 
             _testServer = new TemporalLiteExeTestServerController(Tstout, _redirectServerOutToTstout);
-            await _testServer.StartAsync();
+            await _testServer.StartAsync(TlsOptions, Port);
         }
 
         public override async Task DisposeAsync()

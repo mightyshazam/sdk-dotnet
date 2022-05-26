@@ -17,8 +17,8 @@ namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
     [Collection("SequentialTextExecution")]
     public class SimpleClientInvocationsE2ETest : IntegrationTestBase
     {
-        public SimpleClientInvocationsE2ETest(ITestOutputHelper tstout)
-            : base(tstout)
+        public SimpleClientInvocationsE2ETest(ITestOutputHelper testOut)
+            : base(testOut, 7233, TestTlsOptions.None)
         {
         }
 
