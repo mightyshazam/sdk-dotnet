@@ -211,6 +211,7 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
             return (TestCaseWorkflowId(caller), TestCaseTaskQueue(caller));
         }
 
+        // TODO: Explain usage
         private Task DoWithStartedHandle<T>(Func<WorkflowHandle, string, Task> work,
             T arg,
             [CallerMemberName] string caller = null)
@@ -223,6 +224,8 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
                 },
                 caller);
         }
+
+        // TODO: Explain usage
         private async Task DoWithHandle(Func<WorkflowHandle, string, Task> work, [CallerMemberName] string caller = null)
         {
             (string workflowId, string queue) = GetIdAndQueue(caller);

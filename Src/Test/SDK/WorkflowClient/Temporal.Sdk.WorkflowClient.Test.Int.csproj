@@ -57,23 +57,23 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Content Include="..\..\..\..\Certificates\ca.pem">
+    <Content Include="..\..\Certificates\ca.pem">
       <Link>ca.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\..\Certificates\client.pem">
+    <Content Include="..\..\Certificates\client.pem">
       <Link>client.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\..\Certificates\client-key.pem">
+    <Content Include="..\..\Certificates\client-key.pem">
       <Link>client-key.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\..\Certificates\server.pem">
+    <Content Include="..\..\Certificates\server.pem">
       <Link>server.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\..\Certificates\server-key.pem">
+    <Content Include="..\..\Certificates\server-key.pem">
       <Link>server-key.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
