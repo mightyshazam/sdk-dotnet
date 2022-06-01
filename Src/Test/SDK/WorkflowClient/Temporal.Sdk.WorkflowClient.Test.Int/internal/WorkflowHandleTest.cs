@@ -90,14 +90,6 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
                     await handle.EnsureBoundAsync(CancellationToken.None);
                     handle.WorkflowChainId.Should().NotBeNull();
                     handle.IsBound.Should().BeTrue();
-                    using WorkflowHandle bound = WorkflowHandle.CreateBound(handle.TemporalServiceClient,
-                        handle.WorkflowId,
-                        handle.WorkflowChainId);
-                    bool exists = await bound.ExistsAsync(CancellationToken.None);
-                    exists.Should().BeTrue();
-                    bound.WorkflowId.Should().Be(handle.WorkflowId, "They reference the same workflow");
-                    bound.WorkflowChainId.Should().Be(handle.WorkflowChainId, "They reference the same workflow");
-                    bound.IsBound.Should().BeTrue();
                 });
         }
 
@@ -211,8 +203,8 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
             return (TestCaseWorkflowId(caller), TestCaseTaskQueue(caller));
         }
 
-        // TODO: Explain usage
-        private Task DoWithStartedHandle<T>(Func<WorkflowHandle, string, Task> work,
+        // NOTE: This method exists as a convenience to save the caller effort when writing tests
+        private Task DoWithStartedHandle<T>(Func<IWorkflowHandle, string, Task> work,
             T arg,
             [CallerMemberName] string caller = null)
         {
@@ -225,13 +217,14 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
                 caller);
         }
 
-        // TODO: Explain usage
-        private async Task DoWithHandle(Func<WorkflowHandle, string, Task> work, [CallerMemberName] string caller = null)
+        // NOTE: This method exists as a convenience to ensure discretely named workflows per test
+        private async Task DoWithHandle(Func<IWorkflowHandle, string, Task> work, [CallerMemberName] string caller = null)
         {
             (string workflowId, string queue) = GetIdAndQueue(caller);
             TemporalClient client = CreateTemporalClient();
-            using WorkflowHandle handle = WorkflowHandle.CreateUnbound(client, workflowId);
-            await work(handle, queue);
+            using IWorkflowHandle wfHandle = client.CreateWorkflowHandle(workflowId);
+            wfHandle.Should().BeOfType<WorkflowHandle>();
+            await work((WorkflowHandle)wfHandle, queue);
         }
     }
 }
