@@ -5,11 +5,51 @@ namespace Temporal.TestUtil
 {
     internal static class TestEnvironment
     {
-        internal const string CaCertificatePath = "ca.pem";
-        internal const string ClientCertificatePath = "client.pem";
-        internal const string ClientKeyPath = "client-key.pem";
-        internal const string ServerCertificatePath = "server.pem";
-        internal const string ServerKeyPath = "server-key.pem";
+        private const string CaCertificate = "ca.pem";
+        private const string ClientCertificate = "client.pem";
+        private const string ClientKey = "client-key.pem";
+        private const string ServerCertificate = "server.pem";
+        private const string ServerKey = "server-key.pem";
+
+        internal static string CaCertificatePath
+        {
+            get
+            {
+                return GetCertificatePath(CaCertificate);
+            }
+        }
+
+        internal static string ClientCertificatePath
+        {
+            get
+            {
+                return GetCertificatePath(ClientCertificate);
+            }
+        }
+
+        internal static string ClientKeyPath
+        {
+            get
+            {
+                return GetCertificatePath(ClientKey);
+            }
+        }
+
+        internal static string ServerCertificatePath
+        {
+            get
+            {
+                return GetCertificatePath(ServerCertificate);
+            }
+        }
+
+        internal static string ServerKeyPath
+        {
+            get
+            {
+                return GetCertificatePath(ServerKey);
+            }
+        }
 
         public static bool IsWindows
         {
@@ -34,6 +74,11 @@ namespace Temporal.TestUtil
         {
             string binaryRootDirPath = TestEnvironment.GetBinaryRootDirPath();
             return Path.GetDirectoryName(binaryRootDirPath);
+        }
+
+        public static string GetCertificatePath(string certificate)
+        {
+            return Path.Join("Certificates", certificate);
         }
     }
 }

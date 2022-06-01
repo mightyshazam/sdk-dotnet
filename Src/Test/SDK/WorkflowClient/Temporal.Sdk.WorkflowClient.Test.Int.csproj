@@ -57,24 +57,24 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Content Include="..\..\Certificates\ca.pem">
-      <Link>ca.pem</Link>
+    <Content Include="$(SharedTestSrcBaseDir)\Certificates\ca.pem">
+      <Link>Certificates\ca.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Certificates\client.pem">
-      <Link>client.pem</Link>
+    <Content Include="$(SharedTestSrcBaseDir)\Certificates\client.pem">
+      <Link>Certificates\client.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Certificates\client-key.pem">
-      <Link>client-key.pem</Link>
+    <Content Include="$(SharedTestSrcBaseDir)\Certificates\client-key.pem">
+      <Link>Certificates\client-key.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Certificates\server.pem">
-      <Link>server.pem</Link>
+    <Content Include="$(SharedTestSrcBaseDir)\Certificates\server.pem">
+      <Link>Certificates\server.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Certificates\server-key.pem">
-      <Link>server-key.pem</Link>
+    <Content Include="$(SharedTestSrcBaseDir)\Certificates\server-key.pem">
+      <Link>Certificates\server-key.pem</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
