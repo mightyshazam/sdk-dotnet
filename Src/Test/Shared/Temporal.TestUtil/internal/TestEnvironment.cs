@@ -76,9 +76,9 @@ namespace Temporal.TestUtil
             return Path.GetDirectoryName(binaryRootDirPath);
         }
 
-        public static string GetCertificatePath(string certificate)
+        private static string GetCertificatePath(string certificate)
         {
-            return Path.Join("Certificates", certificate);
+            return Path.Combine("Certificates", certificate);
         }
     }
 }
