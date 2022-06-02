@@ -32,28 +32,37 @@
   </ItemGroup>
 
   <ItemGroup>       
-    <Compile Include="$(SharedSrcBaseDir)\Temporal.TestUtil\public\TestBase.cs" Link="$(SharedSrcBaseLabel)\Temporal.TestUtil\public\%(Filename)%(Extension)" />       
-    <Compile Include="..\..\Shared\Temporal.TestUtil\internal\TestTlsOptions.cs">
-      <Link>Shared-Test-Src\Temporal.TestUtil\internal\TestTlsOptions.cs</Link>
-    </Compile>
+    <Compile Include="$(SharedSrcBaseDir)\Temporal.TestUtil\public\TestBase.cs"
+              Link="$(SharedSrcBaseLabel)\Temporal.TestUtil\public\%(Filename)%(Extension)" />
   </ItemGroup>
   
-  <ItemGroup>    
-    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\ITemporalTestServerController.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
+  <ItemGroup>
+    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\TestTlsOptions.cs">
+      <Link>$(SharedTestSrcBaseLabel)\Temporal.TestUtil\public\%(Filename)%(Extension)</Link>
+    </Compile>  
+    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\ITemporalTestServerController.cs" 
+              Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
   
-    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\JavaBasedTemporalTestServerController.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
+    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\JavaBasedTemporalTestServerController.cs"
+              Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
 
-    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\TemporalLiteExeTestServerController.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
+    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\TemporalLiteExeTestServerController.cs"
+              Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
 
-    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\IntegrationTestBase.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
+    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\IntegrationTestBase.cs"
+              Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
 
-    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\TestEnvironment.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
+    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\TestEnvironment.cs"
+              Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
 
-    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\ProcessManager.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
+    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\ProcessManager.cs"
+              Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
 
-    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\ExtendedWorkflowServiceClient.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
+    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\ExtendedWorkflowServiceClient.cs"
+              Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />
 
-    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\TestCaseContextMonikers.cs" Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />    
+    <Compile Include="$(SharedTestSrcBaseDir)\Temporal.TestUtil\internal\TestCaseContextMonikers.cs"
+              Link="$(SharedTestSrcBaseLabel)\Temporal.TestUtil\internal\%(Filename)%(Extension)" />    
   </ItemGroup>
   
   <ItemGroup>

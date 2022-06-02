@@ -12,7 +12,6 @@ namespace Temporal.WorkflowClient
 {
     internal class WorkflowHandle : IWorkflowHandle, IDisposable
     {
-        private readonly object _pipelineCreationLock = new();
         #region --- Static construction methods ---
 
         internal static WorkflowHandle CreateUnbound(TemporalClient temporalClient, string workflowId)
@@ -757,9 +756,7 @@ namespace Temporal.WorkflowClient
             // (i.e., not null). Regardless of the actual semaphone state, we can use that obect to take a local
             // `pipelineCreationLock` to protect pipeline contruction.
 
-            // TODO: Managed to get around the initialization behavior when calling `CreateBound`
-            // Need to investigate how much of an issue that is
-            return _temporalClient.GetOrCreateServiceInvocationPipeline(this, ref _serviceInvocationPipeline, _pipelineCreationLock, opArgs);
+            return _temporalClient.GetOrCreateServiceInvocationPipeline(this, ref _serviceInvocationPipeline, _bindigLock, opArgs);
         }
 
         #endregion -- Privates --

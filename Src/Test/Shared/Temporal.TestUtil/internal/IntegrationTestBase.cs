@@ -16,13 +16,13 @@ namespace Temporal.TestUtil
 
         private readonly TestCaseContextMonikers _testCaseContextMonikers;
 
-        public IntegrationTestBase(ITestOutputHelper tstout, int temporalServicePort, TestTlsOptions testTlsOptions)
+        protected IntegrationTestBase(ITestOutputHelper tstout, int temporalServicePort, TestTlsOptions testTlsOptions)
             : this(tstout, RedirectServerOutToTstoutDefault, temporalServicePort, testTlsOptions)
         {
         }
 
-        public IntegrationTestBase(ITestOutputHelper cout, bool redirectServerOutToTstout, int temporalServicePort, TestTlsOptions testTlsOptions)
-            : base(cout)
+        protected IntegrationTestBase(ITestOutputHelper tstout, bool redirectServerOutToTstout, int temporalServicePort, TestTlsOptions testTlsOptions)
+            : base(tstout)
         {
             _redirectServerOutToTstout = redirectServerOutToTstout;
             Port = temporalServicePort;
