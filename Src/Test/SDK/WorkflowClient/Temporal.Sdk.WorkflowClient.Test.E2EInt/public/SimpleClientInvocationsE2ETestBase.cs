@@ -15,8 +15,8 @@ namespace Temporal.Sdk.WorkflowClient.Test.E2EInt
     [Collection("SequentialTestExecution")]
     public abstract class SimpleClientInvocationsE2ETestBase : IntegrationTestBase
     {
-        protected SimpleClientInvocationsE2ETestBase(ITestOutputHelper cout, TestTlsOptions options, int port)
-            : base(cout, port, options)
+        protected SimpleClientInvocationsE2ETestBase(ITestOutputHelper tstout, TestTlsOptions options, int port)
+            : base(tstout, port, options)
         {
         }
 
