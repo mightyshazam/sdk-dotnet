@@ -24,10 +24,10 @@
           ]
         }
       ],
-      "dest": "ApiDoc/netcoreapp3.1/Sdk",
+      "dest": "ApiDoc/net6.0/Sdk",
       "filter": "Filter-AllTemporalGrpcApi.yml",
       "properties": {
-        "TargetFramework": "netcoreapp3.1"
+        "TargetFramework": "net6.0"
       },
       "disableGitFeatures": false,
       "disableDefaultFilter": false
@@ -41,10 +41,10 @@
           ]
         }
       ],
-      "dest": "ApiDoc/netcoreapp3.1/GrpcApi",
+      "dest": "ApiDoc/net6.0/GrpcApi",
       "filter": "Filter-Gogoproto.yml",
       "properties": {
-        "TargetFramework": "netcoreapp3.1"
+        "TargetFramework": "net6.0"
       },
       "disableGitFeatures": false,
       "disableDefaultFilter": false
@@ -63,9 +63,9 @@
         "dest": "ApiDoc"
       },
       {
-        "src": "ApiDoc/netcoreapp3.1",
+        "src": "ApiDoc/net6.0",
         "files": [ "**.yml", "index.md" ],
-        "dest": "ApiDoc/netcoreapp3.1"
+        "dest": "ApiDoc/net6.0"
       },
       {
         "src": ".",
@@ -90,7 +90,7 @@
     "xrefService": [
       "https://xref.docs.microsoft.com/query?uid={uid}"
     ],
-    "dest": "_site",
+    "dest": "temporalio.github.io/sdk-dotnet",
     "globalMetadataFiles": [ "GlobalMetadata.json" ],
     "fileMetadataFiles": [ "FileMetadata.json" ],
     "template": [ "statictoc" ], // [ "default" ], // [ "statictoc" ],
