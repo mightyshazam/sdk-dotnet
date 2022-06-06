@@ -66,12 +66,14 @@ namespace Temporal.WorkflowClient
             // (https://stackoverflow.com/questions/55456807/create-x509certificate2-from-cert-and-key-without-making-a-pfx-file)
             // (https://github.com/dotnet/runtime/issues/23749)
             // @ToDo: Review this for other OSes when supported.
-#if NETCOREAPP3_1
+
             if (!ephemeralCert.HasPrivateKey)
             {
                 return new(ephemeralCert.Export(X509ContentType.Cert));
             }
-#endif
+
+            // We use password here because some operating systems will fail when exporting a pfx
+            // without a password. The password used has no value outside of this method
             byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx, Password);
             X509Certificate2 certificate = new(ephemeralCertBytes, Password);
 
