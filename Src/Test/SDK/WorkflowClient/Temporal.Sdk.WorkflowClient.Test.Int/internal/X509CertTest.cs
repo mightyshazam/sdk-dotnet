@@ -1,3 +1,5 @@
+// These tests are not valid on net462 because we do not convert pem to x509certificate2
+#if NETCOREAPP3_1_OR_GREATER
 using System;
 using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
@@ -61,3 +63,5 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
         }
     }
 }
+
+#endif
