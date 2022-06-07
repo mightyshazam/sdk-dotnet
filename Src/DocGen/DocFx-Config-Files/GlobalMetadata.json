@@ -1,0 +1,13 @@
+﻿//
+// See https://dotnet.github.io/docfx/tutorial/docfx.exe_user_manual.html#323-separated-metadata-files-for-global-metadata-and-file-metadata
+//
+{
+  "_appTitle": "Temporal SDK for .NET",
+  "_enableSearch": "true",
+  "_enableNewTab": "true",
+  "_gitContribute": {
+    "apiSpecFolder": "Doc/ApiDoc"
+  },
+  "_appLogoPath": "Articles/Resources/TemporalLogo-TopNavi-WhiteOnTrnsp.png",
+  "_appFaviconPath": "Articles/Resources/TemporalLogo-Favicon-BlackOnTrnsp.64x64.png"
+}

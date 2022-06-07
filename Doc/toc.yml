@@ -1,0 +1,8 @@
+# This file defines the top navigation bar for the DocFx-generated site.
+#
+- name: Home
+  href: index.md
+- name: API Reference
+  href: ApiDoc/index.md
+- name: Articles
+  href: Articles/index.md

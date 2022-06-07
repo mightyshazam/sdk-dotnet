@@ -1,0 +1,14 @@
+# This file helps defining the navigation structure for the DocFx-generated site.
+#
+- name: Temporal SDK for .NET
+        (Alpha)
+  href: ../index.md
+- name: API Reference
+  href: ../ApiDoc/index.md
+- name: Articles
+  href: index.md
+  items:
+    - name: Repo on Github
+      href: https://github.com/temporalio/sdk-dotnet
+    - name: Readme
+      href: https://github.com/temporalio/sdk-dotnet/blob/master/README.md

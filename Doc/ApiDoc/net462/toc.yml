@@ -1,0 +1,17 @@
+# This file helps defining the navigation structure for the DocFx-generated site.
+#
+- name: Temporal SDK for .NET
+        (Alpha)
+  href: ../../index.md
+- name: Articles
+  href: ../../Articles/index.md
+- name: API Reference
+  href: ../index.md
+- name: .Net Framework 4.6.2
+  href: index.md
+  items:
+  - name: SDK
+    href: SDK/toc.yml
+    topicHref: index.md
+  - name: Low-level gRPC API
+    href: GrpcApi/toc.yml
