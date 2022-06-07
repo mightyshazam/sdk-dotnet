@@ -24,6 +24,7 @@ namespace Temporal.Util
         /// an exception will occur at that line. This prevents incorrect code analysis warnings/end errors such as 'missing return value',
         /// 'missing initialization' and similar.
         /// </summary>
+
 #if NET6_0_OR_GREATER
         [System.Diagnostics.StackTraceHidden]
 #endif

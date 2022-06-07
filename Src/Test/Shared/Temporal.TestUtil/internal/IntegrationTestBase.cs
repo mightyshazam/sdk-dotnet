@@ -1,6 +1,8 @@
+using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Temporal.WorkflowClient;
 using Xunit.Abstractions;
 
 namespace Temporal.TestUtil
@@ -14,17 +16,23 @@ namespace Temporal.TestUtil
 
         private readonly TestCaseContextMonikers _testCaseContextMonikers;
 
-        public IntegrationTestBase(ITestOutputHelper tstout)
-            : this(tstout, RedirectServerOutToTstoutDefault)
+        protected IntegrationTestBase(ITestOutputHelper tstout, int temporalServicePort, TestTlsOptions testTlsOptions)
+            : this(tstout, RedirectServerOutToTstoutDefault, temporalServicePort, testTlsOptions)
         {
         }
 
-        public IntegrationTestBase(ITestOutputHelper tstout, bool redirectServerOutToTstout)
+        protected IntegrationTestBase(ITestOutputHelper tstout, bool redirectServerOutToTstout, int temporalServicePort, TestTlsOptions testTlsOptions)
             : base(tstout)
         {
             _redirectServerOutToTstout = redirectServerOutToTstout;
+            Port = temporalServicePort;
+            TlsOptions = testTlsOptions;
             _testCaseContextMonikers = new TestCaseContextMonikers(System.DateTimeOffset.Now);
         }
+
+        protected TestTlsOptions TlsOptions { get; }
+
+        protected int Port { get; }
 
         internal virtual ITemporalTestServerController TestServer
         {
@@ -44,7 +52,7 @@ namespace Temporal.TestUtil
             // configuration mechanism to decide on the implementation chosen.
 
             _testServer = new TemporalLiteExeTestServerController(Tstout, _redirectServerOutToTstout);
-            await _testServer.StartAsync();
+            await _testServer.StartAsync(TlsOptions, Port);
         }
 
         public override async Task DisposeAsync()
@@ -56,6 +64,44 @@ namespace Temporal.TestUtil
             }
 
             await base.DisposeAsync();
+        }
+
+        protected TemporalClient CreateTemporalClient()
+        {
+            return TlsOptions switch
+            {
+                TestTlsOptions.None => new TemporalClient(),
+                TestTlsOptions.Server => new TemporalClient(new TemporalClientConfiguration
+                {
+                    ServiceConnection = new TemporalClientConfiguration.Connection(ServerHost: "localhost",
+                        ServerPort: Port,
+                        IsTlsEnabled: true,
+                        ClientIdentityCert: null,
+                        SkipServerCertValidation: false,
+                        ServerCertAuthority: TemporalClientConfiguration.TlsCertificate.FromPemFile(TestEnvironment.CaCertificatePath)),
+                }),
+                TestTlsOptions.Mutual => new TemporalClient(new TemporalClientConfiguration
+                {
+                    ServiceConnection = new TemporalClientConfiguration.Connection("localhost",
+                        ServerPort: Port,
+                    IsTlsEnabled: true,
+                    ClientIdentityCert: TemporalClientConfiguration.TlsCertificate.FromPemFile(TestEnvironment.ClientCertificatePath,
+                        TestEnvironment.ClientKeyPath),
+                    SkipServerCertValidation: false,
+                    ServerCertAuthority: TemporalClientConfiguration.TlsCertificate.FromPemFile(TestEnvironment.CaCertificatePath)),
+                }),
+                _ => throw new ArgumentException("Invalid value for TlsOptions", nameof(TlsOptions))
+            };
+        }
+
+        protected string TestCaseWorkflowId([CallerMemberName] string testMethodName = null)
+        {
+            return TestCaseContextMonikers.ForWorkflowId(this, testMethodName);
+        }
+
+        protected string TestCaseTaskQueue([CallerMemberName] string testMethodName = null)
+        {
+            return TestCaseContextMonikers.ForTaskQueue(this, testMethodName);
         }
     }
 }

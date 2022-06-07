@@ -31,6 +31,10 @@ namespace Temporal.TestUtil
 
         private readonly ITestOutputHelper _tstout;
         private readonly bool _redirectServerOutToTstout;
+        private const string DefaultTemporalLiteProcArgsTemplate = "start --ephemeral --namespace {0} --port {1}";
+
+        private const string TlsTemporalLiteProcArgsTemplate =
+            "--tls-certificate-file \"{0}\" --tls-key-file \"{1}\" --client-certificate-authority \"{2}\"";
 
         private ProcessManager _temporalLiteProc = null;
 
@@ -41,7 +45,7 @@ namespace Temporal.TestUtil
             _redirectServerOutToTstout = redirectServerOutToTstout;
         }
 
-        public async Task StartAsync()
+        public async Task StartAsync(TestTlsOptions tlsOptions, int port = 7233)
         {
 #pragma warning disable CS0162 // Unreachable code detected: Using const bools for settings
             if (Config.ExeBinarySource == ExeBinarySource.PrecompiledFromToolsRepo)
@@ -50,11 +54,10 @@ namespace Temporal.TestUtil
             }
 #pragma warning restore CS0162 // Unreachable code detected
 
-            const int TemporalServicePort = 7233;
-            if (IsPortInUse(TemporalServicePort))
+            if (IsPortInUse(port))
             {
                 TstoutWriteLine();
-                TstoutWriteLine($"WARNING!   Something is already listening on local port {TemporalServicePort}."
+                TstoutWriteLine($"WARNING!   Something is already listening on local port {port}."
                               + $" We will not be able to start TemporalLite."
                               + Environment.NewLine
                               + TstoutPrefix("WARNING!   However, this is most likely some kind of Temporal server,"
@@ -74,7 +77,7 @@ namespace Temporal.TestUtil
                 await InstallTemporalLiteAsync(temporalLiteExePath);
             }
 
-            Start(temporalLiteExePath);
+            Start(temporalLiteExePath, tlsOptions, port);
         }
 
 #pragma warning disable CS0162 // Unreachable code detected: Using const bools for settings
@@ -338,15 +341,48 @@ namespace Temporal.TestUtil
             TstoutWriteLine();
         }
 
-        private void Start(string temporalLiteExePath)
+        private string CreateDefaultServerArgs(string @namespace, int port)
+        {
+            return String.Format(DefaultTemporalLiteProcArgsTemplate, @namespace, port);
+        }
+
+        private string CreateTlsServerArgs(bool useMtls)
+        {
+            string binaryRoot = Environment.CurrentDirectory;
+            string certificate = Path.Combine(binaryRoot, TestEnvironment.ServerCertificatePath);
+            string key = Path.Combine(binaryRoot, TestEnvironment.ServerKeyPath);
+            string ca = Path.Combine(binaryRoot, TestEnvironment.CaCertificatePath);
+            if (useMtls)
+            {
+                return $"{String.Format(TlsTemporalLiteProcArgsTemplate, certificate, key, ca)} --mtls";
+            }
+
+            return String.Format(TlsTemporalLiteProcArgsTemplate, certificate, key, ca);
+        }
+
+        private string CreateServerArgs(string @namespace, TestTlsOptions tlsOptions, int port)
+        {
+            switch (tlsOptions)
+            {
+                case TestTlsOptions.None:
+                    return CreateDefaultServerArgs(@namespace, port);
+                case TestTlsOptions.Server:
+                    return $"{CreateDefaultServerArgs(@namespace, port)} {CreateTlsServerArgs(false)}";
+                case TestTlsOptions.Mutual:
+                    return $"{CreateDefaultServerArgs(@namespace, port)} {CreateTlsServerArgs(true)}";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(tlsOptions), "unexpected tls arguments received");
+            }
+        }
+
+        private void Start(string temporalLiteExePath, TestTlsOptions tlsOptions, int port)
         {
             const string TemporalLiteNamespace = "default";
-            const string TemporalLiteProcArgsTemplate = "start --ephemeral --namespace {0}";
 
             const string TemporalLiteInitCompletedMsg = "worker service started";
             const int TemporalLiteInitTimeoutMillis = 15000;
-
-            string temporalLiteProcArgs = String.Format(TemporalLiteProcArgsTemplate, TemporalLiteNamespace);
+            string args = CreateServerArgs(TemporalLiteNamespace, tlsOptions, port);
+            string temporalLiteProcArgs = String.Format(args, TemporalLiteNamespace);
 
             try
             {

@@ -56,6 +56,7 @@ namespace Temporal.WorkflowClient
 
         public static X509Certificate2 CreateFromPemData(string certMarkedUpPemData, string keyMarkedUpPemData)
         {
+            const string Password = "password";
             // Get the ephemeral (in-memory) cert:
 
             using X509Certificate2 ephemeralCert = CreateX509EphemeralCertFromPemData(certMarkedUpPemData, keyMarkedUpPemData);
@@ -66,8 +67,15 @@ namespace Temporal.WorkflowClient
             // (https://github.com/dotnet/runtime/issues/23749)
             // @ToDo: Review this for other OSes when supported.
 
-            byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx);
-            X509Certificate2 certificate = new(ephemeralCertBytes);
+            if (!ephemeralCert.HasPrivateKey)
+            {
+                return new(ephemeralCert.Export(X509ContentType.Cert));
+            }
+
+            // We use password here because some operating systems will fail when exporting a pfx
+            // without a password. The password used has no value outside of this method
+            byte[] ephemeralCertBytes = ephemeralCert.Export(X509ContentType.Pfx, Password);
+            X509Certificate2 certificate = new(ephemeralCertBytes, Password);
 
             // Done:
             return certificate;
@@ -124,6 +132,21 @@ namespace Temporal.WorkflowClient
                         byte[] keyBytes = GetPemSectionContent(keyMarkedUpPemData, "RSA PRIVATE KEY");
                         rsa.ImportRSAPrivateKey(keyBytes, out _);
                         privKeyLoaded = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        exAggr.Add(ex);
+                    }
+                }
+
+                if (!privKeyLoaded)
+                {
+                    try
+                    {
+                        byte[] keyBytes = GetPemSectionContent(keyMarkedUpPemData, "EC PRIVATE KEY");
+                        using ECDsa ec = ECDsa.Create();
+                        ec.ImportECPrivateKey(keyBytes, out _);
+                        return pubCert.CopyWithPrivateKey(ec);
                     }
                     catch (Exception ex)
                     {
