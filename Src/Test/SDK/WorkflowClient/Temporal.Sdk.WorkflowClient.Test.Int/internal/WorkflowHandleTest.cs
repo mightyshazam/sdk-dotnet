@@ -224,7 +224,7 @@ namespace Temporal.Sdk.WorkflowClient.Test.Int
             TemporalClient client = CreateTemporalClient();
             using IWorkflowHandle wfHandle = client.CreateWorkflowHandle(workflowId);
             wfHandle.Should().BeOfType<WorkflowHandle>();
-            await work((WorkflowHandle)wfHandle, queue);
+            await work((WorkflowHandle) wfHandle, queue);
         }
     }
 }
