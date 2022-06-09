@@ -12,8 +12,8 @@
 *.conf text=auto
 *.config text=auto
 .gitignore text=auto
-.xml text=auto
-.partial text=auto
+*.xml text=auto
+*.partial text=auto
 .editorconfig text=auto
 *.props text=auto
 *.marker text=auto
