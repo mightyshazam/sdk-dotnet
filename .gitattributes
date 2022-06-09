@@ -6,6 +6,14 @@
 *.csproj text=auto
 *.cs text=auto
 *.md text=auto
+*.yml text=auto
+*.txt text=auto
+*.json text=auto
+*.conf text=auto
+*.config text=auto
+.gitignore text=auto
+.xml text=auto
+.partial text=auto
 .editorconfig text=auto
 *.props text=auto
 *.marker text=auto
